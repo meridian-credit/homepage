@@ -7,3 +7,121 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+# Project guide
+
+Read by Claude Code (through `CLAUDE.md` → `@AGENTS.md`) and by codex. Edit guidance here, outside the
+nextjs-agent-rules markers above — `next dev` rewrites only the text between those markers.
+
+## What this is
+
+Marketing site for 메리디안 택스 어드바이저리 (MERIDIAN, https://www.meridianco.kr), a boutique tax / accounting
+advisory firm. Next.js 16 App Router, React 19, Tailwind v4, TypeScript. All user-facing copy is Korean. Production
+runs on Vercel.
+
+Git: the only remote is `origin` = `nonesty5/homepage`, the owner's repo. Treat `main` as production and reach it
+through a PR, never a direct push. The renewal work (IA v2, new home, services restructure) lives on `ian`.
+
+## Commands
+
+```bash
+npm ci
+npm run dev                  # http://localhost:3000
+npm run lint
+npm run build
+npm run audit:content        # frontmatter checks on content/posts/*.mdx (CI gate)
+
+# Playwright e2e. playwright.config.ts starts `next start` on :3100 itself, so build first.
+npm run build && npm run test:e2e
+npx playwright test tests/e2e/flows.spec.ts -g "menu focus" --project=desktop   # one test, one project
+```
+
+CI (`.github/workflows/ci.yml`, Node 22) runs `npm audit`, `npm audit signatures`, audit:content, lint, build, then
+e2e across four projects (desktop, mobile, webkit, firefox). CI puts `node scripts/qa/https.mjs` in front of :3100 and
+sets `QA_BASE_URL=https://localhost:3443`. That local TLS proxy makes the tests run under the real production CSP,
+including `upgrade-insecure-requests`. Reproduce it the same way when a change touches headers or CSP.
+
+Other browser QA scripts in `scripts/qa/` all expect a server on :3100:
+
+- `audit.mjs`: axe accessibility check over the main routes at 1440 and 390px.
+- `lifecycle.mjs`: finds requestAnimationFrame calls that keep running after navigation.
+- `capture.mjs`: screenshots, video and trace into `artifacts/<label>/`. Run it as `npm run qa:capture -- <label>`.
+
+## Architecture
+
+**Site data is code, not a CMS.**
+- `src/lib/data.ts` holds `services` (fields drive the services pages, home, and search), `members`, and `personas`.
+- `src/lib/constants.ts` holds `siteConfig` (name, URL, contacts) and `navMenu`. It also holds `serviceGroups`, the
+  single source of the 4-group / 8-service taxonomy that menus, lists, and strips all read. `orderedServices`
+  throws at import time if a group names a slug missing from `data.ts`.
+- `sitePages` (also in `constants.ts`) feeds the in-site search index (`/api/search`). `/pricing` and `/preview` are
+  deliberately absent from it and from `sitemap.ts`. Both pages set `robots: { index: false }` in their own metadata,
+  and `robots.ts` also disallows `/preview`. Keep these consistent.
+- `src/lib/schedule.ts` holds NTS tax-calendar dates plus `scheduleReviewedAt`. D-day is computed at view time in
+  Asia/Seoul; never store a D-day number.
+
+**Blog.** Posts are `content/posts/*.mdx`, parsed by `src/lib/posts.ts` (gray-matter, next-mdx-remote, remark-gfm).
+The frontmatter schema and citation rules are in `docs/content-system.md`:
+- Any post stating rates, deadlines, thresholds, or law changes needs `sourceLinks`, primary authority first.
+- `services: [slug]` attaches a 업무경험 post to that service's detail page.
+- Related posts rank by `relatedSlugs`, then category, then keyword overlap.
+
+**Routing and headers** live in `next.config.ts`:
+- A strict CSP and security headers apply to every path except `/contract/**`. A new third-party script, image, or
+  connect origin must be added to the CSP, or it fails silently in production only.
+- `/contract` is a rewrite to a separate Vercel project (taxchat, the freelancer contract app). It is excluded from
+  the headers because its ID-card capture needs `camera=(self)`.
+- The exact `/contract` rewrite must stay **before** `/contract/:path*`. Otherwise Vercel produces an infinite
+  trailing-slash redirect, which does not reproduce under local `next start`.
+- Redirects: apex to www, `/practice/*` to `/services/*`, `/blog?tab=faq` to `/faq`.
+
+**Gated routes.** `/preview` returns 404 unless `ENABLE_PREVIEW_PAGE=true`. `/pricing` exists but is kept out of the nav
+and the sitemap, and is noindex.
+
+**`/api/contact`** sends mail through Resend.
+- It checks Origin and Sec-Fetch-Site against `siteConfig.url` plus `CONTACT_ALLOWED_ORIGINS`.
+- Rate limiting is an Upstash sliding window per IP and per email. It falls back to an in-memory map when the
+  Upstash env vars are unset; set `CONTACT_RATE_LIMIT_REQUIRE_SHARED=true` to forbid that fallback.
+- The full env var list is in `README.md`.
+
+**`/contact` must stay statically prerendered.** Inquiry drafts arrive as query params and are parsed client-side in
+`components/contact/contact-inquiry.tsx` inside a `<Suspense>` whose fallback is the plain form.
+`tests/e2e/contact-rendering.spec.ts` asserts that `/contact` is in the prerender manifest and that the page works
+without JavaScript. Background: per-request rendering blew the Cloudflare Workers CPU limit
+(`docs/reviews/2026-09-11/contact-worker-1102.md`).
+
+**Styling.**
+- Tailwind v4 is configured with `@theme inline` in `src/app/globals.css`. That file (~5.8k lines) carries most of
+  the site's styling as named classes.
+- `promo.css` is imported only by the home page (`src/app/page.tsx`) and scoped under `.promo`.
+- `glass.css` is the refracting-glass header material, imported verbatim. Don't edit it; site colors are passed in
+  from `globals.css`.
+- Some values (such as the spacing ladder) are duplicated between `promo.css` and `globals.css`, so change both.
+- Design rules are in `docs/DESIGN_SYSTEM.md`.
+
+**Motion.** The site uses GSAP, Lenis (`components/providers/smooth-scroll-provider.tsx`), and `motion`. The home
+scroll scenes are `components/home/promo-motion.tsx`, `promo-scenes.ts`, and `service-merge-scene.ts`. Tests enforce
+three rules:
+- Honour `prefers-reduced-motion`.
+- Keep essential content visible without JS.
+- Tear down animation frames and listeners on unmount.
+
+## Conventions
+
+- Code comments, commit messages, and docs are written in Korean, in a plain explanatory voice that records *why*.
+  Comments often cite client review items as `첨삭 #NN`. Match that.
+- Layout fixes are verified by measuring in a real browser (Playwright `getBoundingClientRect` /
+  `getComputedStyle`), not by eyeballing screenshots. `docs/FIX_LOG_2026-09-07.md` shows the pattern.
+- Root `MEMORY.md` is a timestamped decision log: record conclusions there. Scratch investigation files go in
+  `/temp/`, which is gitignored.
+- `HANDOFF_REVIEW.md` is stale (April 2026, pre-rebrand "한결회계법인"). Don't rely on it.
+- `docs/IA_V2.md` is the current information-architecture plan (plain summary in `docs/memory/memory_IA_V2.md`).
+
+## Deploy
+
+- **Production:** Vercel. `.vercelignore` keeps `docs/`, `image/`, and local artifacts out of the upload.
+- **Cloudflare Workers preview** via OpenNext uses `wrangler.preview.jsonc` and `open-next.preview.config.mjs`. The
+  commands are in `docs/reviews/2026-09-11/contact-worker-1102.md`.
+  - On Workers Free (10 ms CPU per request) the adapter intermittently returns error 1102, so this path is only
+    usable for previews.
+  - The `meridian-preview-menu-ia` worker it targets was deleted on 2026-09-27; a deploy recreates it.
