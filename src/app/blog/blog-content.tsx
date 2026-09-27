@@ -4,7 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
-import { AnimateOnScroll } from "@/components/motion";
 import { insightCategories } from "@/lib/constants";
 import { getCategoryStyle } from "@/lib/category-colors";
 import { splitHeadline } from "@/lib/headline";
@@ -12,6 +11,10 @@ import type { PostMeta } from "@/lib/posts";
 
 interface BlogContentProps {
   posts: PostMeta[];
+  /* 주소의 쿼리 문자열(`cat=vat&page=2`). 서버가 미리 그릴 때는 비어 있다.
+     URLSearchParams 를 그대로 넘기지 않는다 — 서버에서 클라이언트로 넘기는
+     값은 평범한 값이어야 하고, 넘어오면서 .get() 같은 메서드가 사라진다. */
+  query?: string;
 }
 
 /* 제목 마지막 글자만 브랜드색으로.
@@ -72,11 +75,22 @@ const PER_PAGE = 12;
 /* 맨 위에서 돌려 보는 글 수. */
 const LEAD_N = 5;
 
-export default function BlogContent({ posts }: BlogContentProps) {
+/* 주소를 읽는 쪽. useSearchParams 는 미리 그리는 정적 페이지에서 Suspense
+   안에서만 쓸 수 있다. 그래서 주소 읽기는 여기 따로 두고, 화면은 아래
+   BlogContent 하나가 그린다 — page.tsx 가 같은 BlogContent 를 쿼리 없이
+   fallback 으로도 그려서 목록이 정적 HTML 에 그대로 실린다.
+   (예전에는 fallback 이 null 이라 HTML 에 글이 한 편도 없었고, 수화 뒤
+   목록이 들어오며 푸터를 밀어냈다 — CLS 0.6.) */
+export function BlogContentFromUrl({ posts }: { posts: PostMeta[] }) {
+  const params = useSearchParams();
+  return <BlogContent posts={posts} query={params.toString()} />;
+}
+
+export default function BlogContent({ posts, query = "" }: BlogContentProps) {
   /* 고른 갈래를 화면 안에만 담아 두면 상단 메뉴의 「인사이트 → 법인세」가
      아무 일도 못 한다. 주소에 적어 두면 메뉴도 링크도 되고, 그 화면을
      그대로 남에게 보낼 수도 있다. */
-  const params = useSearchParams();
+  const params = useMemo(() => new URLSearchParams(query), [query]);
   const active =
     insightCategories.find((c) => c.slug === params.get("cat")) ??
     insightCategories[0];
@@ -152,74 +166,74 @@ export default function BlogContent({ posts }: BlogContentProps) {
     <section className="ins">
       <div className="ins-in">
         {/* ── 맨 위 한 장. 글이 왼쪽, 표지가 오른쪽. ── */}
+        {/* 맨 위 한 장은 첫 화면 안이라 나타나는 연출을 걸지 않는다.
+            걸면 정적 목록이 수화 때 새로 그려지면서 한 번 꺼졌다 켜진다. */}
         {heroPost && (
-          <AnimateOnScroll variant="fadeUp">
-            <div className="ins-lead">
-              <div className="ins-lead-text">
-                {/* 위 묶음은 사진 윗변에, 아래 묶음은 사진 아랫변에 맞춘다.
-                    가운데 정렬로 두면 제목이 사진 한복판에 떠서 두 칸이
-                    따로 놀았다. */}
-                <div className="ins-lead-top">
-                <p className="ins-lead-tag">
-                  <span>인사이트</span>
-                  <i aria-hidden>|</i>
-                  <b style={{ color: getCategoryStyle(heroPost.category, false).color }}>
-                    {heroPost.category}
-                  </b>
-                </p>
-                <h2 className="ins-lead-title">
-                  <Link href={`/blog/${heroPost.slug}`}>
-                    <TitleWithTail title={heroPost.title} />
-                  </Link>
-                </h2>
-                </div>
-
-                <div className="ins-lead-bot">
-                <p className="ins-lead-excerpt">{heroPost.description}</p>
-
-                {/* 최대 다섯 장을 돌려 본다. 자동으로 넘어가지 않는다 —
-                    읽는 중에 바뀌면 방금 본 글을 다시 찾아야 한다.
-                    한 장뿐인 갈래에서는 「1 / 1」과 못 쓰는 화살표만
-                    남으니 아예 안 세운다. */}
-                {leadN > 1 && (
-                <div className="ins-step">
-                  <button
-                    type="button"
-                    onClick={() => setLead((v) => (v - 1 + leadN) % leadN)}
-                    aria-label="이전 글"
-                  >
-                    <Chevron dir="left" />
-                  </button>
-                  <span>
-                    <b>{Math.min(lead, leadN - 1) + 1}</b> / {leadN}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setLead((v) => (v + 1) % leadN)}
-                    aria-label="다음 글"
-                  >
-                    <Chevron dir="right" />
-                  </button>
-                </div>
-                )}
-                </div>
+          <div className="ins-lead">
+            <div className="ins-lead-text">
+              {/* 위 묶음은 사진 윗변에, 아래 묶음은 사진 아랫변에 맞춘다.
+                  가운데 정렬로 두면 제목이 사진 한복판에 떠서 두 칸이
+                  따로 놀았다. */}
+              <div className="ins-lead-top">
+              <p className="ins-lead-tag">
+                <span>인사이트</span>
+                <i aria-hidden>|</i>
+                <b style={{ color: getCategoryStyle(heroPost.category, false).color }}>
+                  {heroPost.category}
+                </b>
+              </p>
+              <h2 className="ins-lead-title">
+                <Link href={`/blog/${heroPost.slug}`}>
+                  <TitleWithTail title={heroPost.title} />
+                </Link>
+              </h2>
               </div>
 
-              <Link href={`/blog/${heroPost.slug}`} className="ins-lead-thumb" aria-label={heroPost.title}>
-                {heroPost.coverImage ? (
-                  <Image
-                    src={heroPost.coverImage}
-                    alt=""
-                    fill
-                    sizes="(max-width: 900px) 100vw, 55vw"
-                    className="object-cover object-top"
-                  />
-                ) : (
-                  <CardNews post={heroPost} />
-                )}
-              </Link>
+              <div className="ins-lead-bot">
+              <p className="ins-lead-excerpt">{heroPost.description}</p>
+
+              {/* 최대 다섯 장을 돌려 본다. 자동으로 넘어가지 않는다 —
+                  읽는 중에 바뀌면 방금 본 글을 다시 찾아야 한다.
+                  한 장뿐인 갈래에서는 「1 / 1」과 못 쓰는 화살표만
+                  남으니 아예 안 세운다. */}
+              {leadN > 1 && (
+              <div className="ins-step">
+                <button
+                  type="button"
+                  onClick={() => setLead((v) => (v - 1 + leadN) % leadN)}
+                  aria-label="이전 글"
+                >
+                  <Chevron dir="left" />
+                </button>
+                <span>
+                  <b>{Math.min(lead, leadN - 1) + 1}</b> / {leadN}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setLead((v) => (v + 1) % leadN)}
+                  aria-label="다음 글"
+                >
+                  <Chevron dir="right" />
+                </button>
+              </div>
+              )}
+              </div>
             </div>
-          </AnimateOnScroll>
+
+            <Link href={`/blog/${heroPost.slug}`} className="ins-lead-thumb" aria-label={heroPost.title}>
+              {heroPost.coverImage ? (
+                <Image
+                  src={heroPost.coverImage}
+                  alt=""
+                  fill
+                  sizes="(max-width: 900px) 100vw, 55vw"
+                  className="object-cover object-top"
+                />
+              ) : (
+                <CardNews post={heroPost} />
+              )}
+            </Link>
+          </div>
         )}
 
         {/* ── 찾기 ── */}

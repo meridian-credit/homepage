@@ -616,6 +616,8 @@ h1, h2, h3, h4 {
    보였다. 면은 평평하고 모서리는 각져야 육면체로 읽힌다. */
 .sc-clip { position: relative; }
 .sc-clip:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+/* 날짜를 알기 전 자리만 잡아 두는 빈 상자. 누를 수 없으니 누를 것처럼 보이면 안 된다. */
+.sched-cube[aria-hidden] .sc-clip { cursor: default; pointer-events: none; }
 .sc-stage {
   display: block;
   height: 100%;
@@ -681,6 +683,15 @@ h1, h2, h3, h4 {
     0 1px 3px rgba(0, 0, 0, .3);
 }
 .site-header[data-tone="dark"] .sc-what { color: #fff; }
+/* 적어 둔 일정이 다 지났을 때의 링크. 큐브와 같은 자리 · 같은 테두리. */
+.sc-empty {
+  display: flex;
+  align-items: center;
+  padding: 0 1.6rem;
+  box-shadow: inset 0 0 0 1px rgba(125, 145, 190, .22);
+  text-decoration: none;
+}
+.site-header[data-tone="dark"] .sc-empty { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18); }
 .site-header[data-tone="dark"] .sc-dd { color: #7E9CFF; }
 
 

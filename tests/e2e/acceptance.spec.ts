@@ -47,7 +47,11 @@ for (const status of [200, 429, 503]) {
     await page.getByLabel('이메일', { exact: false }).fill('test@example.com');
     await page.getByLabel('현재 상황').fill('상담 테스트입니다.');
     await page.getByRole('button', { name: '문의 보내기' }).click();
-    if (status === 200) await expect(page.getByRole('heading', { name: '문의가 접수되었습니다' })).toBeVisible();
+    if (status === 200) {
+      await expect(page.getByRole('heading', { name: '문의가 접수되었습니다' })).toBeVisible();
+      await page.getByRole('button', { name: '새 문의 작성' }).click();
+      await expect(page.getByLabel('이름', { exact: false })).toBeFocused();
+    }
     else {
       await expect(page.locator('form [role=alert]')).toContainText(status === 429 ? '요청이 많습니다' : '전송 실패');
       await expect(page.getByLabel('현재 상황')).toHaveValue('상담 테스트입니다.');

@@ -2,9 +2,7 @@ import { toSafeJsonLd } from "@/lib/json-ld";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { siteConfig } from "@/lib/constants";
-import { Suspense } from "react";
 import ContactForm from "@/components/contact/contact-form";
-import ContactInquiry from "@/components/contact/contact-inquiry";
 import { AnimateOnScroll, LineReveal } from "@/components/motion";
 import { contactFaq } from "@/lib/faq";
 import HeroVideo from "@/components/layout/hero-video";
@@ -79,9 +77,7 @@ export default function ContactPage() {
               <h2 className="t-h3 mb-10">
                 문의 내용
               </h2>
-              <Suspense fallback={<ContactForm />}>
-                <ContactInquiry />
-              </Suspense>
+              <ContactForm />
             </AnimateOnScroll>
 
             <AnimateOnScroll variant="fadeUp" delay={0.2} className="lg:col-span-5">

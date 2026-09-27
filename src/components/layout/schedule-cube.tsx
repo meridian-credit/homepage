@@ -20,7 +20,7 @@ import { useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { scheduleDates } from "@/lib/constants";
 
-import { daysLeft, dday, scheduleSource } from "@/lib/schedule";
+import { daysLeft, dday, ntsThisMonthUrl } from "@/lib/schedule";
 import { useToday } from "@/lib/use-today";
 import { useDialog } from "@/lib/use-dialog";
 const dotted = (ymd: string) => ymd.replaceAll('-', '.');
@@ -33,8 +33,18 @@ export default function ScheduleCube() {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const close = useCallback(() => setOpen(false), []);
   useDialog(open, panelRef, close, triggerRef);
-  if (!today) return null;
-  if (!items.length) return <a className="text-sm" href={scheduleSource} target="_blank" rel="noopener noreferrer">등록된 다음 일정이 없습니다 · 국세청 일정</a>;
+  /* 날짜를 알기 전(서버 HTML · 수화 전)에도 같은 크기의 자리를 먼저 둔다.
+     비워 두면 날짜를 안 뒤 큐브가 끼어들며 옆 메뉴를 민다(CLS). */
+  if (!today) return <div className="sched-cube" aria-hidden><span className="sc-clip" /></div>;
+  /* 적어 둔 일정이 다 지났으면 빈 문구 대신 이번 달 국세청 일정으로 보낸다.
+     「등록된 일정이 없습니다」는 세무 사이트 머리에 둘 말이 아니다. */
+  if (!items.length) return (
+    <div className="sched-cube">
+      <a className="sc-clip sc-empty" href={ntsThisMonthUrl(today)} target="_blank" rel="noopener noreferrer">
+        <span className="sc-what">이번 달 세무일정 · 국세청</span>
+      </a>
+    </div>
+  );
 
   /* 면은 넷. 목록이 그보다 짧으면 앞에서부터 다시 채운다.
      회전값은 되돌리지 않고 계속 키운다 — 0 으로 되감으면 그 순간 튄다. */

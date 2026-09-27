@@ -13,7 +13,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 
 const KEY = "meridian.sched.hideUntil";
 
-import { daysLeft, dday as ddayLabel, scheduleSource, type ScheduleItem } from "@/lib/schedule";
+import { daysLeft, dday as ddayLabel, ntsThisMonthUrl, type ScheduleItem } from "@/lib/schedule";
 import { useToday } from "@/lib/use-today";
 import { useDialog } from "@/lib/use-dialog";
 const dotted = (ymd: string) => ymd.replaceAll('-', '.');
@@ -23,7 +23,7 @@ const dotted = (ymd: string) => ymd.replaceAll('-', '.');
 export function ScheduleButton({ items }: { items: ScheduleItem[] }) {
   const today = useToday();
   const next = today ? items.find(it => daysLeft(it.when, today) >= 0) : undefined;
-  const label = next ? `${next.what.replace(/ .*$/, "")} ${ddayLabel(next.when)}` : today ? "다음 일정 미등록" : null;
+  const label = next ? `${next.what.replace(/ .*$/, "")} ${ddayLabel(next.when)}` : today ? "이번 달 일정" : null;
 
   return (
     <button type="button" id="schedOpen" className="sched-open">
@@ -105,7 +105,8 @@ export default function SchedulePopup({ items, trigger, auto = true }: { items: 
           ))}
         </ol>
 
-        {!liveItems.length && <p>등록된 다음 일정이 없습니다. <a href={scheduleSource}>국세청 일정 보기</a></p>}
+        {/* 적어 둔 일정이 다 지났을 때. 결함처럼 읽히는 빈 문구 대신 오늘 달의 국세청 표로 보낸다. */}
+        {today && !liveItems.length && <p><a href={ntsThisMonthUrl(today)} target="_blank" rel="noopener noreferrer">이번 달 세무일정 · 국세청</a></p>}
         <p className="schp-note">
           <span className="s">국세청 기준 주요 신고·납부 기한.</span>
           <span className="s">담당 법인의 신고 의무 및 마감일은</span>

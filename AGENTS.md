@@ -59,12 +59,19 @@ Other browser QA scripts in `scripts/qa/` all expect a server on :3100:
   and `robots.ts` also disallows `/preview`. Keep these consistent.
 - `src/lib/schedule.ts` holds NTS tax-calendar dates plus `scheduleReviewedAt`. D-day is computed at view time in
   Asia/Seoul; never store a D-day number.
+  - List only months NTS has actually published; don't guess dates.
+  - Once every listed date has passed, the header cube and the `/portal` popup link to this month's NTS page.
+  - `npm run audit:content` puts a warning first when under 30 days of dates remain.
+    `.github/workflows/schedule-check.yml` runs the same check weekly and fails, as a reminder to refill the list.
 
 **Blog.** Posts are `content/posts/*.mdx`, parsed by `src/lib/posts.ts` (gray-matter, next-mdx-remote, remark-gfm).
 The frontmatter schema and citation rules are in `docs/content-system.md`:
 - Any post stating rates, deadlines, thresholds, or law changes needs `sourceLinks`, primary authority first.
 - `services: [slug]` attaches a 업무경험 post to that service's detail page.
 - Related posts rank by `relatedSlugs`, then category, then keyword overlap.
+- `/blog` ships its first page of posts in the static HTML. `blog/page.tsx` renders the same `BlogContent`, without a
+  query, as the `<Suspense>` fallback. Only `BlogContentFromUrl` calls `useSearchParams`. A `null` fallback here once
+  left the HTML without a single post and caused CLS of 0.6. `tests/e2e/blog-rendering.spec.ts` guards against that.
 
 **Routing and headers** live in `next.config.ts`:
 - A strict CSP and security headers apply to every path except `/contract/**`. A new third-party script, image, or
@@ -84,8 +91,15 @@ and the sitemap, and is noindex.
   Upstash env vars are unset; set `CONTACT_RATE_LIMIT_REQUIRE_SHARED=true` to forbid that fallback.
 - The full env var list is in `README.md`.
 
-**`/contact` must stay statically prerendered.** Inquiry drafts arrive as query params and are parsed client-side in
-`components/contact/contact-inquiry.tsx` inside a `<Suspense>` whose fallback is the plain form.
+**`/contact` must stay statically prerendered.**
+- The form renders once, outside any `<Suspense>`. Inquiry drafts arrive as query params. Only the empty `InquiryDraft`
+  child (`components/contact/contact-inquiry.tsx`) reads them, from inside a `<Suspense>`, and hands the draft to the
+  form. The draft never overwrites a field the user has already edited.
+- The fields are uncontrolled and are read with `FormData` at submit. Text typed before hydration therefore survives:
+  The React build that Next bundles (19.3 canary) does not replay it, and a controlled field would reset it on the
+  first re-render.
+- The submit button stays disabled until hydration. A disabled default button also blocks Enter submission, and a
+  hint line gives direct contacts until then.
 `tests/e2e/contact-rendering.spec.ts` asserts that `/contact` is in the prerender manifest and that the page works
 without JavaScript. Background: per-request rendering blew the Cloudflare Workers CPU limit
 (`docs/reviews/2026-09-11/contact-worker-1102.md`).

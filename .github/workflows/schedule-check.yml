@@ -1,0 +1,33 @@
+name: Tax schedule runway
+
+# 헤더의 세무 일정(src/lib/schedule.ts)은 국세청이 게시한 달까지만 적는다.
+# 남은 일정이 30일 밑으로 내려가면 이 점검이 실패해 저장소 알림을 보낸다 —
+# 그때 국세청 다음 달 일정을 확인해 채운다. 일정이 다 지나도 헤더는 「이번 달
+# 국세청 일정」 링크로 바뀌어 망가지지는 않는다. 이건 알림일 뿐 배포를 막지 않는다.
+
+on:
+  schedule:
+    - cron: "0 0 * * 1" # 매주 월요일 09:00 KST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runway:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22.21.1
+          cache: npm
+
+      - name: Install dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+
+      - name: Check schedule runway
+        run: node scripts/content-audit.mjs --schedule-strict
