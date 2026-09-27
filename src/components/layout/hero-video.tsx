@@ -21,11 +21,13 @@ export default function HeroVideo({ opacity = 0.55 }: { opacity?: number }) {
         loop
         playsInline
         preload="metadata"
-        poster="/meridian-hero-poster.jpg"
+        poster="/media/meridian-hero-poster.v1.webp"
         style={{ opacity }}
       >
-        <source src="/meridian-hero.webm" type="video/webm" />
-        <source src="/meridian-hero.mp4" type="video/mp4" />
+        {/* 움직임을 꺼 둔 화면은 CSS 가 영상을 숨기고 포스터만 깐다. 숨겨도 video 는
+            metadata 를 받으러 가므로, source 에 조건을 걸어 아예 받지 않게 한다. */}
+        <source src="/media/meridian-hero.v1.webm" type="video/webm" media="(prefers-reduced-motion: no-preference)" />
+        <source src="/media/meridian-hero.v1.mp4" type="video/mp4" media="(prefers-reduced-motion: no-preference)" />
       </video>
       {/* 글이 얹히는 자리를 눌러 준다. 안 누르면 흰 글씨가 뜬다. */}
       <div className="hero-video-veil" />

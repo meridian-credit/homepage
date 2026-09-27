@@ -7,7 +7,10 @@
 
 export default function DashboardPeek() {
   return (
-    <div className="dpk" aria-label="MERIDIAN 세무 대시보드 화면 예시">
+    /* 그림이다. 안의 글자는 화면 모양을 보여 주려는 것이라 읽어 줄 내용이 아니고,
+       크기도 배너 폭을 따라 줄어든다(최소 글자 12px 의 예외). role="img" 로 한 장의
+       그림으로 읽히게 한다 — 이게 없으면 div 의 aria-label 은 읽히지도 않는다. */
+    <div className="dpk" role="img" aria-label="MERIDIAN 세무 대시보드 화면 예시">
       <div className="dpk-win">
         <div className="db">
           <aside className="db-side">
@@ -36,7 +39,7 @@ export default function DashboardPeek() {
             <div className="db-body">
               <p className="db-eyebrow">종합 현황</p>
               <div className="db-h1row">
-                <h3>한눈에 보는 우리 회사</h3>
+                <p className="db-h1">한눈에 보는 우리 회사</p>
                 <div className="db-seg"><span className="on">최근 반영월</span><span>올해</span><span>이번달</span></div>
               </div>
               <p className="db-tagline"><b>2026년 7월 확정자료</b> 국세청 수집자료 기준</p>

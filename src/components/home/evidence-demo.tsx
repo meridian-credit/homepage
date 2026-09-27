@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from 'react';
-import { useInView } from "motion/react";
+import { useInViewOnce } from "@/lib/in-view";
 import { usePrefersReducedMotion as useReducedMotion } from "@/lib/use-media";
 import { evidenceData } from '@/lib/evidence-demo';
 
@@ -9,7 +9,7 @@ type Period = typeof periods[number]['id'];
 const metrics = [{"label": "매출 합계", "values": {"m": "184,920,000", "l": "171,340,000", "q": "512,880,000", "y": "1,946,220,000"}, "compare": {"m": "전년 동월 +12.3%", "l": "전년 동월 +8.1%", "q": "전년 동기 +10.4%", "y": "전년 +14.2%"}, "down": false}, {"label": "매입 합계", "values": {"m": "121,405,000", "l": "118,220,000", "q": "349,610,000", "y": "1,332,880,000"}, "compare": {"m": "전년 동월 +4.8%", "l": "전년 동월 +3.2%", "q": "전년 동기 +5.1%", "y": "전년 +6.0%"}, "down": true}, {"label": "잠정 손익", "values": {"m": "48,595,000", "l": "38,200,000", "q": "118,510,000", "y": "434,300,000"}, "compare": {"m": "전년 동월 +28.7%", "l": "전년 동월 +19.4%", "q": "전년 동기 +23.9%", "y": "전년 +31.1%"}, "down": false}, {"label": "부가세 예상", "values": {"m": "6,351,500", "l": "5,312,000", "q": "16,327,000", "y": "61,334,000"}, "compare": {"m": "불공제 후보 4건", "l": "불공제 후보 2건", "q": "불공제 후보 9건", "y": "불공제 후보 27건"}, "down": false}];
 function DemoNumber({ value }: { value: string }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const visible = useInView(ref, { once: true });
+  const visible = useInViewOnce(ref);
   const reduced = useReducedMotion();
   const [display, setDisplay] = useState(value);
   useEffect(() => {
@@ -53,8 +53,8 @@ export default function EvidenceDemo() {
             <span className={`cmp${item.down ? ' dn' : ''}`}>{item.compare[period]}</span>
           </button>)}</div>
           <div className="evid" id="evidence-detail" aria-live="polite">
-            <div><h4>계산식</h4><div className="formula"><Formula text={detail.f} /></div><p className="evid-note">표시된 숫자는 예시입니다. 실제 고객 데이터가 아닙니다.</p></div>
-            <div><h4>{detail.t}</h4><p className="rnote">{detail.n}</p><div className="rows">{detail.r.map(([label, value], index) => <div className="rw" key={index}><span>{label}</span><span>{value}</span></div>)}</div></div>
+            <div><h3>계산식</h3><div className="formula"><Formula text={detail.f} /></div><p className="evid-note">표시된 숫자는 예시입니다. 실제 고객 데이터가 아닙니다.</p></div>
+            <div><h3>{detail.t}</h3><p className="rnote">{detail.n}</p><div className="rows">{detail.r.map(([label, value], index) => <div className="rw" key={index}><span>{label}</span><span>{value}</span></div>)}</div></div>
           </div>
         </div>
       </div>

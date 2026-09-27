@@ -260,7 +260,7 @@ export function setupPromoScenes(root: HTMLElement, lenis?: Lenis) {
            판 위(~x1411)에 반쯤 걸친다. 위 절반은 어두운 영상, 아래 절반은
            흰 바탕이라 어느 색을 골라도 한쪽이 안 읽힌다.
            첫 화면은 어차피 「여기서 시작」 자리라 띠가 할 일도 없다. */
-        const heroEl = root.querySelector<HTMLElement>('.about-stage, .about-flat');
+        const heroEl = root.querySelector<HTMLElement>('.about-stage');
         const heroHolds = heroEl
           ? (() => { const r = heroEl.getBoundingClientRect(); return r.top < mid && r.bottom > mid; })()
           : false;
@@ -272,10 +272,9 @@ export function setupPromoScenes(root: HTMLElement, lenis?: Lenis) {
         cur?.a.setAttribute('aria-current', 'true');
 
         // 앵커가 짙은 구간 위에 있으면 밝게.
-        // .invert 는 이제 흰 구간이다. 짙은 데는 .deep 이 붙은 칸과 첫 화면뿐이다.
-        // .aflat-film 은 붙이지 않고 쌓아 놓는 첫 화면의 영상 판이다.
-        // 움직임을 꺼 두면 넓은 화면에서도 이쪽이 나오므로 같이 센다.
-        const onDark = [...root.querySelectorAll<HTMLElement>('.invert.deep, .about-stage, .aflat-film')].some(el => {
+        // .invert 는 이제 흰 구간이다. 짙은 데는 .deep 이 붙은 칸과 첫 화면의 영상 판뿐이다.
+        // 영상 판(.about-video)은 붙은 무대에서는 무대 전체를, 쌓은 판에서는 첫 판을 덮는다.
+        const onDark = [...root.querySelectorAll<HTMLElement>('.invert.deep, .about-video')].some(el => {
           const r = el.getBoundingClientRect();
           return r.top < mid && r.bottom > mid;
         });
@@ -331,7 +330,8 @@ export function setupPromoScenes(root: HTMLElement, lenis?: Lenis) {
          ui-ux-pro-max 의 GSAP 프리셋 조합:
            · Scroll Reveal / Complex — pin + scrub (섹션을 붙여놓고 스크롤에 물린다)
            · Stagger List / Standard — grid:'auto' 물결 (격자에서 자연스러운 순서)
-         Lenis 와 ScrollTrigger 가 같은 스크롤을 보도록 연결한다. */
+         Lenis 는 창 스크롤 값을 직접 움직이므로 ScrollTrigger 는 따로 잇지 않아도 같은
+         스크롤을 본다(ScrollTrigger.update 를 Lenis 에 물리지 않는다). */
       // 좁은 화면에서는 흩뿌림을 하지 않는다. 카드가 화면 밖으로 나가 가로 스크롤이 생긴다.
       const wideEnough = innerWidth > 700;
       // CDN 시절엔 window.gsap 을 봤다. 지금은 import 로 들어오므로 그 검사를 뺀다.

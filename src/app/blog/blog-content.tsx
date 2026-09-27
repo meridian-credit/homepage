@@ -55,7 +55,7 @@ function CardNews({ post }: { post: PostMeta }) {
       </p>
       {tail && (
         <p
-          className="mt-3 line-clamp-3 border-t pt-3 text-[11.5px] leading-relaxed sm:text-xs"
+          className="mt-3 line-clamp-3 border-t pt-3 text-xs leading-relaxed"
           style={{
             color: "rgba(0,0,0,0.5)",
             borderColor: "rgba(0,0,0,0.1)",
@@ -266,7 +266,9 @@ export default function BlogContent({ posts, query = "" }: BlogContentProps) {
         {(
           <>
             <nav className="ins-cats" aria-label="갈래">
-              {insightCategories.map((c, i) => (
+              {/* 글 없는 갈래는 칩도 뺀다(메뉴와 같다). 주소로 곧장 들어온 갈래는
+                  비었어도 남겨 둔다 — 지금 어디에 있는지는 보여야 한다. */}
+              {insightCategories.filter((c) => c.slug === active.slug || countOf(c.match) > 0).map((c, i) => (
                 <span key={c.slug} className="contents">
                   {i > 0 && <i aria-hidden>|</i>}
                   <button

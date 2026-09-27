@@ -57,28 +57,20 @@ export const siteConfig = {
   /* 하단에 실제 사업장 주소를 적는다(첨삭 #39). 도로명 두 줄.
      location 은 「어디서 만나나」라 자리가 다르다 — 그대로 둔다. */
   address: ["서울시 강서구 마곡중앙로 171", "프라이빗타워Ⅱ 1210호"],
+  /* 같은 주소를 검색엔진용 칸(schema.org PostalAddress)으로 나눈 것. 주소가 바뀌면 둘 다 고친다.
+     우편번호는 확인한 값이 없어 적지 않는다. */
+  postalAddress: {
+    streetAddress: "마곡중앙로 171, 프라이빗타워Ⅱ 1210호",
+    addressLocality: "강서구",
+    addressRegion: "서울특별시",
+    addressCountry: "KR",
+  },
   tel: "02-6953-2820",
   founder: "박민상 회계사",
   affiliation:
     "박민상 공인회계사는 동성회계법인 소속이며, 본 사이트는 자문 · 인사이트 활동을 소개하기 위한 개인 브랜드 공간입니다. 회계감사 · 세무 기장 · 세무 조정 · 세무 신고 등 법정 업무는 모두 동성회계법인 명의로 정식 수행됩니다.",
   clientPortalUrl: "https://hometax-dashboard.vercel.app",
   pricingUrl: "/pricing",
-};
-
-/**
- * Hero background images.
- * 빌딩숲 사진을 public/images/ 아래에 올린 후 경로를 채워주세요.
- * null이면 현재처럼 솔리드 다크 배경 유지.
- *
- * 권장 파일 경로:
- *   public/images/hero-home.jpg     — 1920x1080+ 가로 (홈 히어로)
- *   public/images/hero-about.jpg    — 1920x1080+ 가로 (어바웃 히어로)
- *   public/images/hero-cta.jpg      — 1920x1080+ 가로 (CTA 야경)
- */
-export const heroImages = {
-  home: null as string | null,
-  about: null as string | null,
-  cta: null as string | null,
 };
 
 /**
@@ -120,15 +112,13 @@ export const insightCategories = [
 /* ─────────────────────────────────────────────────────────────
    상단 메뉴.
 
-   여섯 칸이다. HOME 과 CONTACT 는 없앴다 — 왼쪽 로고가 이미 홈으로 가고,
+   일곱 칸이다. HOME 과 CONTACT 는 없앴다 — 왼쪽 로고가 이미 홈으로 가고,
    오른쪽 파란 버튼이 이미 문의로 간다. 한 줄에 같은 목적지를 두 번 두지
-   않는다. 그 두 자리에 수임료와 대시보드를 넣었다.
+   않는다.
 
-   앞에서부터 「누구냐 → 뭘 하냐 → 얼마냐 → 누가 썼냐 → 뭘 아냐 → 어떻게
-   보여주냐」 순서다. 수임료가 세 번째인 건, 처음 온 사람이 제일 먼저
-   돌아서는 지점이 값을 모를 때라서다.
-
-   자세한 근거는 docs/IA_MENU_PLAN.md.
+   앞에서부터 「누구냐 → 뭘 하냐 → 누가 하냐 → 누구를 돕냐 → 뭘 아냐 →
+   무엇을 묻냐 → 어떻게 보여주냐」 순서다. 수임료(/pricing)는 지금 메뉴에 없다.
+   열지 말지는 docs/IA_V2.md §7 에서 정한다. 자세한 근거도 그 문서에 있다.
    ───────────────────────────────────────────────────────────── */
 export interface NavItem {
   href: string;
@@ -198,9 +188,10 @@ export const navLinks = navMenu.map(({ href, label }) => ({ href, label }));
 /* ─────────────────────────────────────────────────────────────
    사람이 도착할 수 있는 모든 페이지.
 
-   검색 색인이 이걸 본다.
-   /pricing 과 /preview 는 일부러 뺀다 — robots.ts 가 검색엔진에서 막는
-   페이지라, 사이트 안 검색에만 나오면 앞뒤가 안 맞는다.
+   사이트 안 검색(/api/search)이 이걸 본다.
+   /pricing 과 /preview 는 일부러 뺀다 — 둘 다 검색엔진에 내보내지 않는 페이지라
+   (자기 metadata 가 noindex, /preview 는 robots.ts 도 막는다) 사이트 안 검색에만
+   나오면 앞뒤가 안 맞는다.
    ───────────────────────────────────────────────────────────── */
 export const sitePages: Array<{ href: string; label: string; hint: string }> = [
   { href: "/", label: "홈", hint: "메리디안" },

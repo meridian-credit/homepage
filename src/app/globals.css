@@ -33,11 +33,16 @@
   --shadow-hover: 0 4px 16px -4px rgba(0, 0, 0, 0.12);
   --shadow-elevated: 0 8px 24px -8px rgba(0, 0, 0, 0.15);
 
-  --font-sans: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --font-sans: "Pretendard Site", "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
   /* 제목용. 본문(Pretendard)과 대비를 주되 한 계열 안에서만 논다.
      전에는 홈에서만 이 서체를 부르고 나머지 7개 페이지는 본문 서체로 제목을 찍어서
      페이지마다 인상이 달랐다. 이제 한 군데서 정하고 전부 여기를 본다. */
-  --font-display: "Wanted Sans Variable", "Wanted Sans", var(--font-sans);
+  --font-display: "Wanted Sans Site", "Wanted Sans Variable", "Wanted Sans", var(--font-sans);
+
+  /* Tailwind text-xs 기본값 0.75rem 은 뿌리 15px 에서 11.25px 다. 사이트 최소 글자
+     12px 에 맞춘다. 줄 높이는 그대로 1rem(15px)로 둬서 줄 간격이 바뀌지 않게 한다. */
+  --text-xs: 0.8rem;
+  --text-xs--line-height: calc(1 / 0.8);
 }
 
 /* ─── Deloitte 시그니처: 그린 닷 ───
@@ -55,7 +60,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -508,7 +513,9 @@ h1, h2, h3, h4 {
 }
 
 .prose th {
-  background: var(--color-surface);
+  /* 밝은 회색 머리줄. --color-surface 는 이제 검정(짙은 구간)이라, 그걸 쓰면
+     #1A1A1A 글자가 검정 위에 앉아 머리줄이 안 보였다(대비 1.2:1). */
+  background: var(--color-card);
   font-weight: 600;
   font-size: 0.8125rem;
   letter-spacing: 0.03em;
@@ -661,7 +668,7 @@ h1, h2, h3, h4 {
   flex: 1;
   min-width: 0;
   text-align: right;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--color-strong);
@@ -670,7 +677,7 @@ h1, h2, h3, h4 {
   text-overflow: ellipsis;
 }
 .sc-dd {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: var(--color-accent);
@@ -769,7 +776,7 @@ h1, h2, h3, h4 {
 .hdr-mega-eyebrow,
 .hdr-mega-cols { margin-left: var(--mega-x, 0); transition: margin-left .24s cubic-bezier(.2,.8,.3,1); }
 .hdr-mega-eyebrow {
-  font-size: .625rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: .2em;
   text-transform: uppercase;
@@ -796,7 +803,7 @@ h1, h2, h3, h4 {
   width: max-content;
 }
 .hdr-mega-coltitle {
-  font-size: .6875rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: .08em;
   color: var(--color-accent);
@@ -835,7 +842,7 @@ h1, h2, h3, h4 {
 .hdr-mega-hint {
   display: block;
   margin-top: 1px;
-  font-size: .75rem;
+  font-size: 0.8rem;
   color: var(--color-muted);
 }
 .site-header[data-tone="dark"] .hdr-mega-hint { color: rgba(255,255,255,.58); }
@@ -966,7 +973,7 @@ h1, h2, h3, h4 {
 /* 네 갈래 이름. 누르는 게 아니라 묶음 표시라 작고 흐리게 둔다. */
 .mnav-sublab {
   margin: 6px 0 1px;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.09em;
   color: var(--color-accent);
@@ -1104,7 +1111,7 @@ h1, h2, h3, h4 {
 }
 .svc-en {
   margin-left: auto;
-  font-size: .68rem;
+  font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: .16em;
   text-transform: uppercase;
@@ -1129,7 +1136,7 @@ h1, h2, h3, h4 {
   letter-spacing: -.01em;
   color: var(--color-muted);
 }
-.svc-head--sub .svc-en { font-size: .62rem; }
+.svc-head--sub .svc-en { font-size: 0.8rem; }
 
 /* ── 들머리 ─────────────────────────────────────
    「이런 때 필요합니다」는 읽는 사람이 자기 처지를 확인하는 곳이다.
@@ -1143,7 +1150,7 @@ h1, h2, h3, h4 {
 }
 .svc-when-lab {
   margin: 0 0 1.6rem;
-  font-size: .7rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: .17em;
   text-transform: uppercase;
@@ -1205,6 +1212,8 @@ h1, h2, h3, h4 {
   background: transparent;
   color: inherit;
 }
+/* 짙은 판 위 영문 꼬리표. 기본 회색(#6E6E6E)은 남색 위에서 3.2:1 이라 안 읽힌다. */
+.svc-give .svc-en { color: var(--color-on-deep-muted); }
 .svc-give > div,
 .svc-ask > div {
   /* 1600 에서 좌우 여백 26 을 뺀 값. 위 본문 글줄과 카드 모서리를 맞춘다. */
@@ -1220,7 +1229,7 @@ h1, h2, h3, h4 {
 .svc-ask { padding-block: clamp(1.6rem, 3vh, 2.6rem) clamp(3rem, 6vh, 5rem); }
 .svc-ask-in { text-align: center; }
 .svc-ask-lab {
-  font-size: .68rem; font-weight: 700; letter-spacing: .18em;
+  font-size: 0.8rem; font-weight: 700; letter-spacing: .18em;
   text-transform: uppercase; color: #7E9CFF; margin-bottom: 1rem;
 }
 .svc-ask h3 {
@@ -1267,7 +1276,7 @@ h1, h2, h3, h4 {
   gap: .6rem 1rem;
 }
 .svc-all-lab {
-  font-size: .68rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: .16em;
   text-transform: uppercase;
@@ -1362,7 +1371,7 @@ h1, h2, h3, h4 {
   outline-offset: -2px;
 }
 .svc-index-no {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   color: var(--color-subtle);
@@ -1429,7 +1438,7 @@ h1, h2, h3, h4 {
 }
 .cat-chip-n {
   margin-left: 6px;
-  font-size: 0.6875rem;
+  font-size: 0.8rem;
   font-weight: 700;
   opacity: 0.62;
   font-variant-numeric: tabular-nums;
@@ -1573,7 +1582,7 @@ h1, h2, h3, h4 {
 .site-search-row.is-on { background: var(--color-card); }
 .site-search-kind {
   grid-area: kind;
-  font-size: 0.625rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--color-accent);
   letter-spacing: 0.04em;
@@ -1591,7 +1600,7 @@ h1, h2, h3, h4 {
 .site-search-hint {
   grid-area: hint;
   margin-top: 2px;
-  font-size: 0.6875rem;
+  font-size: 0.8rem;
   color: var(--color-subtle);
 }
 .site-search-empty {
@@ -1602,10 +1611,8 @@ h1, h2, h3, h4 {
 }
 
 /* ── 타입 위계 ─────────────────────────────────
-   홈(promo.css)이 쓰는 사다리를 나머지 페이지에도 그대로 쓴다.
-   홈 토큰은 .promo 안에 갇혀 있어 여기까지 닿지 않는다.
-   그래서 같은 값을 한 벌 더 적어 둔다 — 고칠 땐 promo.css 의
-   --t-* 와 같이 고쳐야 두 쪽이 갈라지지 않는다.
+   사이트 전체가 이 한 벌을 쓴다. 홈(promo.css 의 .promo)도 여기 :root 값을
+   물려받으므로 따로 적지 않는다 — 예전에는 두 파일에 같은 값이 한 벌씩 있었다.
 
    칸 사이는 1.618배다.
      --t--1 12px  꼬리표
@@ -1620,7 +1627,10 @@ h1, h2, h3, h4 {
      .t-label    내용 안의 항목 이름. 선 없다. (홈의 .ui-lab)
    히어로는 각 페이지 고유라 여기서 건드리지 않는다. */
 :root {
-  --t--1: 0.75rem;
+  /* 뿌리 글자가 15px 이라 위 표의 px 은 16px 기준 이름일 뿐이다. 실제로는
+     12 · 13.1 · 15 · 24.3 · 39.3 · 63.5px 이다. 가장 작은 칸만 0.8rem 으로
+     둬서 실제로도 12px 이 되게 한다 — 사이트의 최소 글자다(0.75rem 은 11.25px 였다). */
+  --t--1: 0.8rem;
   --t-0:  0.875rem;
   --t-1:  1rem;
   --t-2:  1.618rem;
@@ -1632,6 +1642,8 @@ h1, h2, h3, h4 {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  /* 구역 제목 구실을 할 때는 h2 로 쓴다(/services). 제목 서체 규칙(h1–h4)을 받지 않게 본문 서체를 못 박는다. */
+  font-family: var(--font-sans);
   font-size: var(--t--1);
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -1971,23 +1983,6 @@ h1, h2, h3, h4 {
 
 .mglobe-limb circle { stroke: var(--mglobe-limb, rgba(0, 0, 0, 0.16)); }
 
-/* 검은 바탕용. 경도선은 흰 선, 0°선 한 줄만 파랑 그대로다. */
-.mglobe--dark {
-  --mglobe-line: rgba(255, 255, 255, 0.22);
-  --mglobe-limb: rgba(255, 255, 255, 0.3);
-}
-
-/* About 한 페이지짜리에서는 지구본이 주인공이라 화면을 거의 다 쓴다. */
-.mglobe--xl {
-  /* 화면이 아니라 본문 열을 기준으로 잰다. 넓은 화면에서 화면 기준으로
-     두면 지구본만 본문 격자 밖에서 논다.
-
-     47% 는 왼쪽으로 밀리는 거리에서 나온 값이다. tsx 가 무대 폭의 26%
-     만큼 미니까, 반지름(0.45×폭)까지 더해도 열 왼쪽 끝을 안 넘으려면
-     0.5 - 0.26 - 0.45w ≥ 여백 → w ≤ 0.47 이다. 이보다 크게 두면
-     넓은 화면에서 지구본만 왼쪽으로 샌다. */
-  width: min(56%, 78svh);
-}
 
 /* 경도 0°선. 같이 도는 18줄 중 한 줄이다.
    CSS 의 stroke 는 SVG 의 stroke 속성보다 세다. 위 규칙이 이 줄까지
@@ -2088,7 +2083,7 @@ h1, h2, h3, h4 {
 
 @media (prefers-reduced-motion: reduce) {
   .hero-video video { display: none; }
-  .hero-video { background: var(--color-deep) center/cover url("/meridian-hero-poster.jpg"); }
+  .hero-video { background: var(--color-deep) center/cover url("/media/meridian-hero-poster.v1.webp"); }
 }
 
 /* ───────── 로고 (헤더 · 어바웃 히어로 공용) ─────────
@@ -2159,21 +2154,6 @@ h1, h2, h3, h4 {
   width: 100%;
 }
 
-/* About 히어로. 높이는 다른 페이지와 같고, 글만 화면 폭 기준 가운데다. */
-.about-hero {
-  justify-content: center;
-  padding-block: clamp(6rem, 11vh, 9rem);
-}
-
-/* 화면 폭을 그대로 먹는다. 좁아지면 글자가 알아서 줄어든다. */
-.about-hero-logo {
-  font-size: clamp(3.4rem, 12.2vw, 12rem);
-  line-height: 1;
-  margin: 0;
-}
-
-/* 파란 점은 로고의 일부다. 크게 뽑을 때는 조금 띄워서 숨통을 준다. */
-.about-hero-logo .green-dot { margin-left: 0.02em; }
 
 
 
@@ -2212,8 +2192,13 @@ h1, h2, h3, h4 {
 
      그라디언트가 아니라 한 색이다. 위아래로 옅어지게 두면 막대(75px)와
      펼침판(223px)이 각자 자기 높이로 같은 그라디언트를 다시 그려서,
-     두 장이 서로 다른 색이 되고 사이에 경계선이 생긴다. */
-  --glass-bar-bg: rgba(255, 255, 255, 0.66);
+     두 장이 서로 다른 색이 되고 사이에 경계선이 생긴다.
+
+     알파 0.8. 0.66 에서는 뒤로 지나가는 본문 글자가 2.37:1 로 비쳐 메뉴 글자와
+     겹쳐 읽혔다. 0.8 이면 약 1.5:1 로 가라앉고 뒤는 여전히 20% 비친다.
+     파이어폭스·웹킷도 @supports 를 통과하지만 SVG 굴절을 안 그리는 판이 있어,
+     그때는 이 막 하나가 가독성을 다 맡는다. 비교 화면: docs/plans/production-fixes/glass/ */
+  --glass-bar-bg: rgba(255, 255, 255, 0.8);
   /* 흐리기를 뺀다. 0.8px 이라도 blur 를 걸면 뒤가 뭉개져서, 스크롤할 때
      뒤 글자가 띡띡 갈리기만 하고 비치지는 않았다. 굴절만 남긴다 —
      뒤가 그대로 보이면서 가장자리만 휜다. */
@@ -2289,8 +2274,9 @@ h1, h2, h3, h4 {
   }
 }
 
-/* 파이어폭스는 backdrop-filter: url() 을 안 받고 사파리는 판마다 다르다.
-   그때는 예전 blur 유리로 떨어진다. 깨지지 않는다. 왜곡만 없다. */
+/* backdrop-filter: url() 문법을 모르는 브라우저는 예전 blur 유리로 떨어진다.
+   깨지지 않는다. 왜곡만 없다. (2026-09 실측: 파이어폭스·웹킷은 문법은 받아서
+   이 분기로 오지 않는다. 위 흰 막 0.8 이 그 경우를 맡는다.) */
 @supports not (backdrop-filter: url(#glass-refract)) {
   .site-header {
     --glass-bar-bg: rgba(255, 255, 255, 0.5);
@@ -2396,184 +2382,150 @@ h1, h2, h3, h4 {
 
 
 /* =========================================================================
-   홈 첫 화면 — 영상 한 판, 「무슨 회사인가」 한 판
-   화면이 붙어 있고 스크롤 양이 시간이 된다. 값은 about-opening.tsx 가 준다.
-   여기서는 자리와 생김새만 잡는다.
+   홈 첫 화면 — 영상 한 판, 「무슨 회사인가」 한 판 (about-opening.tsx)
+   DOM 은 하나다. 아래 기본 규칙은 위아래로 쌓은 판이다(휴대폰 · 움직임 끔 · JS 끔).
+   넓은 화면에서 움직임이 허용되면 그 아래 @media 가 화면에 붙인 무대로 바꾼다.
+   붙은 무대의 시계는 스크롤 진행도 --p(0..1)다. tsx 가 넣고, 구간은 여기서 푼다.
+   @media 문자열은 use-scroll-progress.ts 의 STAGE_MEDIA 와 같아야 한다.
 
-   ※ 지구본·본초자오선·광선 장면은 /about 으로 옮겼다. 아래에 남아 있는
-     .about-globe / .about-meaning / .about-laser 규칙은 그 장면이 쓰던
-     것이라 지금 홈에서는 아무것도 안 그린다.
+   ※ 지구본·본초자오선·광선 장면은 /about 으로 옮겼다. 다시 여기로 가져오지 말 것.
    ====================================================================== */
 .about-stage {
-  /* 붙어 있는 길이 = 이 값 - 100svh. 두 판이 그 안에서 넘어간다.
-     장면이 셋에서 둘로 줄어 232 → 190svh 로 줄였는데, 그래도 길었다.
-     움직임은 진행도 0.6 에서 다 끝난다(영상 0.18~0.44, 글 0.42~0.6).
-     190 이면 그 뒤로 36svh 가 「다 끝난 화면」인 채 흘러가 흰 자리만 남는다.
-     148 로 줄이면 끝난 뒤 19svh 만 머물다 다음 구역으로 넘어간다. */
-  height: calc(126svh + 5rem);
-  /* 흰 바탕이 이 사이트의 기본이다. 첫 화면부터 그렇게 시작한다.
-     지구본은 밝은 쪽 기본값(검은 실선)이 이미 들어 있어 그대로 쓴다. */
-  background: var(--color-background);
   position: relative;
-  /* main 이 헤더 높이(5rem)만큼 비워 두는데, 이 화면은 검정이 헤더 뒤까지
-     올라가야 한다. 그만큼 되끌어 올리고 높이에 다시 더해 준다. */
+  /* main 이 헤더 높이(5rem)만큼 비워 두는데, 영상은 헤더 뒤까지 올라가야 한다. */
   margin-top: -5rem;
-  /* 지구본이 화면보다 넓다. 모바일에서 그만큼 가로 스크롤이 생겼다(390 화면에서 8px).
-     clip 은 스크롤 컨테이너를 만들지 않아 안쪽 sticky 가 그대로 산다. */
+  /* 흰 바탕이 이 사이트의 기본이다. 첫 화면부터 그렇게 시작한다. */
+  background: var(--color-background);
+  /* clip 은 스크롤 컨테이너를 만들지 않아 안쪽 sticky 가 그대로 산다. */
   overflow-x: clip;
 }
+.about-stage-pin { color: var(--color-foreground); }
 
-.about-stage-pin {
-  position: sticky;
-  top: 0;
-  height: 100svh;
-  /* 글이 멈추는 자리를 --pin-top 하나로 통일한다. 판까지 내리면
-     히어로 영상이 헤더 뒤를 못 덮는다 — 내리는 건 안쪽 내용이다. */
-  padding-top: var(--pin-top, 152px);
-  /* 칸은 화면 폭이다 — 영상이 끝까지 깔려야 한다.
-     안에 든 것들은 전부 inset:0 이라 그냥 두면 같이 화면 폭을 쓴다.
-     2560px 에서 본초자오선 글이 본문 오른쪽 끝을 352px 넘어갔다.
-     그래서 층마다 --stage-x 만큼 안으로 들여 세운다. */
+/* ⓪ 영상 판. 쌓은 판에서는 화면을 다 채우지 않는다. 100svh 로 두니 390×844 에서
+   「무엇을 하는 회사인가」 첫 줄이 1,049px 에 있어 첫 화면에 한 줄도 안 보였다.
+   56svh 면 첫 줄이 700px 위로 오고, 375×667 에서도 첫 화면 안에 든다. */
+.about-video {
+  position: relative;
+  height: min(100svh, max(22rem, 56svh));
   overflow: hidden;
-  /* 본문 열 바깥에 남는 여백. 화면이 1600 보다 좁으면 그냥 여백값이다. */
-  --stage-x: max(var(--site-gutter-6), calc(50% - 800px + var(--site-gutter-6)));
+  background: #060C1C;
   display: grid;
   place-items: center;
-  /* 줄어든 영상 판의 자리와 높이. 영상(.about-video)과 그 밑에 앉는
-     글(.about-close)이 같은 값을 봐야 둘이 안 겹친다. */
-  --film-top: calc(var(--pin-top, 152px) * 0.6);
-  --film-h: 42svh;
-  /* 바탕색은 안 칠한다. 칠하면 뒤에 깐 영상을 한가운데 1600px 만큼
-     하얗게 덮는다. 흰 바탕은 .about-stage 가 이미 깔고 있다. */
-  color: var(--color-foreground);
+  color: #fff;
 }
-
-/* 지구본 껍데기 두 겹.
-   바깥은 광선이 지우고 가는 마스크만 쓴다 — 안 움직여야 마스크가 화면
-   좌표를 그대로 쓴다. 안쪽이 켜지고 왼쪽으로 밀리는 일을 맡는다. */
-.about-globe {
-  position: absolute;
-  inset: 0 var(--stage-x);
-  pointer-events: none;
-}
-
-.about-globe-move {
+.about-video video {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
-
-/* ① 로고. 헤더와 같은 조립인데 표식만 뺐다.
-   껍데기(shell)는 안 움직인다 — 광선 마스크가 여기 걸리므로 움직이면
-   마스크까지 같이 밀려가서 아무것도 안 지워진다. 미는 건 안쪽(move)이다.
-   지구본과 같은 크기의 칸이라야 같은 -26% 로 나란히 간다. */
-.about-logo-shell,
-.about-logo-move {
+/* 흰 이름이 얹히는 자리를 눌러 준다. 안 누르면 밝은 장면에서 이름이 사라진다. */
+.about-video-veil {
   position: absolute;
-  inset: 0 var(--stage-x);
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
+  inset: 0;
+  background: rgba(6, 12, 28, .58);
 }
+@media (prefers-reduced-motion: reduce) {
+  /* 움직임을 꺼 둔 사람에게는 영상을 안 튼다. 판만 남는다. */
+  .about-video video { display: none; }
+}
+/* 영상 위 이름. 보이기만 한다(aria-hidden) — 페이지 제목(h1)은 아래 글판의 이름이다.
+   붙은 무대에서는 h1 이 날아갈 거리를 재기 전까지만 이 자리를 지킨다. */
 .about-logo {
+  position: relative;
+  z-index: 1;
   margin: 0;
+  padding-inline: var(--site-gutter-6);
   font-size: clamp(3.2rem, 13vw, 13rem);
   line-height: 1;
   text-align: center;
 }
 .about-logo .green-dot { margin-left: 0.02em; }
 
-/* ② 지구본이 왼쪽으로 빠지면서 비는 오른쪽. 좁은 화면에서는 가운데로 온다. */
-.about-meaning {
-  position: absolute;
-  z-index: 2;
-  /* 본문 글줄의 오른쪽 끝에 맞춘다. */
-  right: var(--stage-x);
-  width: min(30rem, 78%);
-  text-align: left;
-}
-
-.about-eyebrow {
-  font-size: 0.68rem;
-  letter-spacing: 0.5em;
-  text-transform: uppercase;
-  color: var(--color-subtle);
-  margin: 0 0 1.2rem;
-}
-
-.about-term {
-  font-size: clamp(2.2rem, 5vw, 3.4rem);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-  margin: 0;
-  word-break: keep-all;
-}
-
-.about-rule {
-  width: 3rem;
-  height: 1px;
-  background: var(--color-accent);
-  margin: 1.75rem 0;
-}
-
-/* 본문이지만 이 화면에서는 이게 유일한 설명이다. 작게 두면 회색 덩어리로
-   읽혀서 한 단계 올린다. */
-.about-body {
-  font-size: clamp(1.12rem, 1.5vw, 1.3rem);
-  line-height: 1.85;
-  color: var(--color-muted);
-  margin: 0;
-  word-break: keep-all;
-}
-.about-body strong { color: var(--color-foreground); font-weight: 600; }
-.about-body-2 { margin-top: 1.6rem; }
-
-/* ③ 광선. 오른쪽 끝에서 왼쪽 끝으로 한 번 지나간다.
-   덩어리가 아니라 가는 줄기다 — 폭이 좁고 양옆으로만 번진다.
-   기울이지 않는다. 이 선이 지구본을 자르는 경계와 같은 자리여야 해서,
-   비스듬하면 지워진 단면과 빛줄기가 어긋난다. */
-.about-laser {
-  position: absolute;
-  z-index: 3;
-  top: -20%;
-  bottom: -20%;
-  left: 0;
-  width: 2px;
-  background: var(--color-accent);
-  box-shadow:
-    0 0 10px 2px rgba(43, 91, 255, 0.45),
-    0 0 44px 10px rgba(43, 91, 255, 0.16);
-  pointer-events: none;
-}
-
-/* ③ 마지막 문장. 지구본이 꺼진 빈 검정 위에 이것만 남는다.
-   ④ 그 밑에 이게 뭐 하는 회사인지 한 줄. 둘은 한 덩어리로 가운데에 선다. */
+/* ① 무슨 회사인가. 쌓은 판에서는 영상 판 아래 한 판이다. */
 .about-close {
-  position: absolute;
-  z-index: 2;
-  width: min(46rem, calc(100% - var(--stage-x) * 2));
+  padding: clamp(3.5rem, 9vh, 6rem) var(--site-gutter-6) clamp(4rem, 10vh, 7rem);
   text-align: center;
+  background: var(--color-background);
 }
-/* 넓은 화면에서는 46rem(690px) 상한을 푼다. 본문 열과 같은 폭을 쓴다 —
-   1440 에서 1,382px, 1920 에서 1,542px. 헤더·다른 구역과 같은 자리에 선다.
-   자리는 화면 한가운데가 아니라 「영상 판 바로 밑」이다. 가운데에 두면
-   영상과 겹치거나, 영상을 피하느라 아래가 통째로 빈다. */
-@media (min-width: 901px) {
-  .about-close {
-    width: calc(100% - var(--stage-x) * 2);
-    top: calc(var(--film-top) + var(--film-h) + clamp(2rem, 4.5vh, 3.4rem));
-    bottom: auto;
+
+/* ── 붙은 무대 ────────────────────────────────────────────────
+   화면이 붙어 있고 스크롤 양이 시간이 된다. 움직임은 진행도 0.6 에서 다 끝난다
+   (이름 0.08~0.4, 영상 0.18~0.44, 이름 말고 나머지 0.42~0.6).
+   좁은 화면은 붙이지 않는다. 프레임마다 clip-path 를 다시 쓰는 일이 휴대폰에서 제일
+   무거워서 넘김이 끊기고, 빠르게 굴리면 화면이 튀었다. */
+@media (width > 900px) and (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  .about-stage {
+    /* 붙어 있는 길이 = 이 값 - 100svh. 움직임이 끝난 뒤 19svh 만 머물다 다음 구역으로
+       넘어간다. 190 이면 36svh 가 「다 끝난 화면」인 채 흘러가 흰 자리만 남았다. */
+    height: calc(126svh + 5rem);
   }
-}
-.about-last {
-  margin: 0;
-  text-align: center;
-  font-size: clamp(1.5rem, 3.6vw, 2.6rem);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.55;
-  word-break: keep-all;
+  .about-stage-pin {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    /* 글이 멈추는 자리를 --pin-top 하나로 통일한다. 판까지 내리면 영상이 헤더 뒤를
+       못 덮는다 — 내리는 건 안쪽 내용이다. */
+    padding-top: var(--pin-top, 152px);
+    overflow: hidden;
+    /* 본문 열 바깥에 남는 여백. 화면이 1600 보다 좁으면 그냥 여백값이다. */
+    --stage-x: max(var(--site-gutter-6), calc(50% - 800px + var(--site-gutter-6)));
+    display: grid;
+    place-items: center;
+    /* 줄어든 영상 판의 자리와 높이. 영상과 그 밑에 앉는 글이 같은 값을 봐야 안 겹친다. */
+    --film-top: calc(var(--pin-top, 152px) * 0.6);
+    --film-h: 42svh;
+  }
+  /* 영상은 꺼지지 않는다. 본문 열 폭의 판으로 줄어 화면 위에 남는다. 그 밑에서 글이
+     올라오면 한 화면이 「영상 + 글」 둘로 찬다. --vp 는 0(꽉 참)에서 1(작은 판)까지.
+     판의 자리와 크기는 본문 열과 헤더 높이에 매여 있어서 px 로 tsx 에 적지 않는다. */
+  .about-video {
+    position: absolute;
+    inset: 0;
+    height: auto;
+    z-index: 0;
+    --vp: clamp(0, (var(--p, 0) - 0.18) / 0.26, 1);
+    clip-path: inset(
+      calc(var(--vp) * var(--film-top))
+      calc(var(--vp) * var(--stage-x, 29px))
+      calc(var(--vp) * (100% - var(--film-top) - var(--film-h)))
+      calc(var(--vp) * var(--stage-x, 29px))
+      round calc(var(--vp) * 1.25rem)
+    );
+  }
+  /* 판이 작아질수록 덮개를 걷는다. 작은 판에는 얹히는 글이 없다. */
+  .about-video-veil { opacity: calc(1 - var(--vp) * 0.62); }
+
+  /* 글판. 자리는 화면 한가운데가 아니라 「영상 판 바로 밑」이다. 가운데에 두면 영상과
+     겹치거나, 영상을 피하느라 아래가 통째로 빈다. 폭은 본문 열이다.
+     --rest 는 「이름 말고 나머지」의 진행도다. */
+  .about-close {
+    position: absolute;
+    z-index: 2;
+    top: calc(var(--film-top) + var(--film-h) + clamp(2rem, 4.5vh, 3.4rem));
+    width: calc(100% - var(--stage-x) * 2);
+    padding: 0;
+    background: none;
+    --rest: clamp(0, (var(--p, 0) - 0.42) / 0.18, 1);
+  }
+
+  /* 이름 하나가 화면 한가운데(크게)에서 글판 왼쪽 위 제자리(작게)로 내려온다.
+     거리와 비율(--fly-x · --fly-y · --fly-s)은 화면마다 달라서 tsx 가 잰다.
+     색은 영상 위 흰색에서 흰 바탕의 검정으로 간다(0.26~0.38). motion 판이 제곱 공간에서
+     섞던 것과 가장 가까운 srgb-linear 로 섞는다. */
+  .about-logo-fly {
+    --fly-t: calc(1 - clamp(0, (var(--p, 0) - 0.08) / 0.32, 1));
+    transform:
+      translate(calc(var(--fly-x, 0px) * var(--fly-t)), calc(var(--fly-y, 0px) * var(--fly-t)))
+      scale(calc(1 + (var(--fly-s, 1) - 1) * var(--fly-t)));
+    color: color-mix(in srgb-linear, #0F141B calc(clamp(0, (var(--p, 0) - 0.26) / 0.12, 1) * 100%), #ffffff);
+  }
+  /* 거리를 재기 전(JS 전 첫 그림)에는 날아갈 이름 대신 영상 위 이름을 보인다.
+     두 이름은 같은 자리 · 같은 크기라 재고 나서 바꿔 끼워도 티가 안 난다. */
+  .about-stage:not([data-fly]) .about-logo-fly { opacity: 0; }
+  .about-stage[data-fly] .about-logo { opacity: 0; }
 }
 
 /* ② 회사 설명. 이 화면의 결론이자 지금은 유일한 글이다 —
@@ -2592,12 +2544,6 @@ h1, h2, h3, h4 {
   letter-spacing: 0.24em;
   text-indent: 0.24em;
   color: var(--color-accent);
-}
-.about-what-rule {
-  width: 1px;
-  height: 2.2rem;
-  margin: 0 auto 1.6rem;
-  background: linear-gradient(180deg, transparent, var(--color-accent));
 }
 /* 이름 자리에는 로고가 선다. 세리프는 같은 크기에서 산세리프보다 작아 보이므로
    한 단계 키워야 앞의 「기준선」 문장에 눌리지 않는다. */
@@ -2690,7 +2636,7 @@ h1, h2, h3, h4 {
    위로 184px, 아래로 291px 이 비었고 좌우는 통째로 비었다.
    왼쪽에 로고와 업(業)을 크게 세우고, 오른쪽에 설명과 갈 곳을 붙인다.
    ≤900px 은 붙임을 안 쓰는 판이라 그대로 위아래로 쌓는다. */
-@media (min-width: 901px) {
+@media (width > 900px) {
   .about-what {
     display: grid;
     /* 이 사이트가 이미 쓰는 좌우 비율이다 — /portal 의 .pb-grid 와 같은 값.
@@ -2753,86 +2699,6 @@ h1, h2, h3, h4 {
   .about-what-cta .about-btn { height: 3.4rem; padding: 0 1.9rem; font-size: 1.05rem; }
 }
 
-@media (max-width: 900px) {
-  /* 지구본을 옆으로 밀 폭이 안 나온다. 지구본은 위로 올리고(값은 tsx),
-     글은 아래쪽에 깐다. 지구본도 글을 덮지 않게 한 단계 줄인다. */
-  .mglobe--xl { width: min(calc(100% - var(--site-gutter-6) * 2), 44svh); }
-
-  .about-meaning {
-    right: auto;
-    bottom: 6svh;
-    width: min(34rem, calc(100% - var(--site-gutter-6) * 2));
-    text-align: center;
-  }
-  .about-rule { margin-inline: auto; }
-}
-
-/* ── 휴대폰·움직임 끔 — 붙이지 않고 두 판을 그냥 쌓는다 ──────────
-   프레임마다 clip-path 를 다시 쓰는 일이 휴대폰에서 제일 무겁다.
-   넘김이 끊기고 빠르게 굴리면 화면이 튀던 원인이 그것이다. */
-.about-flat {
-  /* main 이 헤더 높이(5rem)만큼 비워 두는데, 영상은 헤더 뒤까지 올라가야 한다. */
-  margin-top: -5rem;
-  background: var(--color-background);
-}
-.aflat-film {
-  position: relative;
-  height: 100svh;
-  overflow: hidden;
-  background: #060c1c;
-  display: grid;
-  place-items: center;
-  color: #fff;
-}
-.aflat-film video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.aflat-film .about-logo {
-  position: relative;
-  z-index: 1;
-  padding-inline: var(--site-gutter-6);
-}
-.aflat-what {
-  padding: clamp(3.5rem, 9vh, 6rem) var(--site-gutter-6) clamp(4rem, 10vh, 7rem);
-  text-align: center;
-}
-
-/* 움직임을 꺼 둔 사람에게는 세 장면을 그냥 쌓아서 한 번에 보여준다. */
-.about-stage-static {
-  position: relative;
-  margin-top: -5rem;
-  background: var(--color-background);
-  color: var(--color-foreground);
-  padding: 0 6vw;
-  overflow: hidden;
-}
-/* 장면 하나가 화면 하나다. 앞 장면이 나간 뒤에 뒷 장면이 온다.
-   한 판에 쌓으면 「기준선이 되어드리겠습니다」 옆에 본초자오선 설명이
-   그대로 남는다. */
-.ass-scene {
-  min-height: 100svh;
-  display: grid;
-  gap: 3rem;
-  align-content: center;
-  justify-items: center;
-  text-align: center;
-  padding-block: 5rem;
-}
-.ass-scene:first-child { padding-top: calc(5rem + 5rem); }
-.about-stage-static .about-meaning,
-.about-stage-static .about-close,
-.about-stage-static .about-logo {
-  position: static;
-  right: auto;
-  text-align: center;
-}
-.about-stage-static .about-logo-shell,
-.about-stage-static .about-logo-move { position: static; display: block; }
-.about-stage-static .about-rule { margin-inline: auto; }
 
 
 
@@ -2857,21 +2723,6 @@ h1, h2, h3, h4 {
      읽힌다 — 작으면 세 줄짜리 목록으로 돌아간다. */
   max-width: none;
   text-align: left;
-}
-
-/* 누가 한 말인지 밝히는 줄. 손님 말 세 마디 아래에 붙는 주석이라
-   가운데가 아니라 말풍선과 같은 왼쪽 기준선에 맞춘다. */
-.imsg-stamp {
-  text-align: left;
-  font-size: 0.8125rem;
-  color: #8e8e93;
-  letter-spacing: -0.01em;
-  margin-top: 1rem;
-  margin-bottom: 0;
-}
-.imsg-stamp b {
-  color: #6b6b70;
-  font-weight: 600;
 }
 
 .imsg-row {
@@ -3016,7 +2867,7 @@ h1, h2, h3, h4 {
 .imsg-b--in::after {
   left: -1.5rem;
   width: 1.5rem;
-  background: var(--imsg-ground, var(--color-background));
+  background: var(--color-background);
   border-bottom-right-radius: 0.62rem;
 }
 .imsg-b--out::before {
@@ -3028,7 +2879,7 @@ h1, h2, h3, h4 {
 .imsg-b--out::after {
   right: -1.5rem;
   width: 1.5rem;
-  background: var(--imsg-ground, var(--color-background));
+  background: var(--color-background);
   border-bottom-left-radius: 0.62rem;
 }
 
@@ -3042,17 +2893,23 @@ h1, h2, h3, h4 {
 /* 입력 중 — 아이메시지의 점 세 개. 말풍선을 따로 만들지 않는다.
    점이 뜬 그 풍선이 그대로 부풀면서 말이 들어찬다. 그래서 여기서 하는 일은
    말풍선의 안쪽 여백을 점 크기에 맞게 줄이는 것뿐이다. */
-.imsg-b--typing {
-  /* 점 풍선은 작고 조용해야 한다. 여기가 크면 뒤에 말이 들어차도
-     「커졌다」가 안 읽힌다. 커지는 건 이 다음 한 번뿐이다. */
-  padding: 0.62rem 0.8rem;
-  line-height: 0;
-  opacity: 0.72;
-}
-.imsg-dots {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.26rem;
+/* 점과 글은 늘 DOM 에 있다. 쌓은 판(휴대폰 · 움직임 끔 · JS 끔)은 글만 보이고,
+   붙은 무대에서 입력 중인 동안만 점이 글 자리를 차지한다. */
+.imsg-dots { display: none; }
+@media (width > 900px) and (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  .imsg-b--typing {
+    /* 점 풍선은 작고 조용해야 한다. 여기가 크면 뒤에 말이 들어차도
+       「커졌다」가 안 읽힌다. 커지는 건 이 다음 한 번뿐이다. */
+    padding: 0.62rem 0.8rem;
+    line-height: 0;
+    opacity: 0.72;
+  }
+  .imsg-b--typing .imsg-ink { display: none; }
+  .imsg-b--typing .imsg-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.26rem;
+  }
 }
 .imsg-dots span {
   width: 0.38rem;
@@ -3079,63 +2936,82 @@ h1, h2, h3, h4 {
   .imsg-dots span { animation: none; opacity: 0.7; }
 }
 
-/* 대화와 약속이 같은 자리를 쓴다. 위아래로 쌓으면 약속이 「그 자리에」
-   나오지 않고 아래에 하나 더 붙은 게 된다. 한 칸에 겹쳐 두고 높이는
-   둘 중 큰 쪽을 따라가게 한다. */
-.promise-stage { display: grid; }
-.promise-stage-layer { grid-area: 1 / 1; }
+.promise-head { position: relative; z-index: 1; }
 
-/* 장면을 넘기는 건 시간이 아니라 스크롤이다. 통을 길게 잡아 두고 안쪽
-   한 판만 화면에 붙인다. 그 길이만큼 대화가 차오르고 약속이 올라온다.
-   붙는 자리는 화면 세로 가운데다 — 헤더가 위를 덮어도 글이 가리지 않는다. */
-/* 흰 바탕(어바웃)에서는 선을 옅게 깐다. 제목이 가운데 정렬이라 선이
-   글자를 그대로 관통하는데, 진한 파랑이면 오식처럼 읽힌다. */
-/* 선언문 위로 내려오던 자오선을 없앴다. 약속 두 개 사이의 선을 지운 것과
-   같은 이유다 — 세로선이 글을 가르면 한 덩어리로 안 읽힌다. */
+/* 쌓은 판(휴대폰 · 움직임 끔 · JS 끔). 대화도 약속도 다 보이므로 잘릴 자리가 없다.
+   여기서는 사이 여백만 잡는다. */
+.promise-pin { padding-block: clamp(2rem, 6vh, 3.5rem) 0; }
+.promise-stage { margin-top: clamp(2rem, 6vh, 3.5rem); }
+.promise-stage-layer + .promise-stage-layer { margin-top: clamp(2.5rem, 7vh, 4rem); }
 
-.promise-sec:not(.promise-dark) .promise-meridian-trail,
-section:not(.promise-dark) .promise-meridian-trail {
-  opacity: 0.55;
+/* 붙은 무대. 장면을 넘기는 건 시간이 아니라 스크롤이다. 통을 길게 잡아 두고 안쪽
+   한 판만 화면에 붙인다. 그 길이만큼 대화가 차오르고 약속이 올라온다. */
+@media (width > 900px) and (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  /* 말풍선이 날아 나가는 곳은 글줄 끝이 아니라 화면 끝이다. 통을 화면 폭으로
+     넓혀 두고, 안쪽 내용만 본문 열로 되돌린다. 전에는 본문 폭에서 잘려
+     말풍선이 허공에서 반 토막 났다. 길이는 100svh(붙는 판) + 202svh(장면). */
+  .promise-scroll { height: 302svh; margin-inline: calc(50% - 50vw); }
+  .promise-pin {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    padding-block: var(--pin-top, 152px) 0;
+    display: grid;
+    /* 가운데 정렬이면 제목이 화면 한복판에서 시작한다. 앞 장면이 위로
+       빠진 뒤 흰 화면이 800px 가까이 이어지던 원인의 절반이 이것이다. */
+    align-content: start;
+    /* 말풍선이 날아 나갈 때 가로 스크롤이 생기지 않게 가둔다.
+       clip 은 스크롤 통을 만들지 않아 바깥 sticky 를 죽이지 않는다. */
+    overflow: clip;
+  }
+  /* 제목이 무대 안에 같이 붙는다. 바깥에 두면 무대가 화면에 붙어 있는 동안
+     제목만 위로 흘러 나가서, 지금 보는 게 무엇에 대한 이야기인지 사라진다. */
+  .promise-head { margin-bottom: clamp(2rem, 5vh, 3.5rem); }
+  .promise-head > * + * { margin-top: 0; }
+  .promise-head,
+  .promise-stage {
+    /* margin-inline:auto 는 안 된다 — 이 둘은 그리드 칸이라, auto 여백이
+       늘어나기(stretch)를 끄고 글 폭까지 쪼그라들게 만든다. */
+    width: min(100%, 1600px);
+    justify-self: center;
+    padding-inline: var(--site-gutter-6);
+  }
+  /* 대화와 약속이 같은 자리를 쓴다. 한 칸에 겹쳐 두고 높이는 둘 중 큰 쪽을 따라간다.
+     위아래로 쌓으면 약속이 「그 자리에」 나오지 않고 아래에 하나 더 붙은 게 된다. */
+  .promise-stage { display: grid; margin-top: 0; }
+  .promise-stage-layer { grid-area: 1 / 1; }
+  .promise-stage-layer + .promise-stage-layer { margin-top: 0; }
+  .promise-stage-layer[data-off] { pointer-events: none; }
+
+  /* 대화 한 줄의 상태(complaint-thread.tsx 의 data-state). 시간은 motion 판 그대로다.
+     켜짐 0.42s, 마지막 한 마디만 1.1s. 되감기면 0.3s 에 접힌다(아래로 14px).
+     나갈 때 손님 말은 왼쪽, 우리 말은 오른쪽으로 화면 폭 하나를 통째로 날아간다 —
+     어디서 출발하든 반드시 밖으로 나간다(1.05s). 옅어지는 건 다 나간 뒤(0.8s)에
+     시작한다. 한 시각으로 묶으면 그 자리에서 지워진 것처럼 보였다.
+     나가는 동안 14px 아래로 가라앉는 것도 motion 판 그대로다. 옆으로 나는 것과 줄어드는
+     것(transform, 1.05s)과 시간이 달라서 세로는 translate 가 따로 맡는다(0.3s).
+     scale 속성을 transform 과 한 규칙에 같이 쓰면 빌드(Lightning CSS)가 scale 을 지운다. */
+  .imsg-row,
+  .imsg-who {
+    --dir: 1;
+    transition: opacity .42s cubic-bezier(.16,1,.3,1), translate .42s cubic-bezier(.16,1,.3,1), transform .42s cubic-bezier(.16,1,.3,1);
+  }
+  .imsg-row:not(.imsg-row--out) { --dir: -1; }
+  .imsg-row--last { transition-duration: 1.1s; transition-timing-function: ease-out; }
+  .imsg-row[data-state="hidden"],
+  .imsg-who[data-state="hidden"] {
+    opacity: 0;
+    translate: 0 14px;
+    transition: opacity .3s cubic-bezier(.25,.1,.35,1), translate .3s cubic-bezier(.2,.8,.3,1);
+  }
+  .imsg-row[data-state="gone"],
+  .imsg-who[data-state="gone"] {
+    opacity: 0;
+    translate: 0 14px;
+    transform: translateX(calc(var(--dir) * 105vw)) scale(.96);
+    transition: transform 1.05s cubic-bezier(.35,0,1,1), opacity .25s linear .8s, translate .3s cubic-bezier(.2,.8,.3,1);
+  }
 }
-
-/* 제목이 무대 안에 같이 붙는다. 바깥에 두면 무대가 화면에 붙어 있는 동안
-   제목만 위로 흘러 나가서, 지금 보는 게 무엇에 대한 이야기인지 사라진다. */
-.promise-head { position: relative; z-index: 1; margin-bottom: clamp(2rem, 5vh, 3.5rem); }
-.promise-head > * + * { margin-top: 0; }
-
-/* 말풍선이 날아 나가는 곳은 글줄 끝이 아니라 화면 끝이다. 통을 화면 폭으로
-   넓혀 두고, 안쪽 내용만 본문 열로 되돌린다. 전에는 본문 폭에서 잘려
-   말풍선이 허공에서 반 토막 났다. */
-/* 같은 이유로 1.5 배. 100svh(붙는 판) + 135svh(장면) → 100 + 202. */
-.promise-scroll { height: 302svh; margin-inline: calc(50% - 50vw); }
-.promise-head,
-.promise-stage {
-  /* margin-inline:auto 는 안 된다 — 이 둘은 그리드 칸이라, auto 여백이
-     늘어나기(stretch)를 끄고 글 폭까지 쪼그라들게 만든다. 제목이 왼쪽
-     끝이 아니라 화면 한가운데로 몰렸다. */
-  width: min(100%, 1600px);
-  justify-self: center;
-  padding-inline: var(--site-gutter-6);
-}
-.promise-pin {
-  position: sticky;
-  top: 0;
-  height: 100svh;
-  padding-top: var(--pin-top, 152px);
-  display: grid;
-  /* 가운데 정렬이면 제목이 화면 한복판에서 시작한다. 앞 장면이 위로
-     빠진 뒤 흰 화면이 800px 가까이 이어지던 원인의 절반이 이것이다. */
-  align-content: start;
-
-  /* 말풍선이 날아 나갈 때 가로 스크롤이 생기지 않게 가둔다.
-     clip 은 스크롤 통을 만들지 않아 바깥 sticky 를 죽이지 않는다. */
-  overflow: clip;
-}
-/* 붙이지 않고 그냥 쌓는 판(휴대폰·움직임 끔). 대화도 약속도 다 보이므로
-   잘릴 자리가 없다. 여기서는 사이 여백만 잡는다. */
-.promise-flat { padding-block: clamp(2rem, 6vh, 3.5rem) 0; }
-.promise-flat .imsg { margin-top: clamp(2rem, 6vh, 3.5rem); }
-.promise-flat-orbs { margin-top: clamp(2.5rem, 7vh, 4rem); }
 
 /* ── 낮은 화면(노트북)에서 답하는 말이 판 밖으로 잘렸다 ─────────────
    붙는 판은 100svh 인데, 그 안에 들어갈 것이 그보다 많았다.
@@ -3146,13 +3022,13 @@ section:not(.promise-dark) .promise-meridian-trail {
    1440×900 도 3px 모자랐다. 원(약속 01·02)도 판 바닥에 딱 붙어 여유가 0 이었다.
 
    고치는 자리는 「글」이 아니라 「여백과 크기」다. 문장은 그대로 둔다.
-   ≤900px 은 이미 쌓아서 보여주는 판(.promise-flat)이라 여기서 뺀다. */
-@media (min-width: 901px) and (max-height: 940px) {
+   쌓은 판(휴대폰 · 움직임 끔)은 잘릴 자리가 없어 여기서 뺀다. */
+@media (width > 900px) and (prefers-reduced-motion: no-preference) and (scripting: enabled) and (max-height: 940px) {
   .promise-pin { --pin-top: 116px; }
   .promise-head { margin-bottom: 1.5rem; }
   .promise-head .lede { margin-top: 1rem; font-size: clamp(1rem, 1.45vw, 1.3rem); }
 }
-@media (min-width: 901px) and (max-height: 820px) {
+@media (width > 900px) and (prefers-reduced-motion: no-preference) and (scripting: enabled) and (max-height: 820px) {
   .promise-pin { --pin-top: 84px; }
   .promise-head { margin-bottom: 1rem; }
   /* 말풍선 사이 간격. 한 마디씩 오르는 리듬은 그대로 두고 사이만 좁힌다. */
@@ -3169,23 +3045,6 @@ section:not(.promise-dark) .promise-meridian-trail {
   .promise-orbs { padding-block: 0.25rem; }
 }
 
-/* 다 나오고 나서 한 번 반짝. 대화가 끝났다는 신호다.
-   빛 한 줄이 왼쪽에서 오른쪽으로 지나간다 — 위 히어로의 그 레이저와 같은 몸짓. */
-.imsg-flash {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-  background: linear-gradient(
-    105deg,
-    transparent 42%,
-    rgba(43, 91, 255, 0.1) 48%,
-    rgba(255, 255, 255, 0.85) 50%,
-    rgba(43, 91, 255, 0.1) 52%,
-    transparent 58%
-  );
-}
-
 /* 오른쪽에 고정된 이정표(.anchor)와 파란 말풍선이 서로 겹쳤다.
    이정표가 보이는 폭에서만 대화창 오른쪽을 그만큼 비운다.
    이정표는 1120px 아래에서 사라지므로 그 위에서만 건다. */
@@ -3195,9 +3054,6 @@ section:not(.promise-dark) .promise-meridian-trail {
      사진 오른쪽 끝과 비교표 파란 칸이 이정표 글자 밑으로 들어간다. */
   #keep .keep-list,
   #vs .vs-fix { padding-right: 8.75rem; }
-  /* 대표 회계사도 오른쪽 목록이 페이지 끝까지 간다.
-     「가치평가 모델링 (DCF · …」 줄이 이정표 글자와 겹쳤다. */
-  #who .pu-head { padding-right: 8.75rem; }
 }
 
 @media (max-width: 640px) {
@@ -3205,7 +3061,6 @@ section:not(.promise-dark) .promise-meridian-trail {
   /* 좁은 화면에서도 답하는 사람은 남긴다. 칸만 줄인다. */
   .imsg-row--out { grid-template-columns: 1fr 5.5rem; gap: 0 0.6rem; }
   .imsg-face { width: 2.25rem; height: 2.25rem; }
-  .imsg-face--out { width: 5.5rem; margin-bottom: -0.5rem; }
   .imsg-b { max-width: 84%; padding: 0.7rem 1.1rem 0.8rem; border-radius: 1.4rem; }
   .imsg-b--out { max-width: 88%; padding: 0.8rem 1.2rem 0.9rem; }
   .imsg-b::before, .imsg-b::after { height: 0.85rem; }
@@ -3254,6 +3109,15 @@ section:not(.promise-dark) .promise-meridian-trail {
   .promise-orb:hover { z-index: 2; }
 }
 
+/* 붙은 무대에서는 대화가 다 날아간 뒤 천천히(1.4s) 올라온다. 두 번째 원은 0.35s 늦다.
+   대화가 빠르게 나갔으니 여기서 속도를 늦춘다. 쌓은 판에서는 처음부터 켜져 있다. */
+@media (width > 900px) and (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  .promise-orb {
+    transition: background 0.35s ease, border-color 0.35s ease, opacity 1.4s cubic-bezier(.16,1,.3,1), scale 1.4s cubic-bezier(.16,1,.3,1);
+  }
+  .promise-orbs:not([data-show]) .promise-orb { opacity: 0; scale: .9; }
+  .promise-orbs[data-show] .promise-orb--b { transition-delay: 0s, 0s, .35s, .35s; }
+}
 /* 두 번째 원을 왼쪽으로 끌어당겨 물린다. */
 .promise-orb--b {
   margin-left: -2.75rem;
@@ -3280,7 +3144,7 @@ section:not(.promise-dark) .promise-meridian-trail {
   font-variant-numeric: tabular-nums;
 }
 .promise-orb-label {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.26em;
   text-indent: 0.26em;
@@ -3321,92 +3185,11 @@ section:not(.promise-dark) .promise-meridian-trail {
   color: var(--color-muted);
 }
 
-/* 검은 바탕 위에서. 약속 구간은 히어로의 검정이 그대로 이어진다.
-   흰 테두리를 그대로 쓰면 원이 형광등처럼 뜬다 — 알파로 낮춘다. */
-.promise-dark {
-  /* 말꼬리를 깎아내는 조각도 같은 검정이어야 한다. 안 그러면 흰 부스러기가 남는다. */
-  --imsg-ground: #000;
-}
-.promise-dark .imsg-stamp { color: #8e8e93; }
-.promise-dark .imsg-stamp b { color: #b8b8bd; }
-.promise-dark .imsg-face { background: #1c1c1e; }
-.promise-dark .imsg-face--out { background: none; }
-.promise-dark .promise-orb {
-  border-color: rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.03);
-}
-.promise-dark .promise-orb--b {
-  border-color: rgba(68, 112, 255, 0.55);
-  background: rgba(43, 91, 255, 0.07);
-}
-.promise-dark .promise-orb--a .promise-orb-num { color: #fff; }
-.promise-dark .promise-orb--b .promise-orb-num { color: var(--color-accent-bright); }
-.promise-dark .promise-orb-title { color: #fff; }
-.promise-dark .promise-orb-body { color: rgba(255, 255, 255, 0.62); }
-@media (hover: hover) {
-  .promise-dark .promise-orb--a:hover {
-    border-color: rgba(255, 255, 255, 0.5);
-    background: rgba(255, 255, 255, 0.07);
-  }
-}
-@media (hover: hover) {
-  .promise-dark .promise-orb--b:hover {
-    border-color: var(--color-accent-bright);
-    background: rgba(43, 91, 255, 0.16);
-  }
-}
-
-/* 두 원이 물린 자리를 관통하는 0° 선. 원 언저리에서 끊지 않고 화면
-   맨 위에서 맨 아래까지 지난다 — 경도선은 원 두 개보다 긴 선이다.
-   위아래로 화면 하나씩 더 뻗어 두고, 무대(.promise-pin)가 잘라 낸다. */
-.promise-meridian {
-  position: absolute;
-  /* 무대 높이만큼만 선다. 예전에는 위아래로 화면 하나씩 더 뻗어 두고
-     무대가 잘라 내기를 기대했는데, 잘리지 않고 아래 선언문까지 내려와
-     「세금은 내는 것이 아니라」 글자를 세로로 관통했다. */
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 1px;
-  margin-left: -0.5px;
-  z-index: 0;
-  /* 선 자체는 통이다. 안에서 빛이 지나가고, 지나간 자리에 잔상만 남는다. */
-  background: none;
-  overflow: hidden;
-}
-/* 지나간 자리에 남는 잔상. 아주 옅게만 남긴다 — 선이 계속 서 있으면
-   「지나갔다」는 느낌이 사라진다. */
-.promise-meridian-trail {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgba(43, 91, 255, 0.5) 30%,
-    rgba(43, 91, 255, 0.5) 70%,
-    transparent 100%
-  );
-}
-/* 레이저 한 줄기. 머리는 밝고 꼬리는 길게 끌린다. */
-.promise-meridian-beam {
-  position: absolute;
-  left: -1px;
-  width: 3px;
-  height: 46%;
-  border-radius: 2px;
-  background: linear-gradient(
-    180deg,
-    rgba(43, 91, 255, 0) 0%,
-    rgba(43, 91, 255, 0.35) 55%,
-    var(--color-accent-bright) 92%,
-    #fff 100%
-  );
-  box-shadow: 0 0 18px 2px rgba(68, 112, 255, 0.55);
-}
-
 /* 끊는 자리를 900px 로 잡는다 — 무대를 붙이지 않고 쌓기 시작하는
-   그 폭(useHandheld)과 같아야 한다. 768 로 두면 769~900px 구간만
-   「쌓여 있는데 원」이 되어 글이 또 원 밖으로 나간다. */
+   그 폭(붙은 무대의 width > 900px)과 같아야 한다. 768 로 두면 769~900px 구간만
+   「쌓여 있는데 원」이 되어 글이 또 원 밖으로 나간다.
+   붙은 무대 쪽을 min-width: 901px 로 쓰면 확대 · 축소한 창의 900.5px 같은 폭에서
+   두 쪽 다 안 맞아 같은 일이 난다. 그래서 그쪽은 범위 문법으로 쓴다. */
 @media (max-width: 900px) {
   /* 원을 그만뒀다. 좁은 화면에서 원 안에 들어가는 정사각형은 지름의
      0.7 배뿐이라, 「메리디안은 천천히 가겠습니다」와 그 아래 설명이
@@ -3455,6 +3238,12 @@ section:not(.promise-dark) .promise-meridian-trail {
 }
 /* 짝수 줄은 사진이 오른쪽. 좌우로 하나씩 번갈아 들어온다. */
 .keep-row--r { grid-template-columns: minmax(0, 1fr) minmax(0, 27rem); }
+/* 스크롤에 묶여 좌 · 우에서 들어온다(keep-list.tsx 가 --p 를 넣는다).
+   진행도 0.55 에서 다 켜지고, 1 에서 제자리다. --p 가 없으면(JS 전 · JS 끔) 제자리다. */
+@media (prefers-reduced-motion: no-preference) {
+  .keep-row { --from: -72px; opacity: clamp(0, var(--p, 1) / 0.55, 1); translate: calc((1 - var(--p, 1)) * var(--from)) 0; }
+  .keep-row--r { --from: 72px; }
+}
 .keep-row--r .keep-shot { order: 2; }
 .keep-row--r .keep-text { order: 1; }
 
@@ -3643,7 +3432,7 @@ section:not(.promise-dark) .promise-meridian-trail {
   word-break: keep-all;
 }
 .yflow-m {
-  font-size: .74rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--color-subtle);
   font-variant-numeric: tabular-nums;
@@ -3686,7 +3475,7 @@ section:not(.promise-dark) .promise-meridian-trail {
 .spick-grp ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .spick-glab {
   margin: 0 0 .5rem .9rem;
-  font-size: .68rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: .14em;
   color: var(--color-subtle);
@@ -3713,7 +3502,7 @@ section:not(.promise-dark) .promise-meridian-trail {
 .spick-item:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 .spick-icon { width: 1.25rem; height: 1.25rem; opacity: .85; }
 .spick-no {
-  font-size: .7rem; font-weight: 700; letter-spacing: .06em;
+  font-size: 0.8rem; font-weight: 700; letter-spacing: .06em;
   font-variant-numeric: tabular-nums; opacity: .6;
 }
 .spick-title { font-size: .97rem; font-weight: 600; letter-spacing: -.02em; white-space: nowrap; }
@@ -3877,7 +3666,7 @@ section:not(.promise-dark) .promise-meridian-trail {
   border-radius: 999px;
   background: var(--color-card);
   border: 1px solid var(--color-border);
-  font-size: .7rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--color-subtle);
   font-variant-numeric: tabular-nums;
@@ -3917,7 +3706,7 @@ section:not(.promise-dark) .promise-meridian-trail {
 @media (min-width: 900px) { .svc-samples { grid-template-columns: repeat(3, 1fr); } }
 .svc-sample { background: var(--color-background); padding: 1.4rem 1.5rem; }
 .svc-sample .svc-i {
-  font-size: .72rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--color-subtle);
   font-variant-numeric: tabular-nums;
@@ -3980,7 +3769,7 @@ section:not(.promise-dark) .promise-meridian-trail {
 }
 @media (max-width: 759px) { .stage-dot { top: 4px; } }
 .stage-rail b {
-  font-size: .72rem; font-weight: 800; letter-spacing: .06em;
+  font-size: 0.8rem; font-weight: 800; letter-spacing: .06em;
   color: var(--color-accent); font-variant-numeric: tabular-nums;
 }
 .stage-name {
@@ -4038,7 +3827,7 @@ section:not(.promise-dark) .promise-meridian-trail {
 .schm-hd time {
   display: block;
   margin-top: .3rem;
-  font-size: .74rem;
+  font-size: 0.8rem;
   color: var(--color-subtle);
   font-variant-numeric: tabular-nums;
 }
@@ -4084,7 +3873,7 @@ section:not(.promise-dark) .promise-meridian-trail {
   word-break: keep-all;
 }
 .schm-when {
-  font-size: .78rem;
+  font-size: 0.8rem;
   color: var(--color-subtle);
   font-variant-numeric: tabular-nums;
 }
@@ -4094,7 +3883,7 @@ section:not(.promise-dark) .promise-meridian-trail {
   padding: .22rem .5rem;
   border-radius: 999px;
   border: 1px solid var(--color-border);
-  font-size: .74rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--color-muted);
   font-variant-numeric: tabular-nums;
@@ -4112,7 +3901,7 @@ section:not(.promise-dark) .promise-meridian-trail {
   margin-top: 1.1rem;
   padding-top: .9rem;
   border-top: 1px solid var(--color-border);
-  font-size: .76rem;
+  font-size: 0.8rem;
   line-height: 1.65;
   color: var(--color-subtle);
   word-break: keep-all;
@@ -4164,7 +3953,7 @@ section:not(.promise-dark) .promise-meridian-trail {
 .svcbar-glab {
   flex: none;
   width: 4.6rem;
-  font-size: .66rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: .12em;
   color: #7E9CFF;
@@ -4210,7 +3999,7 @@ section:not(.promise-dark) .promise-meridian-trail {
 /* 날짜와 점의 자리를 분기 줄과 맞춘다. 점이 「매월」과 「10일」 사이에
    끼면 한 낱말이 갈라진다. */
 .yflow-every-d {
-  font-size: .74rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--color-subtle);
   font-variant-numeric: tabular-nums;
@@ -4222,58 +4011,9 @@ section:not(.promise-dark) .promise-meridian-trail {
   border-radius: 999px;
   background: var(--color-accent);
   color: #fff;
-  font-size: .7rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: .04em;
-}
-
-/* ── 첫 화면 영상 ─────────────────────────────
-   홈 맨 위에 깔린다. 스크롤이 시작되면 위아래에서 셔터가 닫히듯 높이가
-   줄어들며 꺼지고, 그 자리에서 지구본이 켜진다. 마스크는 tsx 가 준다. */
-/* 영상만 화면 끝까지 간다. 나머지 층은 --stage-x 로 본문 열에 들어온다. */
-/* 영상은 꺼지지 않는다. 본문 열 폭의 판으로 줄어 화면 위에 남는다.
-   --vp 는 0(화면 꽉 참)에서 1(작은 판)까지 가는 진행도다. 스크롤이 넣어 준다.
-   자리와 크기를 px 로 tsx 에 적지 않는 이유 — 판은 본문 열과 헤더 높이에
-   매여 있어서, 화면이 바뀔 때마다 그 값이 같이 바뀌어야 한다. */
-.about-video {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  background: #060C1C;
-  --vp: 0;
-  clip-path: inset(
-    calc(var(--vp) * var(--film-top))
-    calc(var(--vp) * var(--stage-x, 29px))
-    calc(var(--vp) * (100% - var(--film-top) - var(--film-h)))
-    calc(var(--vp) * var(--stage-x, 29px))
-    round calc(var(--vp) * 1.25rem)
-  );
-}
-/* 판이 작아질수록 덮개를 걷는다. 큰 화면에서는 흰 이름을 받치려고
-   눌러 두지만, 작은 판에는 얹히는 글이 없어서 누를 이유가 없다. */
-.about-video-veil { opacity: calc(1 - var(--vp) * 0.62); }
-.about-video video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-/* 흰 이름이 얹히는 자리를 눌러 준다. 이 판의 알파가 0.5 를 넘어야
-   헤더가 「어둡다」로 읽고 자기 글씨를 흰색으로 바꾼다. */
-.about-video-veil {
-  position: absolute;
-  inset: 0;
-  background: rgba(6, 12, 28, .58);
-}
-/* 로고와 지구본은 영상 위다. 지구본에는 z-index 가 없어서 그냥 두면
-   영상과 같은 층에 서고, DOM 순서로만 갈려 위태롭다. */
-.about-globe { z-index: 1; }
-
-@media (prefers-reduced-motion: reduce) {
-  /* 움직임을 꺼 둔 사람에게는 영상을 안 튼다. 정적 화면에는 애초에
-     .about-video 가 그려지지 않지만, 혹시 남더라도 멈춰 둔다. */
-  .about-video video { display: none; }
 }
 
 /* ── 회사 소개 ─────────────────────────────────
@@ -4319,7 +4059,7 @@ section:not(.promise-dark) .promise-meridian-trail {
   text-align: center;
 }
 .abt-eyebrow {
-  font-size: .68rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: .28em;
   text-transform: uppercase;
@@ -4394,7 +4134,7 @@ section:not(.promise-dark) .promise-meridian-trail {
 }
 @media (min-width: 640px) { .abt-facts { grid-template-columns: 1fr 1fr; } }
 .abt-facts dt {
-  font-size: .68rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: .16em;
   text-transform: uppercase;
@@ -4512,7 +4252,7 @@ section:not(.promise-dark) .promise-meridian-trail {
   align-items: center;
   gap: .45rem;
   margin-top: .8rem;
-  font-size: .76rem;
+  font-size: 0.8rem;
   color: var(--color-subtle);
   font-variant-numeric: tabular-nums;
 }
@@ -4576,7 +4316,7 @@ section:not(.promise-dark) .promise-meridian-trail {
   .svc-read-list a:hover { background: var(--color-card); }
 }
 .svc-read-cat {
-  font-size: .74rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--color-accent);
   white-space: nowrap;
@@ -4588,7 +4328,7 @@ section:not(.promise-dark) .promise-meridian-trail {
   word-break: keep-all;
 }
 .svc-read-date {
-  font-size: .76rem;
+  font-size: 0.8rem;
   color: var(--color-subtle);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -4821,7 +4561,7 @@ section:not(.promise-dark) .promise-meridian-trail {
   display: flex;
   align-items: center;
   gap: .45rem;
-  font-size: .78rem;
+  font-size: 0.8rem;
   color: var(--color-subtle);
   font-variant-numeric: tabular-nums;
 }
@@ -5035,7 +4775,7 @@ section:not(.promise-dark) .promise-meridian-trail {
 }
 .ins-cats button[aria-current="page"] { color: var(--color-accent); font-weight: 800; }
 .ins-cats button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; border-radius: 4px; }
-.ins-cats em { font-style: normal; margin-left: .3rem; font-size: .72rem; opacity: .55; font-variant-numeric: tabular-nums; }
+.ins-cats em { font-style: normal; margin-left: .3rem; font-size: 0.8rem; opacity: .55; font-variant-numeric: tabular-nums; }
 
 /* ── 카드 ── */
 .ins-grid {
@@ -5066,7 +4806,7 @@ section:not(.promise-dark) .promise-meridian-trail {
   display: flex;
   align-items: center;
   gap: .4rem;
-  font-size: .76rem;
+  font-size: 0.8rem;
   color: var(--color-subtle);
   font-variant-numeric: tabular-nums;
 }
@@ -5221,6 +4961,10 @@ section:not(.promise-dark) .promise-meridian-trail {
 }
 .ins-faq button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
 
+/* 푸터 전체 메뉴는 두 칸 격자라 줄 사이가 0 이다. 글줄(19px)만큼만 누를 자리가 있어
+   위아래 링크가 맞붙었다(WCAG 2.5.8 의 24px). 칸 높이를 24px 로 준다. 좁은 화면은 아래에서 40px. */
+.ft-menu a { min-height: 24px; display: flex; align-items: center; }
+
 /* ══ 좁은 화면 손질 ═════════════════════════════
    390px 에서 전수로 재고 걸린 것만 고친다. */
 @media (max-width: 640px) {
@@ -5229,9 +4973,8 @@ section:not(.promise-dark) .promise-meridian-trail {
   .page-hero > .absolute[class*="opacity-"] { display: none; }
 
   /* 라벨류 글씨 바닥값. 9~10px 짜리가 섞여 있어 같은 급인데 크기가
-     제각각이었다. 11px 아래로는 안 내려간다. */
+     제각각이었다. 사이트 최소 글자(12px) 아래로는 안 내려간다. */
   .abt-eyebrow,
-  .about-eyebrow,
   .svc-en,
   .svc-head--sub .svc-en,
   .svc-when-lab,
@@ -5249,8 +4992,8 @@ section:not(.promise-dark) .promise-meridian-trail {
   .abt-facts dt,
   .hdr-mega-eyebrow,
   .t-eyebrow,
-  .t-label { font-size: 11px; }
-  .svc-chip { font-size: 11px; }
+  .t-label { font-size: 12px; }
+  .svc-chip { font-size: 12px; }
 
   /* 손 안에서는 두 칸이 안 들어간다. 묶음 하나가 한 줄씩 선다. */
   .svcbar-list { grid-template-columns: minmax(0, 1fr); gap: .55rem; }
@@ -5301,7 +5044,7 @@ section:not(.promise-dark) .promise-meridian-trail {
   margin-top: .55rem;
   padding-top: .5rem;
   border-top: 1px solid rgba(255, 255, 255, .16);
-  font-size: .76rem;
+  font-size: 0.8rem;
   font-weight: 400;
   letter-spacing: .01em;
   line-height: 1.45;
@@ -5313,7 +5056,7 @@ section:not(.promise-dark) .promise-meridian-trail {
 .hdr-cta--sm {
   height: 2.2rem;
   padding-inline: .85rem;
-  font-size: .78rem;
+  font-size: 0.8rem;
   border-radius: 8px;
 }
 
@@ -5610,7 +5353,7 @@ section:not(.promise-dark) .promise-meridian-trail {
 }
 .abt-hero-sub {
   margin-top: 1.4rem;
-  font-size: clamp(.78rem, 1.1vw, .95rem);
+  font-size: clamp(.8rem, 1.1vw, .95rem);
   letter-spacing: .35em;
   text-transform: uppercase;
   color: var(--color-on-deep-muted);
@@ -5640,7 +5383,7 @@ section:not(.promise-dark) .promise-meridian-trail {
   /* 푸터 — 글자는 작게 두되 누를 자리는 44px 을 지킨다.
      재 본 값: 링크 열일곱 개가 전부 15px 높이였다. 손끝으로는 못 누른다.
      글자 크기는 그대로 두고 위아래 여백으로 칸만 키운다. */
-  footer .t-label { font-size: 10.5px; margin-bottom: 0.4rem; }
+  footer .t-label { font-size: 12px; margin-bottom: 0.4rem; }
   footer nav a,
   .ft-contact a {
     font-size: 13px;
@@ -5795,8 +5538,34 @@ footer .t-label-d {
 .spick-item.is-on .spick-no { color: white; }
 .stg-rail button:not(.is-on) { opacity: 1; }
 .stg-rail button:not(.is-on) b { color: #68738a; }
-.aflat-what { background: var(--color-background); }
 
 .ins-cats button em { opacity: 1; color: #647184; }
 .ins-cats button[aria-current="page"] em { color: #244ec9; }
 .promise-orb--b .promise-orb-label { opacity: 1; color: #3156c7; }
+
+/* 스크롤 리빌 (components/motion). 서버 HTML 은 늘 보인다. JS 가 화면 아래 요소에만
+   data-reveal="pending" 을 걸고, 보이면 "shown" 으로 바꾼다(use-reveal.ts).
+   거리 · 시간 · 곡선은 motion 판 그대로다: 글 20px · 0.6s, 묶음 항목 20px · 0.5s, 밑줄 0.8s. */
+@media screen and (prefers-reduced-motion: no-preference) {
+  [data-reveal="pending"][data-reveal-kind],
+  [data-reveal="pending"] [data-reveal-item] { opacity: 0; }
+  [data-reveal="pending"][data-reveal-kind="fadeUp"],
+  [data-reveal="pending"] [data-reveal-item] { transform: translateY(20px); }
+  [data-reveal="shown"][data-reveal-kind] {
+    transition: opacity .6s cubic-bezier(.16,1,.3,1) var(--reveal-delay, 0s), transform .6s cubic-bezier(.16,1,.3,1) var(--reveal-delay, 0s);
+  }
+  [data-reveal="shown"] [data-reveal-item] {
+    transition: opacity .5s cubic-bezier(.16,1,.3,1) var(--reveal-delay, 0s), transform .5s cubic-bezier(.16,1,.3,1) var(--reveal-delay, 0s);
+  }
+  [data-reveal-line] { transform-origin: left center; }
+  [data-reveal-line][data-reveal="shown"] { transition: transform .8s cubic-bezier(.16,1,.3,1) var(--reveal-delay, 0s); }
+}
+/* 밑줄은 장식이라 첫 화면에서도 그어진다. JS 가 돌 때만 처음에 접어 둔다. */
+@media screen and (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  [data-reveal-line]:not([data-reveal="shown"]) { transform: scaleX(0); }
+}
+
+/* 헤더 읽은 만큼 막대(scroll-progress.tsx). 프레임마다 새 값이 들어오면 전환이 다시 시작해,
+   0.2s 선형이 motion 판 spring 의 뒤따름(시간 상수 약 0.23s)과 비슷해진다. */
+.scroll-progress { transform: scaleX(0); transition: transform .2s linear; }
+@media (prefers-reduced-motion: reduce) { .scroll-progress { transition: none; } }

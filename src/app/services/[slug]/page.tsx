@@ -319,8 +319,9 @@ export default async function ServiceDetailPage({ params }: Props) {
         <div className="svc-read">
             <AnimateOnScroll variant="fadeUp">
               <div className="svc-head">
-                <h2 className="svc-h">업무 경험 &amp; 인사이트</h2>
-                <span className="svc-en">Case notes &amp; insights</span>
+                {/* 업무경험 글이 아직 없으면 제목에 그 말을 걸지 않는다. */}
+                <h2 className="svc-h">{cases.length ? <>업무 경험 &amp; 인사이트</> : "인사이트"}</h2>
+                <span className="svc-en">{cases.length ? <>Case notes &amp; insights</> : "Insights"}</span>
               </div>
               {reads.length > 0 && (
                 <ul className="svc-read-list">

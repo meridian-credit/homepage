@@ -92,7 +92,7 @@ export default function Portal() {
               <div className="shot-win" id="shotWin">
                 <div className="shot-caption" id="shotCap"></div>
                 {/* 실제 홈 화면 그대로. 캡처가 아니라 요소로 그린다. */}
-                <div className="db" aria-label="MERIDIAN 세무 대시보드 홈">
+                <div className="db" role="img" aria-label="MERIDIAN 세무 대시보드 홈 화면 예시">
                   <aside className="db-side">
                     <p className="db-brand">MERIDIAN<span>TAX &amp; ADVISORY</span></p>
                     <p className="db-co">㈜메리디안 데모</p>
@@ -117,7 +117,7 @@ export default function Portal() {
                     <div className="db-body">
                       <p className="db-eyebrow">종합 현황</p>
                       <div className="db-h1row">
-                        <h3>한눈에 보는 우리 회사</h3>
+                        <p className="db-h1">한눈에 보는 우리 회사</p>
                         <div className="db-seg"><span className="on">최근 반영월</span><span>올해</span><span>지난분기</span><span>이번분기</span><span>지난달</span><span>이번달</span></div>
                       </div>
                       <p className="db-tagline"><b>2026년 7월 확정자료</b> 국세청 수집자료 기준</p>
@@ -174,8 +174,10 @@ export default function Portal() {
                   </div>
                 </div>
                 </div>
-                {/* 대시보드 위 그 자리에서 조각이 하나씩 확대된다 */}
-                <figure className="hotspot" data-at="0.08" style={{'--fx': '0%', '--fy': '-30%'} as React.CSSProperties}><figcaption className="say">통장까지 붙어서, <b>오늘 돈이 어떻게 도는지</b> 바로 보입니다</figcaption><div className="hs-in">
+                {/* 대시보드 위 그 자리에서 조각이 하나씩 확대된다.
+                    조각은 그림의 일부라 읽어 주지 않는다(aria-hidden) — 말은 figcaption 이 한다.
+                    그림 속 글자라 사이트 최소 글자(12px)의 예외다. */}
+                <figure className="hotspot" data-at="0.08" style={{'--fx': '0%', '--fy': '-30%'} as React.CSSProperties}><figcaption className="say">통장까지 붙어서, <b>오늘 돈이 어떻게 도는지</b> 바로 보입니다</figcaption><div className="hs-in" aria-hidden="true">
                     <p className="db-ey">TODAY CASH</p>
                     <p className="db-ct">오늘 현금 현황</p>
                     <div className="db-cells" style={{'gridTemplateColumns': 'repeat(3,1fr)'}}>
@@ -184,7 +186,7 @@ export default function Portal() {
                       <div><p className="k">기한 지난 미지급</p><p className="v num">18,240,000원</p><p className="m">12건</p></div>
                     </div>
                   </div></figure>
-                <figure className="hotspot" data-at="0.32" style={{'--fx': '0%', '--fy': '-8%'} as React.CSSProperties}><figcaption className="say">낼 세금과 <b>놓칠 뻔한 것</b>을 미리 짚어줍니다</figcaption><div className="hs-in">
+                <figure className="hotspot" data-at="0.32" style={{'--fx': '0%', '--fy': '-8%'} as React.CSSProperties}><figcaption className="say">낼 세금과 <b>놓칠 뻔한 것</b>을 미리 짚어줍니다</figcaption><div className="hs-in" aria-hidden="true">
                     <p className="ui-lab" style={{'color': 'var(--blue)', 'fontWeight': '800'}}>다음 부가세 신고</p>
                     <p className="v2" style={{'fontSize': '26px'}}>2기 예정 신고 · D-76</p>
                     <p className="m2">부가세 리포트에서 예상액 확인 →</p>
@@ -194,7 +196,7 @@ export default function Portal() {
                   </div></figure>
                 <figure className="hotspot" data-at="0.56" style={{'--fx': '-28%', '--fy': '20%'} as React.CSSProperties}>
                   <figcaption className="say">신고 전에 <b>낼 금액</b>이 이미 나와 있습니다</figcaption>
-                  <div className="hs-in vat">
+                  <div className="hs-in vat" aria-hidden="true">
                     <p className="vat-lab">납부 예상 부가세 <span>2026년 7월 기준</span></p>
                     <p className="vat-big num">6,351,500<em>원</em></p>
                     <div className="vat-calc">
@@ -205,7 +207,7 @@ export default function Portal() {
                     <p className="vat-note">확정 신고 전 잠정치입니다. 불공제 후보 4건은 아직 빼지 않았습니다.</p>
                   </div>
                 </figure>
-                <figure className="hotspot" data-at="0.82" style={{'--fx': '26%', '--fy': '20%'} as React.CSSProperties}><figcaption className="say"><b>여섯 달 흐름</b>이 막대 하나로 보입니다</figcaption><div className="hs-in">
+                <figure className="hotspot" data-at="0.82" style={{'--fx': '26%', '--fy': '20%'} as React.CSSProperties}><figcaption className="say"><b>여섯 달 흐름</b>이 막대 하나로 보입니다</figcaption><div className="hs-in" aria-hidden="true">
                     <p className="k2">월별 추이</p>
                     <div className="ui-bars">
                       <div className="bg"><span className="b now" style={{'--h': '96%'} as React.CSSProperties}></span><span className="b old" style={{'--h': '22%'} as React.CSSProperties}></span><i>1월</i></div>
@@ -399,8 +401,10 @@ export default function Portal() {
         <div className="vs-fix wrap">
           <p className="tick rise">무엇이 다른가</p>
           <h2 className="sec rise">같은 기장인데<br className="brk" />결과가 다른 이유<span className="dot-b">.</span></h2>
+          {/* 표 머리의 로고는 lazy 다. 두면 React 가 <head> 에 preload 를 거는데, 한참 아래라
+              몇 초 안에 안 쓰여 브라우저가 경고를 남겼다. */}
           <table className="vs rise">
-            <thead><tr><th><span className="sr-only">비교 항목</span></th><th className="theirs">보통의 세무사무소</th><th className="ours"><span className="vs-brand"><img src="/meridian-logo.png" alt="" />MERIDIAN</span></th></tr></thead>
+            <thead><tr><th><span className="sr-only">비교 항목</span></th><th className="theirs">보통의 세무사무소</th><th className="ours"><span className="vs-brand"><img src="/meridian-logo.png" alt="" loading="lazy" />MERIDIAN</span></th></tr></thead>
             <tbody>
               <tr><th>자료 전달</th><td className="theirs">월말마다 대표님이 모아서 보냄</td><td className="ours"><strong>매일 자동 수집.</strong> 보낼 것이 없음</td></tr>
               <tr><th>숫자 확인</th><td className="theirs">신고 끝나고 결과만 받음</td><td className="ours"><strong>지금 이 순간</strong>의 손익과 부가세</td></tr>

@@ -22,7 +22,9 @@ test('reduced motion hydrates without errors and keeps content visible', async (
   page.on('pageerror', error => errors.push(error.message));
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
-  await expect(page.locator('.about-flat')).toBeVisible();
+  /* 움직임을 끄면 첫 화면은 붙이지 않고 쌓는다(DOM 은 하나, CSS 가 고른다). */
+  await expect(page.locator('.about-stage')).toBeVisible();
+  await expect(page.locator('.about-stage-pin')).toHaveCSS('position', 'static');
   await page.locator('footer').scrollIntoViewIfNeeded();
   for (const content of await page.locator('.rise, .rise-slow').all()) {
     await expect(content).toHaveCSS('opacity', '1');

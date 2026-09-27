@@ -390,7 +390,7 @@ export default function PricingCalculator() {
                                         {industry.description}
                                       </span>
                                     </div>
-                                    <span className={`flex-shrink-0 text-[0.65rem] uppercase tracking-wider ${isSelected ? "text-neutral-400" : "text-subtle"}`}>
+                                    <span className={`flex-shrink-0 text-xs uppercase tracking-wider ${isSelected ? "text-neutral-400" : "text-subtle"}`}>
                                       {getPricingProfileLabel(industry.id)}
                                     </span>
                                   </div>
@@ -419,6 +419,8 @@ export default function PricingCalculator() {
                               {state.revenue > 0 ? formatRevenueLabel(state.revenue) : "미입력"}
                             </strong>
                           </div>
+                          {/* 슬라이더는 누를 자리가 24px 는 돼야 한다(WCAG 2.5.8). 뿌리 글자가 15px 이라
+                              h-6(1.5rem)은 22.5px 이다 — px 로 적는다. 선 두께는 브라우저가 그대로 그린다. */}
                           <input
                             type="range"
                             min={0}
@@ -429,10 +431,10 @@ export default function PricingCalculator() {
                               const idx = Number(e.target.value);
                               dispatch({ type: "setRevenue", value: REVENUE_OPTIONS[idx] ?? REVENUE_OPTIONS[0] });
                             }}
-                            className="w-full accent-foreground"
+                            className="w-full h-[24px] accent-foreground"
                             aria-label="연매출 슬라이더"
                           />
-                          <div className="relative mt-1 h-9 text-[0.65rem] text-subtle uppercase tracking-wider">
+                          <div className="relative mt-1 h-9 text-xs text-subtle uppercase tracking-wider">
                             {REVENUE_MARKERS.map((amount) => {
                               const markerIndex = REVENUE_OPTIONS.indexOf(amount);
                               const left = `${(markerIndex / (REVENUE_OPTIONS.length - 1)) * 100}%`;
@@ -537,10 +539,10 @@ export default function PricingCalculator() {
                               step={1}
                               value={state.staffCount}
                               onChange={(e) => dispatch({ type: "setStaff", value: Number(e.target.value) })}
-                              className="w-full accent-foreground"
+                              className="w-full h-[24px] accent-foreground"
                               aria-label="직원 수 슬라이더"
                             />
-                            <div className="relative mt-1 h-5 text-[0.65rem] text-subtle uppercase tracking-wider">
+                            <div className="relative mt-1 h-5 text-xs text-subtle uppercase tracking-wider">
                               {([0, 5, 10, 30] as const).map((n) => {
                                 const pct = (n / STAFF_RANGE_MAX) * 100;
                                 return (
@@ -580,10 +582,10 @@ export default function PricingCalculator() {
                                   value: Number(e.target.value),
                                 })
                               }
-                              className="w-full accent-foreground"
+                              className="w-full h-[24px] accent-foreground"
                               aria-label="직원 외 신고 인원 슬라이더"
                             />
-                            <div className="relative mt-1 h-5 text-[0.65rem] text-subtle uppercase tracking-wider">
+                            <div className="relative mt-1 h-5 text-xs text-subtle uppercase tracking-wider">
                               {([0, 5, 10, 30] as const).map((n) => {
                                 const pct = (n / STAFF_RANGE_MAX) * 100;
                                 return (
@@ -764,7 +766,7 @@ export default function PricingCalculator() {
                                   aria-pressed={isSelected}
                                 >
                                   <span
-                                    className={`mt-0.5 w-4 h-4 border flex items-center justify-center text-[10px] flex-shrink-0 ${
+                                    className={`mt-0.5 w-4 h-4 border flex items-center justify-center text-xs flex-shrink-0 ${
                                       isSelected ? "btn-blue border-transparent" : "border-border"
                                     }`}
                                   >
@@ -805,7 +807,7 @@ export default function PricingCalculator() {
                                   aria-pressed={isSelected}
                                 >
                                   <span
-                                    className={`mt-0.5 w-4 h-4 border flex items-center justify-center text-[10px] flex-shrink-0 ${
+                                    className={`mt-0.5 w-4 h-4 border flex items-center justify-center text-xs flex-shrink-0 ${
                                       isSelected ? "btn-blue border-transparent" : "border-border"
                                     }`}
                                   >
@@ -817,7 +819,7 @@ export default function PricingCalculator() {
                                       {flag.description}
                                     </span>
                                   </div>
-                                  <span className="text-[0.65rem] uppercase tracking-wider text-subtle flex-shrink-0">
+                                  <span className="text-xs uppercase tracking-wider text-subtle flex-shrink-0">
                                     별도 협의
                                   </span>
                                 </button>
@@ -843,7 +845,7 @@ export default function PricingCalculator() {
         <div className="bg-card border border-border">
           <div className="px-5 md:px-6 pt-6 pb-5 border-b border-border">
             <span
-              className={`inline-block text-[0.65rem] uppercase tracking-[0.15em] px-2 py-1 border ${
+              className={`inline-block text-xs uppercase tracking-[0.15em] px-2 py-1 border ${
                 estimate.isCustom || estimate.needsRevenue
                   ? "border-accent-bright text-accent bg-surface"
                   : "border-border text-muted"
@@ -976,7 +978,7 @@ export default function PricingCalculator() {
               <button
                 type="button"
                 onClick={onCopySummary}
-                className="text-[0.7rem] uppercase tracking-wider text-muted hover:text-foreground"
+                className="text-xs uppercase tracking-wider text-muted hover:text-foreground"
               >
                 요약 복사
               </button>
@@ -1080,7 +1082,7 @@ function MiniMetric({
     >
       <span className="t-label">{label}</span>
       <strong className="block text-sm md:text-base mt-1 tabular-nums">{value}</strong>
-      {note && <p className="text-[0.65rem] text-subtle mt-1 leading-relaxed">{note}</p>}
+      {note && <p className="text-xs text-subtle mt-1 leading-relaxed">{note}</p>}
     </div>
   );
 }

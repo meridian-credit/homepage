@@ -239,7 +239,7 @@ export default async function BlogPostPage({ params }: Props) {
           <AnimateOnScroll variant="fadeUp" delay={0.1}>
             <div className="mb-5 flex flex-wrap items-center gap-3">
               <span
-                className="inline-block rounded-sm px-3 py-1 text-[10px] font-medium tracking-wider"
+                className="inline-block rounded-sm px-3 py-1 text-xs font-medium tracking-wider"
                 style={getCategoryStyle(post.meta.category, true)}
               >
                 {post.meta.category}
@@ -348,7 +348,7 @@ export default async function BlogPostPage({ params }: Props) {
                           {source.label}
                         </a>
                         {kindLabel && (
-                          <span className="rounded-full bg-card px-2.5 py-1 text-[10px] font-medium tracking-wider text-subtle">
+                          <span className="rounded-full bg-card px-2.5 py-1 text-xs font-medium tracking-wider text-subtle">
                             {kindLabel}
                           </span>
                         )}
@@ -403,7 +403,7 @@ export default async function BlogPostPage({ params }: Props) {
                   <div className="p-8">
                     <div className="mb-3 flex flex-wrap items-center gap-3">
                       <span
-                        className="inline-block rounded-sm px-2.5 py-1 text-[10px] font-medium tracking-wider"
+                        className="inline-block rounded-sm px-2.5 py-1 text-xs font-medium tracking-wider"
                         style={getCategoryStyle(relatedPost.category)}
                       >
                         {relatedPost.category}

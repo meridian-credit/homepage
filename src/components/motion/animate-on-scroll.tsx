@@ -1,81 +1,24 @@
 "use client";
 
-import { motion, useInView } from "motion/react";
-import { usePrefersReducedMotion as useReducedMotion } from "@/lib/use-media";
-import { useSyncExternalStore, useRef } from "react";
-import type { ReactNode } from "react";
+import { useRef, type CSSProperties, type ReactNode } from "react";
+import { useReveal } from "./use-reveal";
 
-const variants = {
-  fadeUp: {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  },
-  fadeIn: {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1 },
-  },
-  slideLeft: {
-    hidden: { opacity: 0, x: -40 },
-    visible: { opacity: 1, x: 0 },
-  },
-  slideRight: {
-    hidden: { opacity: 0, x: 40 },
-    visible: { opacity: 1, x: 0 },
-  },
-  scaleIn: {
-    hidden: { opacity: 0, scale: 0.92 },
-    visible: { opacity: 1, scale: 1 },
-  },
-} as const;
-
-type Variant = keyof typeof variants;
-
-const subscribe = () => () => {};
-const getClientSnapshot = () => true;
-const getServerSnapshot = () => false;
-
+/* 화면 아래에서 올라오며(fadeUp, 20px) 또는 제자리에서(fadeIn) 나타난다.
+   0.6s, 15% 보일 때. 모양은 globals.css 의 [data-reveal-kind] 규칙, 판정은 useReveal. */
 interface AnimateOnScrollProps {
   children: ReactNode;
-  variant?: Variant;
+  variant?: "fadeUp" | "fadeIn";
   delay?: number;
-  duration?: number;
-  once?: boolean;
-  amount?: number;
   className?: string;
 }
 
-export default function AnimateOnScroll({
-  children,
-  variant = "fadeUp",
-  delay = 0,
-  duration = 0.6,
-  once = true,
-  amount = 0.15,
-  className,
-}: AnimateOnScrollProps) {
-  const hydrated = useSyncExternalStore(
-    subscribe,
-    getClientSnapshot,
-    getServerSnapshot
-  );
-  const reduced = useReducedMotion();
+export default function AnimateOnScroll({ children, variant = "fadeUp", delay = 0, className }: AnimateOnScrollProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once, amount });
-
+  useReveal(ref, 0.15);
+  /* 지연은 늘 적는다. 사용자 속성은 상속되니, 안쪽 리빌이 바깥 지연을 물려받지 않게 한다. */
   return (
-    <motion.div
-      ref={ref}
-      initial={false}
-      animate={!hydrated || reduced || inView ? "visible" : "hidden"}
-      variants={variants[variant]}
-      transition={{
-        duration,
-        delay,
-        ease: [0.16, 1, 0.3, 1],
-      }}
-      className={className}
-    >
+    <div ref={ref} className={className} data-reveal-kind={variant} style={{ "--reveal-delay": `${delay}s` } as CSSProperties}>
       {children}
-    </motion.div>
+    </div>
   );
 }

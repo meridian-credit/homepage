@@ -11,8 +11,7 @@
    한 줄씩 차례로 들어온다 — 다시 whileInView 로 되돌리지 말 것. */
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform } from "motion/react";
-import { usePrefersReducedMotion as useReducedMotion } from "@/lib/use-media";
+import { useScrollProgress, type ScrollRange } from "@/lib/use-scroll-progress";
 
 const ITEMS = [
   {
@@ -63,27 +62,18 @@ export default function KeepList() {
 
 type Item = (typeof ITEMS)[number];
 
+/* 줄의 윗변이 화면 아래 82% 지점을 지날 때 켜지기 시작해서,
+   45% 지점에 닿으면 다 켜진다. 화면 높이의 3분의 1 남짓을 굴려야 한 줄이
+   자리를 잡으므로, 세 줄이 겹쳐 켜지지 않는다. 모양은 globals.css 의 .keep-row. */
+const ROW_RANGE: ScrollRange = [[0, 0.82], [0, 0.45]];
+const MOTION_OK = "(prefers-reduced-motion: no-preference)";
+
 function KeepRow({ item, fromRight }: { item: Item; fromRight: boolean }) {
-  const reduced = useReducedMotion();
   const ref = useRef<HTMLLIElement>(null);
-
-  /* 줄의 윗변이 화면 아래 82% 지점을 지날 때 켜지기 시작해서,
-     45% 지점에 닿으면 다 켜진다. 화면 높이의 3분의 1 남짓을 굴려야 한 줄이
-     자리를 잡으므로, 세 줄이 겹쳐 켜지지 않는다. */
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start 0.82", "start 0.45"],
-  });
-
-  const opacity = useTransform(scrollYProgress, [0, 0.55], [0, 1]);
-  const x = useTransform(scrollYProgress, [0, 1], [fromRight ? 72 : -72, 0]);
+  useScrollProgress(ref, ROW_RANGE, { media: MOTION_OK });
 
   return (
-    <motion.li
-      ref={ref}
-      className={`keep-row${fromRight ? " keep-row--r" : ""}`}
-      style={reduced ? undefined : { opacity, x }}
-    >
+    <li ref={ref} className={`keep-row${fromRight ? " keep-row--r" : ""}`}>
       <div className="keep-shot">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={item.img} alt={item.alt} loading="lazy" />
@@ -92,9 +82,9 @@ function KeepRow({ item, fromRight }: { item: Item; fromRight: boolean }) {
         <span className="keep-num" aria-hidden>
           {item.num}
         </span>
-        <h4 className="keep-title" style={{ wordBreak: "keep-all" }}>
+        <h3 className="keep-title" style={{ wordBreak: "keep-all" }}>
           {item.title}
-        </h4>
+        </h3>
         <p className="keep-body" style={{ wordBreak: "keep-all" }}>
           {item.body.map((line) => (
             <span key={line} className="keep-line">
@@ -103,6 +93,6 @@ function KeepRow({ item, fromRight }: { item: Item; fromRight: boolean }) {
           ))}
         </p>
       </div>
-    </motion.li>
+    </li>
   );
 }

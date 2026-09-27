@@ -111,6 +111,15 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // public/media 는 이름에 버전(v1 …)을 단다. 내용이 바뀌면 이름을 바꾸므로
+        // 한 번 받은 파일은 다시 물을 필요가 없다. 기본값(max-age=0)이면 영상·포스터를
+        // 페이지마다 다시 확인한다.
+        source: "/media/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      {
         source: "/api/:path*",
         headers: [
           { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },

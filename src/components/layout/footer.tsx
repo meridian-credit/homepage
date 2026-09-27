@@ -35,9 +35,9 @@ export default function Footer() {
         <StaggerChildren staggerDelay={0.1} className="ft-grid grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-7 sm:gap-12 lg:gap-8">
           {/* Brand Column */}
           <StaggerItem className="col-span-2 lg:col-span-1">
-            <h3 className="text-base font-bold tracking-[0.12em] uppercase mb-5">
+            <h2 className="text-base font-bold tracking-[0.12em] uppercase mb-5">
               {siteConfig.name}
-            </h3>
+            </h2>
             <p className="text-sm text-neutral-400 leading-relaxed max-w-xs">
               {siteConfig.tagline}
             </p>
@@ -50,9 +50,9 @@ export default function Footer() {
 
           {/* Service Column */}
           <StaggerItem>
-            <h3 className="t-label t-label-d mb-5">
+            <h2 className="t-label t-label-d mb-5">
               Service
-            </h3>
+            </h2>
             <nav className="flex flex-col gap-3" aria-label="푸터 서비스">
               {practiceLinks.map((link) => (
                 <Link
@@ -68,9 +68,9 @@ export default function Footer() {
 
           {/* Menu Column */}
           <StaggerItem>
-            <h3 className="t-label t-label-d mb-5">
+            <h2 className="t-label t-label-d mb-5">
               Menu
-            </h3>
+            </h2>
             {/* 상단 메뉴가 아니라 전체 페이지 목록을 건다.
                 푸터는 상단에 자리가 없어 밀린 것들이 가는 곳이다 —
                 수임료·회계사 소개가 여기에도 없으면 갈 길이 아예 없다. */}
@@ -90,9 +90,9 @@ export default function Footer() {
 
           {/* Contact Column — 손 안에서는 두 칸을 다 쓰는 카드로 앉힌다. */}
           <StaggerItem className="ft-contact col-span-2 lg:col-span-1">
-            <h3 className="t-label t-label-d mb-5">
+            <h2 className="t-label t-label-d mb-5">
               Contact
-            </h3>
+            </h2>
             <div className="flex flex-col gap-3 text-sm text-neutral-400">
               <p>
                 <span className="text-neutral-400 text-xs uppercase tracking-wider">Kakao</span>
@@ -114,6 +114,16 @@ export default function Footer() {
                   className="hover:text-white transition-colors"
                 >
                   {siteConfig.email}
+                </a>
+              </p>
+              <p>
+                <span className="text-neutral-400 text-xs uppercase tracking-wider">Tel</span>
+                <br />
+                <a
+                  href={`tel:${siteConfig.tel}`}
+                  className="hover:text-white transition-colors"
+                >
+                  {siteConfig.tel}
                 </a>
               </p>
               <p className="mt-2 leading-relaxed">
@@ -151,7 +161,7 @@ export default function Footer() {
           {siteConfig.affiliation}
         </p>
         {imageCredits.length > 0 && (
-          <p className="text-[11px] text-neutral-400 leading-relaxed max-w-4xl">
+          <p className="text-xs text-neutral-400 leading-relaxed max-w-4xl">
             <span className="text-neutral-300 font-medium uppercase tracking-wider">
               Image Credits ·{" "}
             </span>

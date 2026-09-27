@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 const contactInfo = [
   { label: "Kakao", value: "카카오톡 채널", href: siteConfig.kakaoChannelUrl, external: true },
   { label: "Email", value: siteConfig.email, href: `mailto:${siteConfig.email}` },
+  { label: "Tel", value: siteConfig.tel, href: `tel:${siteConfig.tel}` },
   { label: "Location", value: siteConfig.location },
   { label: "Hours", value: "평일 09:00 - 18:00 · 사전 약속 권장" },
 ];

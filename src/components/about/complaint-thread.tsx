@@ -15,14 +15,12 @@
    마지막 한 마디는 느리게 켜지면서 살짝 부풀었다 가라앉는다. 거기가 이 대화의
    끝이라는 표시다. 그 다음 손님 말은 왼쪽으로, 우리 말은 오른쪽으로 날아간다.
 
-   움직임을 꺼 둔 사람에게는 전부 켜진 상태로 한 번에 보인다. */
+   켜짐 · 나감의 모양과 시간은 globals.css 가 data-state 를 보고 정한다. 붙은 무대에서만
+   그렇다 — 쌓은 판(휴대폰 · 움직임 끔 · JS 끔)에서는 상태와 상관없이 전부 켜진 채 보인다. */
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
-import { motion, type Variants } from "motion/react";
-import { usePrefersReducedMotion as useReducedMotion } from "@/lib/use-media";
-
-const EASE = [0.16, 1, 0.3, 1] as const;
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { STAGE_MEDIA } from "@/lib/use-scroll-progress";
 
 type Msg = {
   face: string;
@@ -70,56 +68,13 @@ const OUT_FROM = TYPING_AT + 1 + TYPING_HOLD;
 /* 스크롤로 하나씩 켜지는 칸 수 전체. */
 export const THREAD_STEPS = OUT_FROM + OUTGOING.length + 1;
 
-/* 마지막 한 마디만 느리게 켜진다. */
-const LAST_DUR = 1.1;
-
-/* 점 세 개 → 말. 같은 말풍선이 부푸는 시간. */
-const GROW = 0.52;
+/* 점 세 개 → 말. 같은 말풍선이 부푸는 시간(ms)과 곡선. */
+const GROW = 520;
+const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
 /* 글자는 풍선이 웬만큼 커진 뒤에 들어온다. 같이 켜면 작은 칸에서 글자가 눌린다. */
-const INK = { duration: 0.3, delay: 0.3 };
+const INK = { duration: 300, delay: 300 };
 
-type Custom = { dir: number; slow?: boolean };
-
-const rowVariants: Variants = {
-  /* 크기는 건드리지 않는다. 이 대화에서 커지는 건 「점 → 말」 한 번뿐이라야
-     한다. 들어올 때도 부풀면 뭐가 커진 건지 안 읽힌다. */
-  hidden: { opacity: 0, y: 14, scale: 1, x: 0 },
-  shown: ({ slow }: Custom) =>
-    slow
-      ? {
-          /* 마지막 한 마디만 느리게 켜진다. 부풀리지 않는다. */
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          x: 0,
-          transition: { duration: LAST_DUR, ease: "easeOut" },
-        }
-      : {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          x: 0,
-          transition: { duration: 0.42, ease: EASE },
-        },
-  /* 손님 말은 왼쪽, 우리 말은 오른쪽. 각자 왔던 쪽으로 되돌아 나간다. */
-  gone: ({ dir }: Custom) => ({
-    opacity: 0,
-    /* 제 폭의 120% 만 움직이면 말풍선이 화면 한복판에서 사라진다.
-       62vw 도 모자랐다 — 2560px 화면에서는 오른쪽 말풍선이 화면 끝
-       196px 앞에서 멈춰 그 자리에서 사라졌다. 화면 폭 하나를 통째로
-       움직이면 어디서 출발하든 반드시 밖으로 나간다. */
-    x: `${dir * 105}vw`,
-    scale: 0.96,
-    /* 옅어지는 것과 날아가는 것을 따로 잡는다. 한 시각으로 묶어 두니
-       화면을 벗어나기도 전에 투명해져서, 날아 나간 게 아니라 그 자리에서
-       지워진 것처럼 보였다. 옅어지는 건 다 나간 뒤에 시작한다. */
-    transition: {
-      x: { duration: 1.05, ease: [0.35, 0, 1, 1] },
-      scale: { duration: 1.05, ease: [0.35, 0, 1, 1] },
-      opacity: { duration: 0.25, delay: 0.8, ease: "linear" },
-    },
-  }),
-};
+type RowState = "hidden" | "shown" | "gone";
 
 export default function ComplaintThread({
   step = THREAD_STEPS,
@@ -128,18 +83,8 @@ export default function ComplaintThread({
   step?: number;
   exit?: boolean;
 }) {
-  const reduced = useReducedMotion();
-
-  /* i 번째 줄이 켜졌는지. 스크롤이 거기까지 왔으면 켠다. */
-  const anim = (i: number, c: Custom) =>
-    reduced
-      ? {}
-      : {
-          custom: c,
-          variants: rowVariants,
-          initial: "hidden" as const,
-          animate: exit ? "gone" : step > i ? "shown" : "hidden",
-        };
+  /* i 번째 줄이 켜졌는지. 스크롤이 거기까지 왔으면 켠다. 나가면 다 같이 나간다. */
+  const state = (i: number): RowState => (exit ? "gone" : step > i ? "shown" : "hidden");
 
   /* 「입력 중」 점 세 개는 무한히 돈다. 화면 밖에 있어도 브라우저는
      프레임마다 그걸 다시 그린다 — 홈 어디를 굴러도 계속 값이 나갔다.
@@ -164,14 +109,16 @@ export default function ComplaintThread({
       {INCOMING.map((m, i) => {
         const at = i * IN_BLOCK;
         /* 점 세 개가 뜨는 구간. 이 구간이 지나면 같은 풍선이 말로 부푼다. */
-        const typing = !reduced && step > at && step <= at + IN_HOLD;
+        const typing = step > at && step <= at + IN_HOLD;
         return (
-          <motion.div key={m.text} className="imsg-row" {...anim(at, { dir: -1 })}>
+          <div key={m.text} className="imsg-row" data-state={state(at)}>
+            {/* lazy — 첫 화면 아래 한참 뒤라, 두면 React 가 <head> 에 preload 를 걸어
+                첫 화면 포스터와 대역폭을 나눈다. */}
             <span className="imsg-face" aria-hidden>
-              <img src={`/images/personas/${m.face}.svg`} alt="" />
+              <img src={`/images/personas/${m.face}.svg`} alt="" loading="lazy" />
             </span>
-            <Bubble kind="in" typing={typing} reduced={reduced} text={m.text} />
-          </motion.div>
+            <Bubble kind="in" typing={typing} text={m.text} />
+          </div>
         );
       })}
 
@@ -189,20 +136,21 @@ export default function ComplaintThread({
             const first = i === 0;
             const last = i === OUTGOING.length - 1;
             const at = first ? TYPING_AT : OUT_FROM + i;
-            const typing = !reduced && first && step > at && step <= OUT_FROM;
+            const typing = first && step > at && step <= OUT_FROM;
             return (
-              <motion.div
+              /* 마지막 한 마디만 느리게(1.1s) 켜진다. */
+              <div
                 key={t}
-                className="imsg-row imsg-row--out"
-                {...anim(at, { dir: 1, slow: last })}
+                className={`imsg-row imsg-row--out${last ? " imsg-row--last" : ""}`}
+                data-state={state(at)}
               >
-                <Bubble kind="out" typing={typing} reduced={reduced} text={t} tailless={!last} />
-              </motion.div>
+                <Bubble kind="out" typing={typing} text={t} tailless={!last} />
+              </div>
             );
           })}
         </div>
 
-        <motion.div className="imsg-who" {...anim(OUT_FROM, { dir: 1 })} aria-hidden>
+        <div className="imsg-who" data-state={state(OUT_FROM)} aria-hidden>
           <Image
             src="/images/founder-3d-idea.png"
             alt=""
@@ -210,7 +158,7 @@ export default function ComplaintThread({
             height={688}
             sizes="(max-width: 760px) 132px, 236px"
           />
-        </motion.div>
+        </div>
       </div>
 
     </div>
@@ -218,21 +166,59 @@ export default function ComplaintThread({
 }
 
 /* 말풍선 하나. 점 세 개로 떴다가, 같은 풍선이 그대로 부풀면서 말이 들어찬다.
-   풍선을 둘로 나누면(점 풍선 + 말 풍선) 둘이 한 화면에 같이 남는다.
-   motion 의 layout 이 폭·높이를 이어 준다 — 나누지 말 것. */
+   풍선을 둘로 나누면(점 풍선 + 말 풍선) 둘이 한 화면에 같이 남는다 — 나누지 말 것.
+   점과 글은 늘 DOM 에 있고, 어느 쪽을 보일지는 imsg-b--typing 과 CSS 가 정한다.
+   그래서 JS 없이도, 쌓은 판에서도 글이 그대로 읽힌다. */
 function Bubble({
   kind,
   text,
   typing,
-  reduced,
   tailless = false,
 }: {
   kind: "in" | "out";
   text: string;
   typing: boolean;
-  reduced: boolean | null;
   tailless?: boolean;
 }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const was = useRef(typing);
+  const running = useRef<Animation[]>([]);
+
+  /* 점 풍선 ↔ 말 풍선(FLIP). 레이아웃은 한 번에 바꾸고, 바뀌기 전 상자에서 transform 으로
+     이어 준다. 바뀌기 전 상자는 클래스를 잠깐 되돌려 같은 프레임 안에서 잰다.
+     모서리는 늘어난 비율만큼 거꾸로 줄여 둥근 채로 둔다(radius / scale).
+     글은 풍선이 95% 자란 뒤(0.3s)에 들어오므로 따로 역보정하지 않는다. */
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const from = was.current;
+    was.current = typing;
+    if (!el || from === typing || !matchMedia(STAGE_MEDIA).matches) return;
+    /* 앞의 변신이 아직 돌고 있으면 먼저 끝낸다. 스크롤을 크게 굴리면 점 → 글이 120ms 안에
+       연달아 온다. 도는 중에 재면 그 transform 과 줄어든 모서리 값이 섞여 들어와, 모서리가
+       각진 채로 부풀었다. 우리가 건 것만 끈다 — 점의 CSS 애니메이션은 건드리지 않는다. */
+    running.current.forEach((animation) => animation.cancel());
+    el.classList.toggle("imsg-b--typing", from);
+    const a = el.getBoundingClientRect();
+    el.classList.toggle("imsg-b--typing", typing);
+    const b = el.getBoundingClientRect();
+    if (!b.width || !b.height) return;
+    const radius = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0;
+    const frames = Array.from({ length: 11 }, (_, k) => {
+      const u = k / 10;
+      const sx = a.width / b.width + (1 - a.width / b.width) * u;
+      const sy = a.height / b.height + (1 - a.height / b.height) * u;
+      return {
+        transformOrigin: "0 0",
+        transform: `translate(${(a.left - b.left) * (1 - u)}px, ${(a.top - b.top) * (1 - u)}px) scale(${sx}, ${sy})`,
+        borderRadius: `${radius / sx}px / ${radius / sy}px`,
+      };
+    });
+    /* 곡선은 애니메이션 전체에 걸고, 칸은 곡선을 지난 값(u) 기준으로 나눈다. */
+    running.current = [el.animate(frames, { duration: GROW, easing: EASE })];
+    const ink = typing ? null : el.querySelector(".imsg-ink");
+    if (ink) running.current.push(ink.animate([{ opacity: 0 }, { opacity: 1 }], { ...INK, fill: "backwards" }));
+  }, [typing]);
+
   const cls = [
     "imsg-b",
     `imsg-b--${kind}`,
@@ -242,28 +228,12 @@ function Bubble({
     .filter(Boolean)
     .join(" ");
 
-  if (reduced) return <p className={cls}>{text}</p>;
-
   return (
-    <motion.p
-      layout
-      className={cls}
-      transition={{ layout: { duration: GROW, ease: EASE } }}
-    >
-      {typing ? (
-        <span className="imsg-dots" role="status" aria-label="입력 중">
-          <span /><span /><span />
-        </span>
-      ) : (
-        <motion.span
-          className="imsg-ink"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={INK}
-        >
-          {text}
-        </motion.span>
-      )}
-    </motion.p>
+    <p ref={ref} className={cls}>
+      <span className="imsg-dots" role="status" aria-label="입력 중">
+        <span /><span /><span />
+      </span>
+      <span className="imsg-ink">{text}</span>
+    </p>
   );
 }

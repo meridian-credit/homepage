@@ -6,24 +6,25 @@
 
 /* 홈 전용 토큰. :root 에 두면 나머지 10개 페이지까지 새므로 .promo 안에 가둔다. */
 .promo {
-  --w:      #FFFFFF;
+  /* 값과 뜻이 globals.css 의 색과 같은 것은 그 이름을 그대로 가리킨다. 한 곳에서만 고친다. */
+  --w:      var(--color-background);
   --w-2:    #F4F7FC;   /* 옅은 면 */
   --w-3:    #E4EBF5;   /* 선·구분 */
 
-  /* 짙은 쪽. 검정이 아니라 남색이다. globals.css 의 --color-deep 과 같은 값.
+  /* 짙은 쪽. 검정이 아니라 남색이다.
      쓰는 데는 첫 화면과 맨 끝 CTA 둘뿐이고, 본문 중간에는 안 쓴다. */
-  --navy:   #0E1D4A;
-  --navy-2: #0A1636;
+  --navy:   var(--color-deep);
+  --navy-2: var(--color-deep-2);
   --navy-3: #0E1D4A;
 
-  --tx:     #000000;   /* 본문. 순흑 */
-  --tx-2:   #4D4D4D;   /* 보조 */
+  --tx:     var(--color-foreground);   /* 본문. 순흑 */
+  --tx-2:   var(--color-muted);        /* 보조 */
   /* 파랑 한 벌. hometax-dashboard 의 accent 사다리를 그대로 쓴다.
      500 이 기준, 진한 바탕 위에서는 400, 눌린 상태는 600. */
   --blue-900: #1B40CC; /* accent-700. 그라디언트의 바닥 */
   --blue-d:   #1F4AE0; /* accent-600. hover·pressed */
-  --blue:     #2B5BFF; /* accent-500. 흰 바탕 위 기준색 */
-  --blue-b:   #4470FF; /* accent-400. 진한 바탕 위에서 쓰는 밝은 파랑 */
+  --blue:     var(--color-accent);        /* accent-500. 흰 바탕 위 기준색 */
+  --blue-b:   var(--color-accent-bright); /* accent-400. 진한 바탕 위에서 쓰는 밝은 파랑 */
   --blue-300: #7E9CFF; /* accent-300. 그라디언트의 꼭대기 */
   --blue-200: #B9C8FF; /* accent-200. 진한 바탕 위 보조 글자 */
   --blue-l:   #E7EEFF; /* accent-100. 파란 옅은 면 */
@@ -34,13 +35,7 @@
   --up:     #0E7C5A;
   --down:   #B4453C;
 
-  /* 위계 = 1.618배 */
-  --t--1: 0.75rem;    /* 12px */
-  --t-0:  0.875rem;   /* 14px */
-  --t-1:  1rem;       /* 16px */
-  --t-2:  1.618rem;   /* 25.9px */
-  --t-3:  2.618rem;   /* 41.9px */
-  --t-4:  4.236rem;   /* 67.8px */
+  /* 글자 위계(--t-*)는 globals.css 의 :root 값을 그대로 물려받는다. */
 
   --s1:8px; --s2:12px; --s3:16px; --s4:24px; --s5:32px; --s6:64px; --s7:104px;
 
@@ -847,7 +842,8 @@ h2.sec { font-size: clamp(1.9rem, 4.4vw, var(--t-3)); margin-top: var(--s3); max
 .db-body { padding: var(--s4); overflow: hidden; flex: 1; min-height: 0; }
 .db-eyebrow { font-size: 10.5px; font-weight: 800; letter-spacing: .06em; color: var(--blue); }
 .db-h1row { display: flex; align-items: center; gap: var(--s3); margin-top: 3px; }
-.db-h1row h3 { font-family: var(--disp); font-size: 21px; font-weight: 800; letter-spacing: -.04em; }
+/* 그림 속 앱의 제목이다. 페이지 제목 단계에 끼지 않게 h3 가 아니라 p 로 둔다. */
+.db-h1row .db-h1 { font-family: var(--disp); font-size: 21px; font-weight: 800; letter-spacing: -.04em; }
 .db-seg { margin-left: auto; display: flex; gap: 2px; background: var(--w); border: 1px solid var(--w-3); border-radius: 999px; padding: 3px; }
 .db-seg span { font-size: 10.5px; color: var(--tx-2); padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
 .db-seg span.on { background: #14161A; color: #fff; font-weight: 700; }
@@ -1413,7 +1409,9 @@ h2.sec { font-size: clamp(1.9rem, 4.4vw, var(--t-3)); margin-top: var(--s3); max
 
 
 /* 카드 안 글자는 카드 크기를 따라간다(cqh/cqw).
-   카드가 작아지면 같이 작아져서 넘치거나 휑해지지 않는다. */
+   카드가 작아지면 같이 작아져서 넘치거나 휑해지지 않는다.
+   다만 읽는 글자는 12px(0.8rem) 밑으로 줄지 않는다. 덱은 그림이 아니라 표 내용이 뜻을 가진
+   화면이라 접근성 트리에 두고, 사이트의 최소 글자 규칙을 그대로 따른다. */
 /* 01번 꼴(큰 숫자) 카드. 재무제표 첫 줄처럼 읽히게 한다.
    라벨은 괘선 위에 얹고, 숫자가 주인공, 근거는 아래로 계단을 만든다. */
 /* 01번 꼴(큰 숫자) 카드 = 앱 안의 카드 한 장.
@@ -1421,26 +1419,27 @@ h2.sec { font-size: clamp(1.9rem, 4.4vw, var(--t-3)); margin-top: var(--s3); max
    라벨 옆에 기준 시점, 상태값은 알약 배지, 근거는 배지 옆에 나란히. */
 .fpane:has(> .ui-big) { text-align: left; align-content: space-between; }
 .fpane > .ui-lab {
-  font-size: clamp(10px, 3.8cqh, 16px); color: var(--tx);
+  font-size: clamp(.8rem, 3.8cqh, 16px); color: var(--tx);
   letter-spacing: 0; text-transform: none; font-weight: 700;
 }
 /* 기준 시점. 라벨과 같은 줄에 흐리게 — 앱은 늘 "언제 기준"을 붙인다. */
 .fpane > .ui-lab span {
   font-weight: 500; color: var(--tx-2); margin-left: .5em;
-  font-size: .88em; letter-spacing: 0;
+  font-size: max(.8rem, .88em); letter-spacing: 0;
 }
 .fpane .ui-big {
   font-family: var(--disp);
-  font-size: clamp(22px, 27cqh, 100px); margin-top: clamp(6px, 3cqh, 20px);
+  /* 높이만 따르면 좁은 카드(휴대폰)에서 숫자 한 덩어리가 폭을 넘는다. 폭(17cqw)으로도 막는다. */
+  font-size: clamp(22px, min(27cqh, 17cqw), 100px); margin-top: clamp(6px, 3cqh, 20px);
   line-height: .95; letter-spacing: -.05em;
 }
 /* 단위(원)는 숫자를 방해하면 안 된다. 작게, 흐리게. */
 .fpane .ui-big em {
-  font-size: .2em; font-weight: 700; color: var(--tx-2);
+  font-size: max(.8rem, .2em); font-weight: 700; color: var(--tx-2);
   margin-left: .1em; vertical-align: baseline; letter-spacing: 0;
 }
 .fpane .ui-sub {
-  font-size: clamp(11px, 5cqh, 21px); margin-top: clamp(8px, 4cqh, 26px);
+  font-size: clamp(.8rem, 5cqh, 21px); margin-top: clamp(8px, 4cqh, 26px);
   color: var(--tx-2); display: flex; align-items: center; flex-wrap: wrap;
   gap: clamp(6px, 2cqh, 12px);
 }
@@ -1449,11 +1448,11 @@ h2.sec { font-size: clamp(1.9rem, 4.4vw, var(--t-3)); margin-top: var(--s3); max
 .fpane .ui-sub .pill {
   background: color-mix(in srgb, var(--up) 12%, #fff);
   border-radius: 999px; padding: .3em .85em; font-weight: 800;
-  font-size: .86em; letter-spacing: -.01em; white-space: nowrap;
+  font-size: max(.8rem, .86em); letter-spacing: -.01em; white-space: nowrap;
 }
 /* 각주 줄. 가로선 위에 올려 카드 바닥을 잡아준다. */
 .fpane .ui-foot {
-  font-size: clamp(10px, 3.6cqh, 15px); margin-top: clamp(6px, 3cqh, 20px);
+  font-size: clamp(.8rem, 3.6cqh, 15px); margin-top: clamp(6px, 3cqh, 20px);
   padding-top: clamp(6px, 2.6cqh, 16px); border-top: 1px solid var(--w-3);
 }
 .fpane .ui-foot b { color: var(--tx); font-weight: 700; }
@@ -1461,32 +1460,32 @@ h2.sec { font-size: clamp(1.9rem, 4.4vw, var(--t-3)); margin-top: var(--s3); max
 /* 모든 카드의 라벨을 같은 문법으로. 앱 카드 제목은 대문자로 안 바꾸고
    자간도 안 벌린다. 벌리면 웹 섹션 제목처럼 보인다. */
 .fpane .ui-lab {
-  font-size: clamp(10px, 3.8cqh, 16px);
+  font-size: clamp(.8rem, 3.8cqh, 16px);
   letter-spacing: 0; text-transform: none; font-weight: 700; color: var(--tx);
 }
 /* 상태값(정상 / 확인 필요)은 맨글자가 아니라 알약에 담는다 — 앱과 같은 방식. */
 .fpane .ui-cols .m b,
 .fpane .ui-list .m b {
-  border-radius: 999px; padding: .2em .7em; font-size: .94em;
+  border-radius: 999px; padding: .2em .7em; font-size: max(.8rem, .94em);
   font-weight: 800; margin-right: .4em; white-space: nowrap;
   background: color-mix(in srgb, currentColor 13%, #fff);
 }
-.fpane .ui-tb   { font-size: clamp(11px, 5cqh, 20px); }
+.fpane .ui-tb   { font-size: clamp(.8rem, 5cqh, 20px); }
 .fpane .ui-tb th, .fpane .ui-tb td { padding: clamp(5px, 6.6cqh, 28px) 0; }
 .fpane .ui-bars { height: clamp(84px, 48cqh, 215px); min-height: 0;
   margin-top: clamp(10px, 5cqh, 28px); margin-bottom: clamp(20px, 8cqh, 38px); }
-.fpane .bg i    { font-size: clamp(9px, 3.4cqh, 14px); bottom: clamp(-20px, -6cqh, -16px); }
+.fpane .bg i    { font-size: clamp(.8rem, 3.4cqh, 14px); bottom: clamp(-20px, -6cqh, -16px); }
 .fpane .ui-cols { gap: clamp(10px, 3cqw, 24px); margin-top: clamp(8px, 7cqh, 42px); }
-.fpane .ui-cols .k { font-size: clamp(10px, 4.6cqh, 19px); }
+.fpane .ui-cols .k { font-size: clamp(.8rem, 4.6cqh, 19px); }
 .fpane .ui-cols .v { font-size: clamp(15px, 8.4cqh, 38px); margin-top: clamp(4px, 3cqh, 18px); line-height: 1.05; letter-spacing: -.03em; }
-.fpane .ui-cols .m { font-size: clamp(9px, 4cqh, 16px); margin-top: clamp(3px, 2.4cqh, 14px); }
+.fpane .ui-cols .m { font-size: clamp(.8rem, 4cqh, 16px); margin-top: clamp(3px, 2.4cqh, 14px); }
 .fpane .ui-mix  { gap: clamp(8px, 5.6cqh, 30px); margin-top: clamp(8px, 4.4cqh, 26px); }
-.fpane .ui-mix .k, .fpane .ui-mix .v { font-size: clamp(11px, 4.6cqh, 19px); }
-.fpane .ui-mix .m { font-size: clamp(9px, 3.4cqh, 14px); }
+.fpane .ui-mix .k, .fpane .ui-mix .v { font-size: clamp(.8rem, 4.6cqh, 19px); }
+.fpane .ui-mix .m { font-size: clamp(.8rem, 3.4cqh, 14px); }
 .fpane .ui-mix .bar { height: clamp(5px, 3cqh, 13px); }
 .fpane .ui-list li { padding: clamp(6px, 5.6cqh, 25px) 0; }
-.fpane .ui-list .k, .fpane .ui-list .v { font-size: clamp(11px, 4.6cqh, 19px); }
-.fpane .ui-list .m { font-size: clamp(9px, 3.4cqh, 14px); }
+.fpane .ui-list .k, .fpane .ui-list .v { font-size: clamp(.8rem, 4.6cqh, 19px); }
+.fpane .ui-list .m { font-size: clamp(.8rem, 3.4cqh, 14px); }
 
 /* 진행 눈금 */
 .fdots { display: flex; gap: 6px; margin-top: var(--s5); }
@@ -1500,7 +1499,10 @@ h2.sec { font-size: clamp(1.9rem, 4.4vw, var(--t-3)); margin-top: var(--s3); max
   .fc { opacity: 1; translate: 0; margin-bottom: var(--s4); }
   .fc:not(:first-child) { display: none; }
   .deck { height: auto; }
-  .fpane { position: static; transform: none !important; opacity: 1 !important; margin-bottom: var(--s3); }
+  /* 카드는 크기 격리(container-type: size)라 제 내용으로 높이를 못 정한다. 높이를 안 주면
+     안여백만 남아 90px 로 접히고 내용이 잘렸다(휴대폰 · 태블릿 /portal, 첫 줄과 큰 숫자만 보임).
+     여섯 카드가 320–1000 폭에서 다 들어가는 높이다(실측). */
+  .fpane { position: static; height: clamp(17rem, 66vw, 380px); transform: none !important; opacity: 1 !important; margin-bottom: var(--s3); }
   .fpane:not(.on) { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1576,7 +1578,7 @@ h2.sec { font-size: clamp(1.9rem, 4.4vw, var(--t-3)); margin-top: var(--s3); max
 :where(.promo) .tab { font: inherit; font-size: var(--t-0); font-weight: 500; cursor: pointer; background: var(--w); border: 1px solid var(--w-3); color: var(--tx-2); padding: 7px 15px; border-radius: 10px; transition: all .2s; }
 :where(.promo) .tab[aria-selected="true"] { background: var(--blue); color: #fff; border-color: var(--blue); font-weight: 600; }
 :where(.promo) .evid { display: grid; grid-template-columns: 1fr 1.1fr; gap: var(--s5); padding: var(--s4); border-top: 1px solid var(--w-3); }
-:where(.promo) .evid h4 { font-size: var(--t--1); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--tx-2); margin: 0 0 4px; }
+:where(.promo) .evid h3 { font-size: var(--t--1); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--tx-2); margin: 0 0 4px; }
 :where(.promo) .evid .rnote { font-size: var(--t--1); color: var(--tx-2); margin-bottom: var(--s3); }
 :where(.promo) .formula { font-size: var(--t-0); line-height: 2.1; }
 :where(.promo) .formula em { font-style: normal; color: var(--blue); font-weight: 600; }
@@ -1667,7 +1669,7 @@ h2.sec { font-size: clamp(1.9rem, 4.4vw, var(--t-3)); margin-top: var(--s3); max
   }
   .svc h3 { font-size: 1.02rem; margin: 9px 0 6px; letter-spacing: -.02em; }
   .svc p { font-size: .8rem; line-height: 1.55; }
-  .svc .go { margin-top: 11px; font-size: .78rem; }
+  .svc .go { margin-top: 11px; font-size: 0.8rem; }
 }
 
 /* ── 네 갈래 카드 ──────────────────────────────────────────
@@ -1999,10 +2001,12 @@ h2.sec { font-size: clamp(1.9rem, 4.4vw, var(--t-3)); margin-top: var(--s3); max
   display: flex; align-items: center; gap: 10px;
   text-decoration: none; position: relative;
 }
-/* 이름은 항상 보인다. 점만 있으면 뭐가 뭔지 모른다. */
+/* 이름은 항상 보인다. 점만 있으면 뭐가 뭔지 모른다.
+   지금 칸(파랑 · 굵게 · 1)보다 한 걸음 물러나되 읽혀야 한다. 0.55 에서는 흰 바탕 2.7:1,
+   짙은 바탕 4.0:1 로 누를 수 있는 링크인데 안 읽혔다. 0.8 이면 4.7:1 · 6.9:1 이다. */
 .anchor .lb {
   font-size: var(--t--1); font-weight: 600; color: var(--tx-2);
-  white-space: nowrap; opacity: .55;
+  white-space: nowrap; opacity: .8;
   transition: opacity .25s, color .25s;
 }
 @media (hover: hover) {
@@ -2265,119 +2269,6 @@ h2.sec { font-size: clamp(1.9rem, 4.4vw, var(--t-3)); margin-top: var(--s3); max
 
 /* ③ 하는 일 — 목록 전체로 보내는 버튼. 카드 아래 가운데. */
 .svc-cta { display: flex; justify-content: center; margin-top: var(--s6); }
-
-/* ── 대표 회계사(펼침) ─────────────────────────
-   ABOUT 에 같은 사람이 다시 나온다. 홈에서는 처음부터 다 펴 두지 않는다.
-   이름과 한 문장만 먼저 두고, 업무 영역은 스크롤이 닿을 때 한 줄씩 열린다. */
-.pu { margin-top: var(--s5); }
-/* 세 칸이다 — 사진 | 이름 | 업무 영역. 이름 칸은 사진 쪽으로 붙여
-   사진+이름이 한 덩어리로 읽히게 한다. 아래 한 줄은 사진 밑 왼쪽에 남는다. */
-.pu-head {
-  display: grid;
-  grid-template-columns: 300px minmax(0, max-content) minmax(0, 1fr);
-  column-gap: var(--s5); row-gap: var(--s5);
-  align-items: center;
-}
-.pu-id { text-align: right; }
-.pu-shot { overflow: hidden; border-radius: 2px; aspect-ratio: 4/5; }
-.pu-shot img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 12%; }
-.pu-name { font-family: var(--disp); font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; letter-spacing: -.05em; line-height: 1; }
-.pu-role { margin-top: var(--s3); font-size: var(--t-1); font-weight: 600; letter-spacing: .04em; color: var(--tx-2); }
-/* 말은 사진 옆이 아니라 아래에 있다. 이름표가 아니라 태도라서 폭을 다 쓴다. */
-.pu-say { margin-top: 0; font-size: 1.25rem; line-height: 1.8; color: var(--tx-2); max-width: 62ch; }
-
-/* 업무 영역. 왼쪽 세로선이 기준선이고, 줄은 거기서 밀려 나온다. */
-/* 줄이 오른쪽에서 밀려 들어온다. 들어오기 전 자리가 화면 밖이라
-   모바일에서 가로 스크롤이 생긴다. 여기서 가둔다. */
-.pu-areas { margin-top: var(--s6); padding-top: var(--s5); border-top: 1px solid var(--w-3); overflow-x: clip; }
-.pu-areas-lab { font-size: var(--t-0); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--tx-2); }
-.pu-areas-list {
-  margin-top: var(--s4); padding-left: var(--s4);
-  border-left: 2px solid var(--blue);
-}
-.pu-areas ul {
-  list-style: none; margin: 0; padding: 0;
-  display: grid; gap: var(--s3);
-}
-.pu-areas li { font-size: var(--t-1); line-height: 1.6; }
-/* 접혀 있던 나머지. 폭이나 높이를 0에서 늘리는 애니메이션이라 overflow 를 닫아 둔다. */
-.pu-areas-rest { overflow: hidden; }
-/* 좁은 화면에서는 아래로 열린다. 위 목록과 간격만 맞춘다. */
-.pu-areas-rest-in { padding-top: var(--s3); }
-
-/* 넓은 화면에서는 오른쪽으로 열린다.
-   앞 세 줄은 자리를 지키고, 나머지가 그 옆에 붙어 나온다.
-   안쪽 목록의 폭을 고정해 두어야 칸이 열리는 동안 글자가 다시 접히지 않는다. */
-@media (min-width: 981px) {
-  /* 오른쪽 칸. 위에 가로선을 긋지 않는다 — 사진 옆에 나란히 선 칸이라
-     선을 그으면 사진과 목록이 다른 층으로 갈라져 보인다. */
-  .pu-head > .pu-areas { grid-column: 3; grid-row: 1; margin-top: 0; padding-top: 0; border-top: none; }
-  /* 말은 사진 아래 왼쪽. 오른쪽 목록 밑으로 흐르지 않게 두 칸만 쓴다. */
-  .pu-head > .pu-say { grid-column: 1 / 3; grid-row: 2; align-self: start; }
-
-  .pu-areas-list { display: flex; align-items: flex-start; }
-  /* 두 칸 다 폭을 못 박는다. 왼쪽을 내용 폭에 맡기면 오른쪽이 열리는 동안
-     왼쪽까지 좁아지며 글자가 접힌다. */
-  /* 두 칸 다 폭을 못 박는다. 왼쪽을 내용 폭에 맡기면 오른쪽이 열리는 동안
-     왼쪽까지 좁아지며 글자가 접힌다. 오른쪽은 겹치면 잘리므로 조금 좁게 잡는다. */
-  .pu-areas-list > ul { flex: none; width: 200px; }
-  .pu-areas-rest-in { padding-top: 0; padding-left: var(--s4); width: 250px; }
-}
-/* 펼쳤을 때 따라 나오는 자격·경력. 업무 영역과 같은 무게로 읽히면
-   목록이 셋이 되어 무엇이 본론인지 흐려진다. 글자를 한 단 낮춘다. */
-.pu-cv { overflow: hidden; }
-.pu-cv-in { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s6); margin-top: var(--s5); padding-top: var(--s5); border-top: 1px solid var(--w-3); }
-.pu-cv-grp ul { list-style: none; margin: var(--s3) 0 0; padding: 0; display: grid; gap: var(--s2); }
-.pu-cv-grp li { font-size: var(--t-0); line-height: 1.7; color: var(--tx-2); }
-@media (max-width: 700px) { .pu-cv-in { grid-template-columns: 1fr; gap: var(--s5); } }
-
-.pu-more {
-  display: inline-block; margin-top: var(--s5); font-size: var(--t-1); font-weight: 700;
-  border-bottom: 2px solid var(--tx); padding: 0 0 3px; text-decoration: none;
-  background: none; border-top: 0; border-left: 0; border-right: 0;
-  font-family: inherit; color: inherit; cursor: pointer;
-  transition: color .2s, border-color .2s;
-}
-@media (hover: hover) {
-  .pu-more:hover { color: var(--blue); border-color: var(--blue); }
-}
-
-@media (max-width: 980px) {
-  .pu-head { grid-template-columns: 1fr; gap: var(--s4); }
-  .pu-id { text-align: left; }
-  /* 한 줄로 쌓이면 말이 이름 바로 밑에 붙는 편이 읽기 좋다.
-     업무 영역은 그 다음이다. */
-  .pu-head > .pu-say { order: 1; margin-top: 0; }
-  .pu-head > .pu-areas { order: 2; margin-top: var(--s4); }
-  .pu-shot { max-width: 260px; aspect-ratio: 1/1; }
-  .pu-say { font-size: var(--t-1); }
-}
-
-/* 소속. 업무 영역과 같은 폭 안에 두되, 두 칸으로 나눠 연락처를 옆에 붙인다.
-   법인 관계를 밝히는 자리라 색을 쓰지 않는다. */
-.pu-aff {
-  margin-top: var(--s6); padding-top: var(--s5); border-top: 1px solid var(--w-3);
-  display: grid; grid-template-columns: 1fr 300px; gap: var(--s6) var(--s7); align-items: start;
-}
-.pu-aff .pu-areas-lab { grid-column: 1; }
-.pu-aff-body { grid-column: 1; display: grid; gap: var(--s3); max-width: 56ch; }
-.pu-aff-body p { font-size: var(--t-1); line-height: 1.8; color: var(--tx-2); }
-.pu-aff-body b { color: var(--tx); font-weight: 700; }
-.pu-aff-contact { grid-column: 2; grid-row: 1 / span 2; display: grid; gap: 6px; align-content: start; }
-.pu-aff-contact p { font-size: var(--t-1); line-height: 1.7; }
-.pu-aff-contact .pu-areas-lab { margin-bottom: var(--s2); }
-.pu-aff-contact a { text-decoration: none; border-bottom: 1px solid var(--w-3); transition: color .2s, border-color .2s; }
-@media (hover: hover) {
-  .pu-aff-contact a:hover { color: var(--blue); border-color: var(--blue); }
-}
-.pu-aff-loc { color: var(--tx-2); font-size: var(--t-0) !important; padding-top: 6px; }
-
-@media (max-width: 980px) {
-  .pu-aff { grid-template-columns: 1fr; gap: var(--s4); }
-  .pu-aff .pu-areas-lab, .pu-aff-body, .pu-aff-contact { grid-column: 1; }
-  .pu-aff-contact { grid-row: auto; margin-top: var(--s3); padding-top: var(--s4); border-top: 1px solid var(--w-3); }
-}
-
 
 /* 이 자리에 「가운데로 세운다」는 규칙이 있었다. 파일 뒤쪽이라 위에서
    왼쪽으로 잡아 둔 걸 통째로 되돌렸다 — 그래서 정렬이 안 바뀌었다.

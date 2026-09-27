@@ -18,6 +18,20 @@ import { usePathname } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { navMenu } from "@/lib/constants";
 
+export type NavEntry = (typeof navMenu)[number];
+
+/* 글이 한 편도 없는 블로그 갈래는 메뉴에서 뺀다. 누르면 「아직 글이 없습니다」만
+   보게 된다. 어느 갈래가 비었는지는 글을 읽을 수 있는 서버(layout)가 세어 넘긴다.
+   갈래 표(insightCategories)는 그대로 둔다 — 글이 생기면 저절로 다시 선다. */
+export function visibleMenu(hiddenHrefs: readonly string[]): NavEntry[] {
+  if (!hiddenHrefs.length) return navMenu;
+  return navMenu.map((entry) =>
+    "items" in entry && entry.items
+      ? { ...entry, items: entry.items.filter((item) => !hiddenHrefs.includes(item.href)) }
+      : entry
+  );
+}
+
 /* 대각선으로 판까지 내려가는 동안 마우스가 칸을 잠깐 벗어난다.
    그때 바로 닫으면 판을 못 누른다. 이만큼만 기다렸다 닫는다. */
 const CLOSE_DELAY = 120;
@@ -49,7 +63,7 @@ export function useMenuOpen() {
 
 export type MenuCtl = ReturnType<typeof useMenuOpen>;
 
-export function DesktopNav({ ctl }: { ctl: MenuCtl }) {
+export function DesktopNav({ ctl, entries }: { ctl: MenuCtl; entries: NavEntry[] }) {
   const pathname = usePathname();
   const { open, setOpen, cancelClose, scheduleClose } = ctl;
   const navRef = useRef<HTMLElement>(null);
@@ -78,7 +92,7 @@ export function DesktopNav({ ctl }: { ctl: MenuCtl }) {
 
   return (
     <nav ref={navRef} className="flex items-center gap-9" aria-label="주 메뉴">
-      {navMenu.map((entry) => {
+      {entries.map((entry) => {
         const hasPanel = Boolean(entry.items || entry.columns);
         const active = isOn(pathname, entry.href);
         const shown = open === entry.label;
@@ -164,14 +178,14 @@ export function DesktopNav({ ctl }: { ctl: MenuCtl }) {
 
 /* ── 모바일 ───────────────────────────────────────────────── */
 
-export function MobileNav({ onNavigate }: { onNavigate: () => void }) {
+export function MobileNav({ onNavigate, entries }: { onNavigate: () => void; entries: NavEntry[] }) {
   const pathname = usePathname();
   /* 처음에는 다 접혀 있다. 여섯 칸이 한눈에 들어와야 어디로 갈지 고른다. */
   const [openLabel, setOpenLabel] = useState<string | null>(null);
 
   return (
     <nav className="mnav" aria-label="주 메뉴">
-      {navMenu.map((entry) => {
+      {entries.map((entry) => {
         const cols =
           entry.columns ?? (entry.items ? [{ title: "", items: entry.items }] : []);
         const rows = cols.flatMap((c) => c.items);
@@ -247,10 +261,10 @@ export function MobileNav({ onNavigate }: { onNavigate: () => void }) {
 /* ── 헤더 안에서 열리는 판 ─────────────────────────────────
    칸 밑에 카드가 뜨는 게 아니라, 헤더가 스스로 키를 키워 그 안에 담는다.
    그래서 판이 헤더와 같은 유리 위에 앉고 경계가 안 생긴다. */
-export function MegaPanel({ ctl }: { ctl: MenuCtl }) {
+export function MegaPanel({ ctl, entries }: { ctl: MenuCtl; entries: NavEntry[] }) {
   const pathname = usePathname();
   const { open, setOpen, cancelClose, scheduleClose } = ctl;
-  const entry = navMenu.find((m) => m.label === open);
+  const entry = entries.find((m) => m.label === open);
   const rows = entry?.columns ?? (entry?.items ? [{ title: "", items: entry.items }] : []);
 
   /* 하위 메뉴는 그 칸 바로 밑에 선다. 통 왼쪽 끝에서 시작하면

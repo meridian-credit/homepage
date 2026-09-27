@@ -76,11 +76,15 @@ test('blog page and scroll survive article and back', async ({ page }) => {
   await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(before - 200);
 });
 
+/* 재시도 응답도 여기서 준다. 실제 /api/search 를 부르면 전체 스위트 부하 중 서버가 늦을 때
+   한 번씩 떨어졌다(단독 90/90 통과). 이 테스트가 보는 것은 실패 → 다시 시도 흐름이다. */
+const SEARCH_FIXTURE = [{ title: '세무 기장', href: '/services/tax-bookkeeping', kind: '서비스', hint: '세무자문', terms: '세무 기장 장부' }];
+
 test('search distinguishes service failure and retries', async ({ page, isMobile }) => {
   let fail = true;
   await page.route('**/api/search', async route => {
     if (fail) await route.fulfill({ status: 503, json: {} });
-    else await route.continue();
+    else await route.fulfill({ json: SEARCH_FIXTURE });
   });
   await page.goto('/services');
   if (isMobile) await page.getByRole('button', { name: '메뉴 열기', exact: true }).click();

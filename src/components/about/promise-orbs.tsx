@@ -1,14 +1,8 @@
-"use client";
-
 /* 약속 두 개. 네모 칸 두 개 대신 원 두 개가 서로 물린다.
-   물린 자리를 파란 세로선 하나가 위에서 아래로 가로지른다 —
-   위 히어로에서 지구본을 지나던 그 0° 선이 여기까지 내려온 셈이다.
 
-   원은 스크롤에 맞춰 각각 부풀고, 선은 그 다음에 위에서 아래로 그어진다.
-   움직임을 꺼 둔 사람에게는 다 켜진 상태로 그대로 보인다. */
-
-import { motion } from "motion/react";
-import { usePrefersReducedMotion as useReducedMotion } from "@/lib/use-media";
+   붙은 무대에서는 대화가 다 날아간 뒤 천천히(1.4s) 올라오고, 두 번째 원이 0.35s 늦다.
+   그 전환은 globals.css 가 data-show 를 보고 건다. 쌓은 판(휴대폰 · 움직임 끔)에서는
+   처음부터 다 켜진 상태다. */
 
 const PROMISES = [
   {
@@ -23,30 +17,12 @@ const PROMISES = [
   },
 ];
 
-const EASE = [0.16, 1, 0.3, 1] as const;
-
 /* show 를 켜는 시점은 위(PromiseStage)가 정한다. 대화가 다 날아간 다음이다. */
 export default function PromiseOrbs({ show = false }: { show?: boolean }) {
-  const reduced = useReducedMotion();
-
-  const orb = (i: number) =>
-    reduced
-      ? {}
-      : {
-          initial: { opacity: 0, scale: 0.9 },
-          animate: show ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 },
-          /* 천천히 올라온다. 대화가 빠르게 나갔으니 여기서 속도를 늦춘다. */
-          transition: { duration: 1.4, delay: show ? i * 0.35 : 0, ease: EASE },
-        };
-
   return (
-    <div className="promise-orbs">
+    <div className="promise-orbs" data-show={show || undefined}>
       {PROMISES.map((p, i) => (
-        <motion.div
-          key={p.num}
-          className={`promise-orb promise-orb--${i === 0 ? "a" : "b"}`}
-          {...orb(i)}
-        >
+        <div key={p.num} className={`promise-orb promise-orb--${i === 0 ? "a" : "b"}`}>
           <div className="promise-orb-in">
             <p className="promise-orb-num">
               <span className="promise-orb-label">약속</span>
@@ -59,12 +35,11 @@ export default function PromiseOrbs({ show = false }: { show?: boolean }) {
               {p.body}
             </p>
           </div>
-        </motion.div>
+        </div>
       ))}
 
       {/* 두 원 사이의 0° 선을 없앴다. 원 둘 사이를 세로로 가르니
           두 약속이 하나로 안 읽히고 갈라져 보였다. */}
-
     </div>
   );
 }

@@ -124,7 +124,7 @@ function ColorCard({ option }: { option: ColorOption }) {
 
       {/* Hairline divider sample */}
       <div className="mb-8 border-t border-border pt-8">
-        <p className="text-[10px] tracking-[0.25em] text-subtle uppercase mb-3">
+        <p className="text-xs tracking-[0.25em] text-subtle uppercase mb-3">
           Hero hairline
         </p>
         <div
@@ -135,7 +135,7 @@ function ColorCard({ option }: { option: ColorOption }) {
 
       {/* Hover underline link sample */}
       <div className="mb-8">
-        <p className="text-[10px] tracking-[0.25em] text-subtle uppercase mb-3">
+        <p className="text-xs tracking-[0.25em] text-subtle uppercase mb-3">
           Link hover-underline
         </p>
         <a
@@ -149,7 +149,7 @@ function ColorCard({ option }: { option: ColorOption }) {
 
       {/* Blockquote sample */}
       <div className="mb-8">
-        <p className="text-[10px] tracking-[0.25em] text-subtle uppercase mb-3">
+        <p className="text-xs tracking-[0.25em] text-subtle uppercase mb-3">
           Blockquote left bar
         </p>
         <blockquote
@@ -162,7 +162,7 @@ function ColorCard({ option }: { option: ColorOption }) {
 
       {/* CTA button hover sample */}
       <div className="mb-8">
-        <p className="text-[10px] tracking-[0.25em] text-subtle uppercase mb-3">
+        <p className="text-xs tracking-[0.25em] text-subtle uppercase mb-3">
           Button hover ring
         </p>
         <button
@@ -179,7 +179,7 @@ function ColorCard({ option }: { option: ColorOption }) {
 
       {/* Number hover sample */}
       <div>
-        <p className="text-[10px] tracking-[0.25em] text-subtle uppercase mb-3">
+        <p className="text-xs tracking-[0.25em] text-subtle uppercase mb-3">
           Number on hover
         </p>
         <span
@@ -298,7 +298,7 @@ export default function PreviewPage() {
           </div>
           {colorOptions.map((option) => (
             <div key={option.id} className="mb-16 last:mb-0">
-              <p className="text-[10px] tracking-[0.25em] text-subtle uppercase font-medium mb-4">
+              <p className="text-xs tracking-[0.25em] text-subtle uppercase font-medium mb-4">
                 {option.id} · {option.name} 액센트와 함께
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

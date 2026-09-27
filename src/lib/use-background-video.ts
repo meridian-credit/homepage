@@ -2,7 +2,7 @@
 import { useEffect, type RefObject } from 'react';
 
 /** Pause decorative footage offscreen, in background tabs, and for reduced motion. */
-export function useBackgroundVideo(ref: RefObject<HTMLElement | null>, layoutKey?: boolean | null) {
+export function useBackgroundVideo(ref: RefObject<HTMLElement | null>) {
   useEffect(() => {
     const root = ref.current;
     const video = root instanceof HTMLVideoElement ? root : root?.querySelector('video');
@@ -18,5 +18,5 @@ export function useBackgroundVideo(ref: RefObject<HTMLElement | null>, layoutKey
     query.addEventListener('change', sync);
     document.addEventListener('visibilitychange', sync);
     return () => { observer.disconnect(); query.removeEventListener('change', sync); document.removeEventListener('visibilitychange', sync); video.pause(); };
-  }, [ref, layoutKey]);
+  }, [ref]);
 }

@@ -55,7 +55,8 @@ export default function ServicesPage() {
       <section className="py-20 md:py-24">
         <div className="max-w-[1600px] mx-auto px-6">
           <AnimateOnScroll variant="fadeUp">
-            <p className="t-eyebrow mb-8">SERVICE</p>
+            {/* 이 구역의 제목. 없으면 아래 서비스 이름(h3)이 h1 바로 밑에 서서 제목 단계가 건너뛴다. */}
+            <h2 className="t-eyebrow mb-8"><span aria-hidden="true">SERVICE</span><span className="sr-only">서비스 목록</span></h2>
           </AnimateOnScroll>
           <ServicePicker />
         </div>

@@ -28,9 +28,8 @@ export function useMedia(query: string): boolean {
   );
 }
 
-/* 휴대폰 쪽. 붙임(sticky) 연출을 통째로 끄는 기준이다.
-   프레임마다 clip-path 와 transform 을 다시 쓰는 일이 휴대폰에서 제일
-   무겁다 — 넘김이 끊기고 스크롤이 튀던 원인이 이것이다. */
+/* 휴대폰 쪽(≤900px). 서비스 고르기(service-picker)를 누르면 펼쳐지는 목록으로 바꾸는 기준이다.
+   스크롤 장면을 붙일지 쌓을지는 여기서 정하지 않는다 — CSS(STAGE_MEDIA)가 정한다. */
 export function useHandheld(): boolean {
   return useMedia("(max-width: 900px)");
 }

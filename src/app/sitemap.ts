@@ -52,7 +52,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.7,
     },
-    /* /pricing 은 넣지 않는다. robots.ts 가 막는 페이지다. */
+    /* /pricing 은 넣지 않는다. 메뉴에 없는 페이지이고, 자기 metadata 가 noindex 다.
+       robots.ts 로는 막지 않는다 — 막으면 검색엔진이 그 noindex 를 읽지 못한다
+       (docs/plans/ui-ux-remediation/README.md). */
     {
       url: `${siteConfig.url}/portal`,
       lastModified: now,

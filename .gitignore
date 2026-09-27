@@ -18,6 +18,8 @@
 
 # next.js
 /.next/
+# scripts/fonts/subset.mjs 가 빌드마다 만든다
+/src/fonts/generated/
 /out/
 
 # production
