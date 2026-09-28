@@ -167,8 +167,14 @@ export default function RootLayout({
           <Footer />
         </SmoothScrollProvider>
         <ScrollCue />
-        <Analytics />
-        <SpeedInsights />
+        {/* Vercel 통계는 Vercel 이 빌드했을 때만 싣는다(VERCEL=1). 다른 곳(dev 서버 accounting.teamcredit.kr)에서는
+            /_vercel/* 가 없어 페이지마다 404 두 번과 콘솔 오류가 났다. */}
+        {process.env.VERCEL === "1" ? (
+          <>
+            <Analytics />
+            <SpeedInsights />
+          </>
+        ) : null}
       </body>
     </html>
   );
