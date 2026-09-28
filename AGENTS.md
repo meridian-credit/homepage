@@ -176,7 +176,20 @@ Tests enforce three rules:
 
 ## Deploy
 
-- **Production:** Vercel. `.vercelignore` keeps `docs/`, `image/`, and local artifacts out of the upload.
+- **Production:** `www.meridianco.kr` is still on Vercel. Its DNS is at Gabia; the owner plans to leave Vercel.
+  `.vercelignore` keeps `docs/`, `image/`, and local artifacts out of the upload. Vercel Analytics and Speed Insights
+  render only when `VERCEL=1`, so other hosts don't 404 on `/_vercel/*`.
+- **Dev: https://accounting.teamcredit.kr serves the `dev` branch.** A push to `dev` deploys itself in about a minute.
+  - The ubuntu crontab on `proxmox-ubuntu` runs `/opt/stacks/accounting_dev/deploy.sh` every minute. The script
+    polls the branch head (public repo, so no credentials and no inbound webhook or runner) and builds an image
+    tagged with the commit SHA. It then swaps the `accounting_dev` container and rolls back if the new one doesn't
+    answer within 60s. The log is `deploy.log` in that directory.
+  - A failed build leaves the running container in place. A failed SHA is not retried until the next push; to retry
+    by hand, run `rm failed && ./deploy.sh`.
+  - Path: Cloudflare DNS-only CNAME (grey cloud) → `origin.teamcredit.kr` → Caddy edge on `proxy-seoul-01` (adds
+    `X-Robots-Tag: noindex`) → inner NPM proxy host 76 → `accounting_dev:3000`.
+  - The server `.env` sets `CONTACT_ALLOWED_ORIGINS` and `ENABLE_PREVIEW_PAGE=true`. It has no Resend or Upstash
+    keys yet, so the contact form fails there.
 - **Cloudflare Workers preview** via OpenNext uses `wrangler.preview.jsonc` and `open-next.preview.config.mjs`. The
   commands are in `docs/reviews/2026-09-11/contact-worker-1102.md`.
   - On Workers Free (10 ms CPU per request) the adapter intermittently returns error 1102, so this path is only
