@@ -19,7 +19,8 @@ Marketing site for 메리디안 택스 어드바이저리 (MERIDIAN, https://www
 advisory firm. Next.js 16 App Router, React 19, Tailwind v4, TypeScript. All user-facing copy is Korean. Production
 runs on Vercel.
 
-Git: the only remote is `origin` = `nonesty5/homepage`, the owner's repo. Treat `main` as production and reach it
+Git: the only remote is `origin` = `meridian-credit/homepage`, the owner's organization repo. It was transferred from
+`nonesty5/homepage` (noted 2026-09-28); GitHub still redirects the old URL. Treat `main` as production and reach it
 through a PR, never a direct push. The renewal work (IA v2, new home, services restructure) lives on `ian`.
 
 ## Commands
