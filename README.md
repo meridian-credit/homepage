@@ -1,5 +1,7 @@
 # MERIDIAN Homepage
 
+Marketing site for www.meridianco.kr. Project guide (architecture, conventions, deploy details): `AGENTS.md`.
+
 ## Getting Started
 
 Install dependencies and run the development server:
@@ -11,22 +13,34 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Security Configuration
+## Environment variables
 
-Production deployments must set these environment variables in Vercel:
+Where they are set:
 
-- `RESEND_API_KEY`: server-only API key used by `/api/contact`.
-- `RESEND_FROM_EMAIL`: verified sender address for contact email delivery.
-- `UPSTASH_REDIS_REST_URL`: Upstash Redis REST URL for shared contact rate limiting.
-- `UPSTASH_REDIS_REST_TOKEN`: Upstash Redis REST token for shared contact rate limiting.
-- `CONTACT_ALLOWED_ORIGINS`: optional comma-separated list for explicit preview/staging origins that may submit `/api/contact`.
-- `ENABLE_PREVIEW_PAGE`: leave unset in production unless `/preview` is intentionally being reviewed.
+- Production (`www.meridianco.kr`): the Vercel project's environment variables.
+- Dev (`accounting.teamcredit.kr`): `/opt/stacks/accounting_dev/.env` on `proxmox-ubuntu`, with `env.example` beside it.
 
-Only `NEXT_PUBLIC_*` variables may be exposed to the browser. Do not put secrets in `NEXT_PUBLIC_*`, `public/`, or committed docs.
+The variables:
+
+- `RESEND_API_KEY`: server-only key used by `/api/contact`. Without it the route answers 500 and sends nothing.
+- `RESEND_FROM_EMAIL`: a sender address on a domain verified in Resend. If unset, the route falls back to Resend's
+  test sender, which cannot deliver to the firm's mailbox.
+- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`: optional. Contact rate limits shared across instances. When
+  unset, each instance keeps its own in-memory counters.
+- `CONTACT_RATE_LIMIT_REQUIRE_SHARED`: `true` forbids the in-memory fallback. With this on, a missing or failing
+  Upstash turns every inquiry into a 503, so leave it off on a single server.
+- `CONTACT_ALLOWED_ORIGINS`: optional comma-separated extra origins that may POST `/api/contact` (preview or dev
+  hosts). `siteConfig.url` is always allowed.
+- `ENABLE_PREVIEW_PAGE`: `true` serves `/preview`. Leave it unset in production.
+- `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, `NEXT_PUBLIC_NAVER_SITE_VERIFICATION`: search-console ownership meta tags.
+  They are baked into the HTML at build time, so a new build host needs them too.
+- `VERCEL`: set by Vercel itself. Analytics and Speed Insights render only when it is `1`.
+
+Only `NEXT_PUBLIC_*` variables reach the browser. Do not put secrets in `NEXT_PUBLIC_*`, `public/`, or committed docs.
 
 ## Verification
 
-Run the same checks used by CI before deployment:
+Run the same checks as CI (`.github/workflows/ci.yml`):
 
 ```bash
 npm audit --audit-level=moderate
@@ -34,8 +48,15 @@ npm audit signatures
 npm run audit:content
 npm run lint
 npm run build
+npm run test:e2e        # starts `next start` on :3100 itself; needs the build above
 ```
 
-## Deploy on Vercel
+CI runs e2e behind a local TLS proxy so the production CSP applies. See `AGENTS.md` for how to reproduce that and
+for the other QA scripts.
 
-The production deployment runs on Vercel. Keep `.env*`, generated reports, local screenshots, and docs excluded from deployment through `.vercelignore`.
+## Deploy
+
+- Production runs on Vercel from `main`. Reach `main` through a PR. `.vercelignore` keeps `.env*`, docs, reports and
+  local screenshots out of the upload.
+- A push to `dev` deploys https://accounting.teamcredit.kr in about a minute (self-hosted, pull-based).
+- Before moving production off Vercel, go through BE-08 in `docs/plans/ui-ux-remediation/backend-backlog.md`.

@@ -2,6 +2,11 @@
 
 작성: 2026-09-11 · 기준: `feat/menu-ia`, `9b6f13c4ab9cb82c1894be684c354395cfd72f49`
 
+> **상태 (2026-09-30):** 이 계획은 2026-09-11 에 구현됐다.
+> - 실제 수행 범위와 예외는 [implementation/README.md](./implementation/README.md) 를 기준으로 본다.
+> - 그 뒤의 수정은 [production-fixes](../production-fixes/README.md)(P1–P6)가 이어받았다.
+> - 아래 본문은 계획 당시의 기록이다. 백엔드 항목만 [backend-backlog.md](./backend-backlog.md) 에서 최신으로 유지한다.
+
 ## 1. 목표와 범위
 
 현재 브라우저에서 보이는 디자인을 보존하면서 실제 고객의 탐색·문의·견적 경험을 고치고, 같은 화면을 더 안정적으로 유지할 수 있도록 프론트엔드를 정리한다. 전면 재작성은 하지 않는다. 기존 [통합 검토](../../reviews/2026-09-11/production-readiness.md)의 모든 항목은 아래 작업 또는 [백엔드 후속 목록](./backend-backlog.md)에 연결한다.

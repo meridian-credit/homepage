@@ -21,7 +21,10 @@ runs on Vercel.
 
 Git: the only remote is `origin` = `meridian-credit/homepage`, the owner's organization repo. It was transferred from
 `nonesty5/homepage` (noted 2026-09-28); GitHub still redirects the old URL. Treat `main` as production and reach it
-through a PR, never a direct push. The renewal work (IA v2, new home, services restructure) lives on `ian`.
+through a PR, never a direct push. Branches:
+- `ian`: the renewal work (IA v2, new home, services restructure), not yet merged to `main`.
+- `dev`: `ian` plus the production-readiness fixes (`docs/plans/production-fixes/`). It is what
+  accounting.teamcredit.kr serves (see Deploy). New work lands here first.
 
 ## Commands
 
@@ -68,6 +71,7 @@ Other browser QA scripts in `scripts/qa/` all expect a server on :3100:
   - Once every listed date has passed, the header cube and the `/portal` popup link to this month's NTS page.
   - `npm run audit:content` puts a warning first when under 30 days of dates remain.
     `.github/workflows/schedule-check.yml` runs the same check weekly and fails, as a reminder to refill the list.
+    GitHub runs scheduled workflows only from the default branch, so it stays inactive until this reaches `main`.
 
 **Blog.** Posts are `content/posts/*.mdx`, parsed by `src/lib/posts.ts` (gray-matter, next-mdx-remote, remark-gfm).
 The frontmatter schema and citation rules are in `docs/content-system.md`:
@@ -94,6 +98,12 @@ and the sitemap, and is noindex.
 - It checks Origin and Sec-Fetch-Site against `siteConfig.url` plus `CONTACT_ALLOWED_ORIGINS`.
 - Rate limiting is an Upstash sliding window per IP and per email. It falls back to an in-memory map when the
   Upstash env vars are unset; set `CONTACT_RATE_LIMIT_REQUIRE_SHARED=true` to forbid that fallback.
+- Resend SDK 6.x does not throw on a failed send; it returns `{ data: null, error }`. Check `error`, not just
+  `catch`. The route currently ignores it and answers 200 on failure. That is BE-01 in
+  `docs/plans/ui-ux-remediation/backend-backlog.md`, the verified backlog of open backend issues and of what not
+  to build (no DB, CRM, or queue).
+- The recipient is `siteConfig.email`, hardcoded. Before Resend keys go onto any non-production host, make it
+  configurable, or test inquiries reach the real client mailbox.
 - The full env var list is in `README.md`.
 
 **`/contact` must stay statically prerendered.**
@@ -106,13 +116,13 @@ and the sitemap, and is noindex.
 - The submit button stays disabled until hydration. A disabled default button also blocks Enter submission, and a
   hint line gives direct contacts until then.
 `tests/e2e/contact-rendering.spec.ts` asserts that `/contact` is in the prerender manifest and that the page works
-without JavaScript. Background: per-request rendering blew the Cloudflare Workers CPU limit
+without JavaScript. Background: per-request rendering blew the CPU limit on a Cloudflare Workers preview
 (`docs/reviews/2026-09-11/contact-worker-1102.md`).
 
 **Styling.**
 - Tailwind v4 is configured with `@theme inline` in `src/app/globals.css`. That file (~5.8k lines) carries most of
   the site's styling as named classes.
-- `promo.css` is imported only by the home page (`src/app/page.tsx`) and scoped under `.promo`.
+- `promo.css` is imported only by the home page (`src/app/page.tsx`) and `/portal`, and is scoped under `.promo`.
 - `glass.css` is the refracting-glass header material, imported verbatim. Don't edit it; site colors are passed in
   from `globals.css`.
 - The type scale `--t-*` is defined once, in the `:root` block of `globals.css`; `.promo` inherits it. The promo
@@ -140,8 +150,8 @@ without JavaScript. Background: per-request rendering blew the Cloudflare Worker
   - Every video `<source>` carries `media="(prefers-reduced-motion: no-preference)"`. Under reduced motion no
     source matches, so no video is downloaded.
 
-**Motion.** GSAP drives the home scroll scenes (`components/home/promo-motion.tsx`, `promo-scenes.ts`,
-`service-merge-scene.ts`). Lenis (`components/providers/smooth-scroll-provider.tsx`) smooths the native scroll, so
+**Motion.** GSAP drives the scroll scenes on the home page and `/portal` (`components/home/promo-motion.tsx`,
+`promo-scenes.ts`, `service-merge-scene.ts`; the scene list is §6 of `docs/DESIGN_SYSTEM.md`). Lenis (`components/providers/smooth-scroll-provider.tsx`) smooths the native scroll, so
 ScrollTrigger needs no bridge. There is no `motion` (framer-motion) dependency; the rest is CSS driven by small hooks.
 - **Stage scenes** (home opening `about/about-opening.tsx`, promise thread `about/promise-stage.tsx`):
   - One DOM. The base CSS rules are the stacked (flat) layout. The pinned stage lives under
@@ -179,6 +189,10 @@ Tests enforce three rules:
 - **Production:** `www.meridianco.kr` is still on Vercel. Its DNS is at Gabia; the owner plans to leave Vercel.
   `.vercelignore` keeps `docs/`, `image/`, and local artifacts out of the upload. Vercel Analytics and Speed Insights
   render only when `VERCEL=1`, so other hosts don't 404 on `/_vercel/*`.
+  - Vercel supplies things `next start` does not. Prod sends HSTS and `max-age=0, must-revalidate` on HTML; `next start`
+    sends no HSTS and `s-maxage=31536000`. Before moving production, go through BE-08 in
+    `docs/plans/ui-ux-remediation/backend-backlog.md`.
+- **CI runs only on PRs and `main` pushes.** A `dev` push is checked only by the server's own build.
 - **Dev: https://accounting.teamcredit.kr serves the `dev` branch.** A push to `dev` deploys itself in about a minute.
   - The ubuntu crontab on `proxmox-ubuntu` runs `/opt/stacks/accounting_dev/deploy.sh` every minute. The script
     polls the branch head (public repo, so no credentials and no inbound webhook or runner) and builds an image
@@ -190,8 +204,5 @@ Tests enforce three rules:
     `X-Robots-Tag: noindex`) → inner NPM proxy host 76 → `accounting_dev:3000`.
   - The server `.env` sets `CONTACT_ALLOWED_ORIGINS` and `ENABLE_PREVIEW_PAGE=true`. It has no Resend or Upstash
     keys yet, so the contact form fails there.
-- **Cloudflare Workers preview** via OpenNext uses `wrangler.preview.jsonc` and `open-next.preview.config.mjs`. The
-  commands are in `docs/reviews/2026-09-11/contact-worker-1102.md`.
-  - On Workers Free (10 ms CPU per request) the adapter intermittently returns error 1102, so this path is only
-    usable for previews.
-  - The `meridian-preview-menu-ia` worker it targets was deleted on 2026-09-27; a deploy recreates it.
+- The earlier Cloudflare Workers preview (OpenNext) was removed on 2026-09-30. Workers Free intermittently hit the
+  10 ms CPU limit (error 1102), which ruled it out for production.

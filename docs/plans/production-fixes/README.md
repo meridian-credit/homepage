@@ -2,6 +2,11 @@
 
 작성: 2026-09-27 · 기준: `ian` `936315b` (+ 검토 문서 `51837d2`)
 
+> **상태 (2026-09-30):** P1–P6 를 모두 반영했다(`f4556d3`, `30fdebb`).
+> - 결과와 측정은 [implementation.md](./implementation.md) 에 있다.
+> - 이 수정은 `dev` 브랜치(https://accounting.teamcredit.kr)에 있고, `main`(운영)에는 아직 없다.
+> - 미룬 백엔드 항목은 [백엔드 후속 목록](../ui-ux-remediation/backend-backlog.md) 에 있다. 2026-09-30 에 다시 감사했다.
+
 근거 문서:
 
 - [2026-09-27 통합 검토](../../reviews/2026-09-27/ian-production-readiness.md)

@@ -30,6 +30,8 @@ keywords:
   - 세무조정
 relatedSlugs:
   - corporate-tax-filing-prep
+services:            # 업무경험 posts only: service slugs whose detail page lists this post
+  - tax-bookkeeping
 sourceLinks:
   - label: "국세청 공식 안내"
     url: "https://www.nts.go.kr/"
@@ -44,6 +46,14 @@ sourceLinks:
 - Use `lastChecked` on anything seasonal or law-change sensitive.
 - Use `relatedSlugs` when there is a specific follow-up article that should outrank generic same-category posts.
 - Use `keywords` for concept clusters, not for SEO stuffing.
+- `services` values are service slugs from `serviceGroups` in `src/lib/constants.ts`. Guide for 업무경험 posts:
+  `docs/BLOG_WORK_CASES.md`.
+
+`npm run audit:content` (a CI gate) enforces this schema on published posts:
+- Errors: missing `title` / `description` / `date` / `category`, invalid dates, and a `date` in the future.
+- Warnings: missing `lastChecked`, a `lastChecked` older than 120 days, and missing `sourceLinks`.
+  - Warnings do not fail CI.
+  - Don't bump `lastChecked` without actually re-reviewing the post.
 ## Authority priority
 
 - For rates, deadlines, filing duties, thresholds, forms, penalties, and calculation formulas, cite the closest primary authority first.

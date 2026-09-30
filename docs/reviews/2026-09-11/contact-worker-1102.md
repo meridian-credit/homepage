@@ -25,6 +25,8 @@ npx opennextjs-cloudflare build --config wrangler.preview.jsonc --openNextConfig
 npx opennextjs-cloudflare deploy --config wrangler.preview.jsonc
 ```
 
+> 2026-09-30: 두 설정 파일은 저장소에서 지웠다. 프리뷰 worker 도 2026-09-27 에 지웠다. 다시 쓰려면 `git show d135d60:wrangler.preview.jsonc` 처럼 꺼낸다.
+
 배포 명령에는 기존 환경의 Cloudflare 자격 증명이 필요하다. 문의 API용 자격 증명을 새로 추가하거나 요금제를 변경하지 않는다.
 
 ## 최종 관측과 남은 한계

@@ -1,30 +1,40 @@
 # MERIDIAN 디자인 시스템
 
-> 기준: `hometax-promo/index.html` (홈택스 대시보드 홍보 홈)
-> 만든 날: 2026-08-11
+> 처음 만든 날: 2026-08-11. 기준은 홍보 홈 시안 `hometax-promo/index.html` 이었고, 그 파일은 지금 없다.
+> **2026-09-30 에 현재 코드와 맞췄다.** 값의 원본은 코드다.
+> - 색·글자·폭: `src/app/globals.css` 의 `:root`
+> - 홈·포털 전용 토큰: `src/app/promo.css` 의 `.promo`
+>
+> 이 문서와 코드가 다르면 코드가 맞다. 이 문서를 고친다.
 
 한 줄 방향: **흰 종이 위의 파란 데이터.**
-밝고 넓다. 산세리프만 쓴다. 검정은 반전 구간에만.
+밝고 넓다. 산세리프만 쓴다(워드마크만 예외). 짙은 구간은 검정이 아니라 **남색**이고, 첫 화면과 맨 끝 CTA 에만 쓴다.
 
 ---
 
-## 1. 색 — 9개
+## 1. 색
 
 박스를 두르지 않는다. **선 하나로** 나눈다. 장부의 괘선과 같은 역할이다.
 
+사이트 색은 `globals.css` 의 `--color-*` 가 원본이다. `promo.css` 의 짧은 이름은 그 별칭이다. 별칭이 없는 것만 promo.css 에 값이 있다.
+
 | 이름 | 값 | 쓰는 곳 |
 |---|---|---|
-| `--w` | `#FFFFFF` | 바탕 |
+| `--w` | `#FFFFFF` (`--color-background`) | 바탕 |
 | `--w-2` | `#F4F7FC` | 옅은 면. 구역을 구분할 때 |
 | `--w-3` | `#E4EBF5` | 선·구분 |
-| `--tx` | `#000000` | 본문 글자. **순흑. 흐리게 쓰지 않는다** |
-| `--tx-2` | `#4D4D4D` | 보조 글자 |
-| `--blue` | `#1668D4` | 포인트. 메리디안 코발트 |
-| `--blue-d` | `#0F4FA8` | 진한 파랑 (강조 안의 강조) |
-| `--blue-b` | `#2080F5` | 검은 바탕 위에서 쓰는 밝은 파랑 |
-| `--blue-l` | `#E9F0FD` | 파란 옅은 면 |
+| `--tx` | `#000000` (`--color-foreground`) | 본문 글자. **순흑. 흐리게 쓰지 않는다** |
+| `--tx-2` | `#4D4D4D` (`--color-muted`) | 보조 글자 |
+| `--navy` | `#0E1D4A` (`--color-deep`) | 짙은 구간. `--navy-2` `#0A1636` 은 한 겹 더 누를 때 |
+| `--blue` | `#2B5BFF` (`--color-accent`) | 포인트. 흰 바탕 위 기준색(accent-500) |
+| `--blue-d` | `#1F4AE0` | hover·pressed (accent-600) |
+| `--blue-b` | `#4470FF` (`--color-accent-bright`) | 짙은 바탕 위의 밝은 파랑 (accent-400) |
+| `--blue-l` | `#E7EEFF` | 파란 옅은 면 (accent-100) |
 | `--up` | `#0E7C5A` | 좋아진 수치 |
 | `--down` | `#B4453C` | 나빠진 수치 |
+
+- 파랑 사다리는 고객 포털 앱(hometax-dashboard)의 accent 단계를 그대로 쓴다. 그 밖에 `--blue-900` `#1B40CC`, `--blue-300` `#7E9CFF`, `--blue-200` `#B9C8FF` 이 있다.
+- **파랑은 평면으로 칠하지 않는다.** 면을 칠할 때는 `--grad-blue`(600→500→400) 또는 `--grad-blue-d` 를 쓴다. 사다리 세 칸을 밟아야 면이 접힌 것처럼 읽힌다.
 
 **금지**
 - 보라~파랑 그라데이션 (`#6366f1`, `#8b5cf6`, indigo 계열)
@@ -38,24 +48,35 @@
 Tailwind 기본은 13종이라 어느 게 더 중요한지 눈이 판단을 못 한다.
 단계를 줄이고 **황금비(1.618배)** 로 벌린다.
 
+`--t-*` 는 `globals.css` 의 `:root` 에 한 번만 있다. 홈(`.promo`)도 그 값을 물려받는다.
+뿌리 글자가 **15px** 이므로 실제 크기는 아래와 같다.
+
 | 이름 | 값 | 실제 | 쓰는 곳 |
 |---|---|---|---|
-| `--t--1` | 0.75rem | 12px | 라벨·캡션 |
-| `--t-0` | 0.875rem | 14px | 작은 본문 |
-| `--t-1` | 1rem | 16px | 본문 (기준) |
-| `--t-2` | 1.618rem | 25.9px | 소제목 |
-| `--t-3` | 2.618rem | 41.9px | 섹션 제목 |
-| `--t-4` | 4.236rem | 67.8px | 히어로 (한 페이지에 한 번) |
+| `--t--1` | 0.8rem | 12px | 라벨·캡션. **사이트의 최소 글자** |
+| `--t-0` | 0.875rem | 13.1px | 작은 본문 |
+| `--t-1` | 1rem | 15px | 본문 (기준) |
+| `--t-2` | 1.618rem | 24.3px | 소제목·리드 |
+| `--t-3` | 2.618rem | 39.3px | 섹션 제목 |
+| `--t-4` | 4.236rem | 63.5px | 히어로 (한 페이지에 한 번) |
 
-### 글꼴 2종
+`--t--1` 만 0.8rem 이다. 0.75rem 은 실제로 11.25px 가 되기 때문이다.
+
+라벨은 두 종류뿐이다.
+- `.t-eyebrow`: 구역 맨 위에 둔다. 앞에 파란 짧은 선이 붙는다(홈의 `.tick`).
+- `.t-label`: 내용 안의 항목 이름이다. 선이 없다(홈의 `.ui-lab`).
+
+### 글꼴
 
 ```css
---sans: "Pretendard Variable", Pretendard, -apple-system, sans-serif;  /* 본문 */
---disp: "Wanted Sans Variable", "Wanted Sans", var(--sans);            /* 제목·큰 숫자 */
+--font-sans:    "Pretendard Site", "Pretendard Variable", "Pretendard", -apple-system, … sans-serif;  /* 본문 */
+--font-display: "Wanted Sans Site", "Wanted Sans Variable", "Wanted Sans", var(--font-sans);        /* 제목·큰 숫자 */
 ```
 
+- `… Site` 는 빌드 때 사이트에 쓰인 글자만 남긴 조각이다(`scripts/fonts/subset.mjs`). 없는 글자는 뒤의 원래 조각으로 넘어간다. 싣는 방법은 `AGENTS.md` 의 Fonts 를 본다.
 - **본문은 한글·영어 모두 Pretendard.** 영어라고 Inter 로 바꾸지 않는다.
 - 제목·큰 숫자만 Wanted Sans 로 대비를 준다.
+- 워드마크 `Meridian.` 만 Cormorant Garamond 600 이다(`.brand-word`).
 - Inter / Roboto / Arial / 기본 system-ui 로 끝내지 않는다.
 
 ### 한글 규칙
@@ -64,16 +85,11 @@ Tailwind 기본은 13종이라 어느 게 더 중요한지 눈이 판단을 못 
 p, li, .lede { word-break: keep-all; text-wrap: pretty; }
 ```
 
-- **한글에 `<br>` 로 줄을 나누지 않는다.** CSS 자동 줄바꿈만 쓴다.
-- 문맥 단위로 끊고 싶으면 `<br>` 이 아니라 `<span class="ctx"> </span>` 를 쓴다.
-  `<br>` 은 `display` 로 못 끄기 때문에 좁은 화면에서 **낱말이 붙어버린다.**
-
-```css
-.ctx { white-space: pre-wrap; }              /* 좁은 화면 — 그냥 공백 */
-@media (min-width: 768px) {
-  .ctx { display: block; height: 0; }        /* 넓은 화면 — 줄바꿈 */
-}
-```
+- **한글 줄바꿈은 CSS 에 맡긴다.** `<br>` 로 줄을 나누지 않는다.
+- 특히 **화면 폭에 따라 숨기는 `<br>` 은 쓰지 않는다**(`hidden md:block` 같은 것).
+  - JSX 는 줄바꿈 둘레의 공백을 지운다. 그래서 `<br>` 이 숨으면 앞뒤 낱말이 붙는다.
+  - 예: `src/app/services/page.tsx:207` 은 좁은 화면에서 "시작할지같이"로 보인다(2026-09-30 확인, 미수정).
+- 지금도 몇 페이지에 늘 보이는 `<br />` 이 남아 있다(clients, contact, portal, footer). 새로 늘리지 않는다.
 
 ### 글자 수 제한
 
@@ -81,11 +97,10 @@ p, li, .lede { word-break: keep-all; text-wrap: pretty; }
 
 | 자리 | 제한 |
 |---|---|
-| 히어로 제목 | `16ch` |
-| 섹션 제목 | `20ch` |
-| 리드 문장 | `40ch` |
-| 검은 화면 큰 문장 | `24ch` |
-| 마무리 상담 | `18ch` |
+| 히어로 제목 (`.hero h1`) | `16ch` |
+| 섹션 제목 (`h2.sec`) | `20ch` |
+| 리드 문장 (`.lede`) | `40ch` |
+| 짙은 화면 큰 문장 (`.creed-q`) | `24ch` |
 
 ---
 
@@ -95,15 +110,21 @@ p, li, .lede { word-break: keep-all; text-wrap: pretty; }
 --s1:8px; --s2:12px; --s3:16px; --s4:24px; --s5:32px; --s6:64px; --s7:104px;
 ```
 
+이 사다리는 `promo.css`(홈·포털)에만 있다.
+
 ---
 
 ## 4. 폭
 
 ```css
---wrap:      1600px;   /* 기본. 전체가 이걸 쓴다 */
---wrap-read: 1280px;   /* 읽는 글이 주인인 구역 */
---pad: clamp(20px, 4vw, 40px);
+--wrap:      1600px;                 /* 기본. 전체가 이걸 쓴다 */
+--wrap-read: 1280px;                 /* 읽는 글이 주인인 구역 */
+--pad:       var(--site-gutter-6);   /* 26px, 768px 이상 29px */
 ```
+
+**좌우 여백은 사이트 한 군데서 정한다.** `--site-gutter-*` 는 `globals.css` 에 있고, 헤더와 모든 페이지가 같이 쓴다.
+- 예전에는 홈만 `clamp(20px, 4vw, 40px)` 을 따로 썼다.
+- 그래서 1440px 에서 본문이 헤더 로고보다 11px 안으로 들어갔고, 390px 에서는 6px 밖으로 나갔다.
 
 **`--wrap-read` 를 쓰는 곳** — 넓히면 나빠지는 데다.
 
@@ -119,6 +140,7 @@ p, li, .lede { word-break: keep-all; text-wrap: pretty; }
 ## 5. 앱 카드 문법
 
 앱 화면 속 카드처럼 보여야 한다. 웹 섹션과 글자 문법이 다르다.
+실제 구현은 `/portal` 고객 화면 덱의 `.fpane` 이다(`promo.css`).
 
 | | 웹 섹션 | **앱 카드** |
 |---|---|---|
@@ -142,48 +164,49 @@ p, li, .lede { word-break: keep-all; text-wrap: pretty; }
 ```
 
 ```css
-.card { border-radius: 16px; border: 1px solid var(--w-3);
-        box-shadow: 0 30px 70px -34px rgba(0,0,0,.4); }
+.fpane { container-type: size; border-radius: 16px; border: 1px solid var(--w-3);
+         box-shadow: 0 18px 34px -20px rgba(0,0,0,.34); }
 ```
+
+그림자 번짐은 34px 이 상한이다. 카드가 움직일 때마다 번진 만큼 다시 그리기 때문이다. 70px 일 때 긴 프레임이 21회였고, 34px 로 줄여 14회가 됐다.
 
 ### 알약 배지
 
-상태는 맨글자로 쓰지 않고 알약에 담는다.
-
-```css
-.pill {
-  border-radius: 999px; padding: .2em .7em;
-  font-weight: 800; white-space: nowrap;
-  background: color-mix(in srgb, currentColor 13%, #fff);
-}
-```
-
-`currentColor` 를 쓰므로 `.up`(초록) / `.warn`(주황) 어디에 붙여도 배경이 알아서 맞는다.
+상태는 맨글자로 쓰지 않고 알약(`border-radius: 999px`)에 담는다.
+- 기본 `.pill` 은 색이 정해진 두 가지다. `.ok` 는 옅은 초록 바탕에 `--up`, `.warn` 은 `--blue-l` 바탕에 `--blue-900` 이다.
+- 카드 안 알약(`.fpane .ui-sub .pill`)은 `color-mix(in srgb, var(--up) 12%, #fff)` 바탕이다.
 
 ### 카드 안 글자는 카드 크기를 따라간다
 
-`container-type: size` + `cqh` 를 쓴다. 카드가 작아지면 글자도 같이 작아져서 안 넘친다.
+`container-type: size` 와 컨테이너 단위(`cqh`, `cqw`)를 쓴다. 카드가 작아지면 글자도 같이 작아져서 넘치지 않는다.
 
 ```css
-.card { container-type: size; }
-.card .big { font-size: clamp(22px, 27cqh, 100px); }
+.fpane .ui-big { font-size: clamp(22px, min(27cqh, 17cqw), 100px); }
 ```
 
-**주의:** 상한(`clamp` 세 번째 값)을 작게 잡으면 카드가 커져도 안쪽이 안 커져서 **절반이 빈다.** 카드 높이의 50% 이상은 내용이 차야 한다.
+- 높이(`cqh`)만 따르면, 좁은 카드(휴대폰)에서 숫자 한 덩어리가 폭을 넘는다. 그래서 폭(`17cqw`)으로도 막는다.
+- **주의:** 상한(`clamp` 세 번째 값)을 작게 잡으면, 카드가 커져도 안쪽이 안 커져서 **절반이 빈다.** 카드 높이의 50% 이상은 내용이 차야 한다.
 
 ---
 
-## 6. 움직임 — 다섯 군데만
+## 6. 움직임 — 정해진 장면만
 
-여기저기 흩뿌리지 않는다. 아래 다섯 외에 새로 추가하지 않는다.
+여기저기 흩뿌리지 않는다. 장면은 아래가 전부다. 새 장면을 더하려면 먼저 이 표를 고치고 이유를 적는다.
 
-| # | 무엇 | 어디 |
+| 페이지 | 장면 | 구현 |
 |---|---|---|
-| 1 | 숫자가 올라간다 | 지표 띠 |
-| 2 | 카드가 날아와 모인다 | 메뉴 격자 |
-| 3 | 카드가 포물선으로 빠진다 | 고객 화면 덱 |
-| 4 | 파란 선이 흐른다 | 시작하기 4단계 |
-| 5 | 표 한 칸이 강조된다 | 비교표 |
+| 홈 | 첫 화면 영상 판이 설명 판으로 넘어간다 | `about/about-opening.tsx` (`useScrollProgress`) |
+| 홈 | 불만 대화와 약속이 이어진다 | `about/promise-stage.tsx` |
+| 홈 | 대시보드 배너의 태블릿이 마우스 쪽으로 조금 기운다 | `home/portal-stage.tsx` |
+| 홈 | 비교표 한 칸이 강조된다 | `.vs` · `vsScroll()` (`home/promo-scenes.ts`) |
+| 포털 | 숫자가 올라간다 (지표 띠) | `.stats-rail` · `statsScroll()` |
+| 포털 | 카드가 날아와 모인다 (메뉴 격자) | `.gather-grid` · `mergeScroll()` |
+| 포털 | 서비스 카드가 대시보드로 합쳐지고, 그 화면이 일어서서 안쪽이 흐른다 | `home/service-merge-scene.ts` · `#shot` · `parallax()` |
+| 포털 | 카드가 포물선으로 빠진다 (고객 화면 덱) | `.fpane.gone` · `featScroll()` |
+| 포털 | 파란 선이 흐른다 (시작하기 4단계) | `#flow` · `@keyframes flowseg` |
+| 공통 | 화면 밖에서 들어오는 요소가 한 번 떠오른다 | `components/motion/` · `[data-reveal]` |
+
+구조 규칙은 `AGENTS.md` 의 Motion 에 있다. 무대 장면의 미디어 조건, `--p` 진행률, reveal 이 서버 HTML 을 숨기지 않는 것이 거기 적혀 있다.
 
 ### 강조 애니메이션 (표)
 
@@ -199,7 +222,7 @@ p, li, .lede { word-break: keep-all; text-wrap: pretty; }
 
 > **함정:** 여러 칸에 같은 회전을 걸면 **칸마다 제 중심으로 따로 돈다.**
 > 칸 폭이 800px 이면 1도에도 끝이 14px 씩 어긋나 계단처럼 찌그러진다.
-> `transform-origin` 을 JS 로 계산해 **묶음 전체의 한가운데**로 맞춰야 한 판처럼 돈다.
+> `transform-origin` 을 JS 로 계산해 **묶음 전체의 한가운데**로 맞춰야 한 판처럼 돈다(`vsOrigin()` → `--oy`).
 
 ### 반드시
 
@@ -207,22 +230,20 @@ p, li, .lede { word-break: keep-all; text-wrap: pretty; }
 @media (prefers-reduced-motion: reduce) { /* 전부 완성된 상태로 즉시 표시 */ }
 ```
 
-움직임을 끈 사람에게는 **결과만** 보인다. 다시 보기 버튼도 숨긴다.
+움직임을 끈 사람에게는 **결과만** 보인다. 다시 보기 버튼도 숨긴다. 영상은 아예 받지 않는다.
 
 ---
 
 ## 7. 로고
 
-로고는 **회색 선 그림**이다. 배경에 따라 처리가 다르다.
+**로고는 SVG 부품 둘이다.** 지구본 선 그림 `MeridianMark` 와 글자 `Meridian.` 이다(`src/components/brand/wordmark.tsx`).
+- 선은 `currentColor` 로 그린다. 바탕에 따라 CSS `color` 만 바꾸면 되고, 필터는 쓰지 않는다.
+- 가운데 경도선 한 줄만 늘 `--color-accent` 다.
+- 크기는 둘레 글자 크기(`em`)를 따른다.
 
-| 배경 | 처리 | 크기 |
-|---|---|---|
-| 흰 바탕 | 원본 그대로 | 28px |
-| **파란 면** | `filter: invert(1) brightness(2.2)` | 24px |
-| 검은 바탕 | `filter: invert(1) brightness(1.6)` | 22px |
-
-**금지:** `brightness(0) invert(1)`
-먼저 통째로 검게 뭉갠 뒤 흰색으로 뒤집는 순서라 **지구본 무늬가 사라지고 통짜 흰 원**이 된다. 헤더 로고와 딴 물건으로 보인다.
+옛 PNG 로고(`/images/logo.png`)는 구조화 데이터와 `/portal` 비교표(`.vs-brand`)에만 남아 있다. 그걸 짙은 바탕에 놓을 때:
+- `filter: invert(1) brightness(2.2)` 를 쓴다.
+- **금지:** `brightness(0) invert(1)`. 먼저 통째로 검게 뭉갠 뒤 흰색으로 뒤집는 순서라, **지구본 무늬가 사라지고 통짜 흰 원**이 된다.
 
 ---
 
@@ -230,11 +251,14 @@ p, li, .lede { word-break: keep-all; text-wrap: pretty; }
 
 - 아이콘 + 제목 + 한 줄 설명 **3칸 카드 그리드** (진짜 3개짜리 내용일 때만)
 - 유리 효과(glassmorphism)
+  - 예외는 헤더 하나다. 굴절 유리(`glass.css`)는 의도한 재질이다. 다른 곳에 번지게 하지 않는다.
 - 카드 왼쪽 세로 강조선
 - 의미 없는 반짝임·둥둥 뜨는 애니메이션
 - `01 / 02 / 03` 숫자 마커 — **진짜 순서가 있을 때만**
 - 이모지를 UI 아이콘으로 쓰기
-- 지어낸 숫자 — 셀 수 있으면 코드가 세게 하고, 모르면 **비워 둔다**
+- 지어낸 숫자
+  - 셀 수 있으면 코드가 세게 하고, 모르면 **비워 둔다**.
+  - 데모 화면의 예시 숫자는 "표시된 숫자는 예시입니다"를 붙여 둔다.
 
 ---
 
@@ -243,5 +267,5 @@ p, li, .lede { word-break: keep-all; text-wrap: pretty; }
 1. 모바일 대응 (390px 에서 가로 넘침 0)
 2. 키보드 포커스가 보일 것
 3. `prefers-reduced-motion` 존중
-4. 한글에 `<br>` 금지
+4. 한글에 `<br>` 금지 (§2)
 5. 기억에 남을 요소는 **딱 1개**만 과감하게. 나머지는 조용하게
