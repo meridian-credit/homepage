@@ -162,7 +162,15 @@ ScrollTrigger needs no bridge. There is no `motion` (framer-motion) dependency; 
     state machine uses `onProgress`. The hook commits those updates with `flushSync` so CSS transitions start in the
     same frame, except on the first draw: that one runs inside `useLayoutEffect`, where React forbids `flushSync`.
   - Lightning CSS (the Next minifier) drops a `scale` property that shares a rule with `transform`. Put the scale
-    inside `transform`.
+    inside `transform`. It also moves a separate `transition-behavior: allow-discrete` line above the `transition`
+    shorthand, which then resets it to `normal`. Write `allow-discrete` inside the shorthand.
+- **Header glass and mega menu** (`layout/header.tsx`, `layout/site-nav.tsx`, `glass-filter.tsx`):
+  - The SVG refraction backdrop-filter is re-drawn on every frame in which anything inside the header moves.
+    That frame is about 10× dearer than without it (measured 2026-09-30).
+  - Don't animate inside the header while the refraction is on. The mega menu turns it off while open and for
+    0.3 s after close.
+  - Every mega-menu pane is always rendered; inactive ones are inert. Each pane is placed under its trigger with
+    no transition. The panel uses `overflow: clip`: with `hidden`, keyboard focus scrolled the shorter pane.
 - **Reveals** (`components/motion/`: `AnimateOnScroll`, `StaggerChildren`/`StaggerItem`, `LineReveal`):
   - Server HTML is always visible. After hydration, only elements still below the fold get
     `data-reveal="pending"`. `onceInView` in `src/lib/in-view.ts` (the same check `useInViewOnce` uses) flips them to `"shown"`.

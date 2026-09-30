@@ -732,7 +732,11 @@ h1, h2, h3, h4 {
    유리를 다시 여기에 붙이지 말 것. */
 .hdr-mega {
   position: relative;
-  overflow: hidden;
+  /* hidden 이 아니라 clip. 판들이 한 칸에 겹쳐 있어 칸의 키는 가장 긴 판(인사이트)
+     만큼이다. hidden 은 스크롤할 수 있는 통이라, 짧은 판(서비스)을 키보드로 열어
+     첫 링크에 포커스가 가면 브라우저가 통을 43px 내려 칸 제목이 잘렸고, 그 뒤로
+     마우스로 열어도 그대로였다. clip 은 스크롤 자체가 없다. */
+  overflow: clip;
   height: 0;
   transition: height .22s cubic-bezier(.25, .8, .35, 1);
   background: none;
@@ -741,57 +745,38 @@ h1, h2, h3, h4 {
   contain: paint;
 }
 .hdr-mega::before { content: none; }
-.hdr-mega-in { position: relative; z-index: 1; }
-
-/* 판 안 첫 줄. 그 구역 전체로 가는 길이다 — 칸을 눌러서 열게 바꾸면서
-   칸 자체가 링크가 아니게 됐다. */
-.hdr-mega-all {
-  display: inline-flex;
-  align-items: center;
-  gap: .4rem;
-  text-decoration: none;
-  transition: color .16s ease;
-}
-@media (hover: hover) {
-  .hdr-mega-all:hover { color: var(--color-accent); }
-}
-.site-header[data-tone="dark"] .hdr-mega {
-  background: rgba(10, 18, 38, .82);
-}
+/* 검은 히어로 위([data-tone="dark"])에서 판에 남색을 깔던 규칙은 뺐다. 판이
+   열려 있으면 헤더는 늘 밝은 쪽이라, 그 규칙은 닫히며 접히는 동안에만 걸렸다 —
+   글이 사라진 빈 판이 남색 덩어리로 접혔다. */
 .site-header[data-mega="true"] .hdr-mega { height: var(--mega-h, 15rem); }
-.hdr-mega-in {
+
+/* 판들은 한 칸에 겹쳐 선다(site-nav.tsx MegaPanel). 키는 각자 제 내용만큼이고
+   (align-self: start), 통의 키는 열린 판의 키(--mega-h)를 따로 받는다.
+   나가는 판은 짧게 지우고, 들어오는 판은 통이 조금 자란 뒤에 나타난다.
+   칸을 옮기면 두 판이 제자리에서 겹쳐 바뀐다. */
+.hdr-mega-in { position: relative; z-index: 1; display: grid; }
+.hdr-mega-pane {
+  grid-area: 1 / 1;
+  align-self: start;
   padding-top: .4rem;
   padding-bottom: 2.4rem;
   opacity: 0;
   translate: 0 -6px;
+  transition: opacity .12s ease, translate .28s cubic-bezier(.2,.8,.3,1);
+}
+.site-header[data-mega="true"] .hdr-mega-pane[data-on="true"] {
+  opacity: 1;
+  translate: 0 0;
   transition: opacity .2s ease .04s, translate .28s cubic-bezier(.2,.8,.3,1);
 }
-.site-header[data-mega="true"] .hdr-mega-in { opacity: 1; translate: 0 0; }
 
 /* 판이 열려 있는 동안 헤더 아래를 한 줄로 끊는다. */
 .site-header[data-mega="true"] { border-bottom: 1px solid var(--color-border); }
-.site-header[data-tone="dark"][data-mega="true"] { border-bottom-color: rgba(255,255,255,.14); }
 
-/* 판 내용은 그 칸 밑에서 시작한다. --mega-x 는 JS 가 재서 넣는다. */
-.hdr-mega-eyebrow,
-.hdr-mega-cols { margin-left: var(--mega-x, 0); transition: margin-left .24s cubic-bezier(.2,.8,.3,1); }
-.hdr-mega-eyebrow {
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: .2em;
-  text-transform: uppercase;
-  color: var(--color-subtle);
-  padding-bottom: .85rem;
-  margin-bottom: 1.1rem;
-  border-bottom: 1px solid var(--color-border);
-  width: fit-content;
-  min-width: 12rem;
-  padding-right: 3rem;
-}
-.site-header[data-tone="dark"] .hdr-mega-eyebrow {
-  color: rgba(255,255,255,.5);
-  border-bottom-color: rgba(255,255,255,.14);
-}
+/* 판 내용은 그 칸 밑에서 시작한다. --mega-x 는 JS 가 판마다 재서 넣는다.
+   전환을 걸지 않는다. 걸어 두었더니 칸을 옮길 때마다 글이 옛 칸 자리에서
+   미끄러져 왔고, 처음 열 때는 통 왼쪽 끝에서 날아왔다. */
+.hdr-mega-cols { margin-left: var(--mega-x, 0); }
 
 /* 칸은 내용만큼만. 여섯 개짜리는 두 줄, 세 개짜리는 한 줄. */
 .hdr-mega-cols {
@@ -849,7 +834,9 @@ h1, h2, h3, h4 {
 
 @media (max-width: 767px) { .hdr-mega { display: none; } }
 @media (prefers-reduced-motion: reduce) {
-  .hdr-mega, .hdr-mega-in { transition: none; }
+  .hdr-mega,
+  .hdr-mega-pane,
+  .site-header[data-mega="true"] .hdr-mega-pane[data-on="true"] { transition: none; }
 }
 
 /* ── 모바일 메뉴 ────────────────────────────────
@@ -2294,6 +2281,33 @@ h1, h2, h3, h4 {
 .site-header a,
 .site-header span {
   transition: color 0.28s ease, background-color 0.28s ease;
+}
+
+/* 막(::before)도 글자와 같은 박자로 바뀐다. 글자만 0.28초에 걸쳐 바뀌고 막은
+   한 번에 바뀌어서, 검은 히어로에서 메뉴를 열면 흰 막 위에 흰 글자가 잠깐
+   떠 있었다. 스크롤해서 흰 막으로 넘어갈 때도 같았다.
+
+   펼침판이 열려 있는 동안은 굴절을 끈다(아래 @supports).
+   굴절 필터의 변위 지도(glass-filter.tsx 의 feImage 둘)는 헤더 안에서 무엇이
+   움직이는 프레임마다 다시 그려진다. 판이 자라고 글이 바뀌는 동안은 매 프레임이다.
+   재 본 값(2026-09-30, M2 Max, 1440@2x, 프레임 상한을 푼 Chromium): 메뉴를 여닫는
+   동안 초당 약 180 프레임, 굴절을 빼면 약 1,850. 120Hz 화면이나 약한 GPU 에서는
+   그 차이가 열 때의 끊김이다.
+   판이 열리면 막이 흰색 0.8 이라 굴절은 20% 만 비친다. 켠 것과 끈 것의 화면 차이는
+   평균 0.3/255, 픽셀 1.4% — 흰 막 밑 히어로 글자가 아랫입술에서 4px 밀리는 것뿐이다.
+
+   닫을 때는 판이 다 접힌 뒤(0.3초)에 다시 켠다. 바로 켜면 접히는 동안 다시
+   무거워진다. url() ↔ none 은 이어지는 값이 아니라 allow-discrete 가 있어야
+   늦출 수 있다. 그걸 모르는 브라우저는 바로 켠다 — 예전과 같다.
+   allow-discrete 는 transition 단축 속성 안에 둔다. transition-behavior 로 따로
+   적었더니 빌드(Lightning CSS)가 그 줄을 단축 속성 앞으로 옮겨, 단축 속성이
+   도로 normal 로 덮었다 — 굴절이 닫는 순간 바로 켜졌다. */
+.site-header::before {
+  transition: background-color 0.28s ease, backdrop-filter 0s linear 0.3s allow-discrete;
+}
+.site-header[data-mega="true"]::before { transition-delay: 0s; }
+@supports (backdrop-filter: url(#glass-refract)) {
+  .site-header[data-mega="true"] { --glass-bar-blur: none; }
 }
 
 /* =========================================================================
@@ -4990,7 +5004,6 @@ h1, h2, h3, h4 {
   .ins-cats em,
   .blog-meta,
   .abt-facts dt,
-  .hdr-mega-eyebrow,
   .t-eyebrow,
   .t-label { font-size: 12px; }
   .svc-chip { font-size: 12px; }

@@ -42,6 +42,10 @@ function isOn(pathname: string, href: string) {
   return pathname === path || pathname.startsWith(path + "/");
 }
 
+/* 펼침판은 하위가 있는 칸마다 하나씩이다. 칸의 aria-controls 가 제 판을 가리킨다. */
+const hasPane = (entry: NavEntry) => Boolean(entry.items || entry.columns);
+const paneId = (label: string) => `desktop-navigation-${label.toLowerCase().replace(/\s+/g, "-")}`;
+
 /* ── 데스크톱 ─────────────────────────────────────────────── */
 
 /* 열림 상태는 헤더가 갖는다. 판이 헤더 안에서 열리기 때문에, 판 위에
@@ -93,7 +97,7 @@ export function DesktopNav({ ctl, entries }: { ctl: MenuCtl; entries: NavEntry[]
   return (
     <nav ref={navRef} className="flex items-center gap-9" aria-label="주 메뉴">
       {entries.map((entry) => {
-        const hasPanel = Boolean(entry.items || entry.columns);
+        const hasPanel = hasPane(entry);
         const active = isOn(pathname, entry.href);
         const shown = open === entry.label;
 
@@ -139,14 +143,16 @@ export function DesktopNav({ ctl, entries }: { ctl: MenuCtl; entries: NavEntry[]
               href={entry.href}
               data-trigger={entry.label}
               aria-expanded={shown}
-              aria-controls="desktop-navigation-panel"
+              aria-controls={paneId(entry.label)}
               className={`${face} inline-flex items-center gap-1.5`}
               onKeyDown={(e) => {
                 if (e.key === "ArrowDown") {
                   e.preventDefault();
                   cancelClose();
                   setOpen(entry.label);
-                  requestAnimationFrame(() => document.querySelector<HTMLElement>("#desktop-navigation-panel a")?.focus());
+                  /* 판은 칸마다 따로 있고 닫힌 판은 inert 다. 통 전체의 첫 링크를
+                     찾으면 다른 칸의 판(서비스)에 걸려 포커스가 안 간다. */
+                  requestAnimationFrame(() => document.getElementById(paneId(entry.label))?.querySelector<HTMLElement>("a")?.focus());
                 }
               }}
             >
@@ -260,83 +266,104 @@ export function MobileNav({ onNavigate, entries }: { onNavigate: () => void; ent
 
 /* ── 헤더 안에서 열리는 판 ─────────────────────────────────
    칸 밑에 카드가 뜨는 게 아니라, 헤더가 스스로 키를 키워 그 안에 담는다.
-   그래서 판이 헤더와 같은 유리 위에 앉고 경계가 안 생긴다. */
+   그래서 판이 헤더와 같은 유리 위에 앉고 경계가 안 생긴다.
+
+   판은 하위가 있는 칸마다 하나씩, 늘 그려 둔다. 한 칸에 겹쳐 두고
+   열린 것만 보인다(globals.css .hdr-mega-pane).
+   예전에는 열린 칸의 판 하나만 그렸다. 그래서
+   - 닫는 순간 글이 통째로 사라지고 빈 판만 접혔다. 맨 위 검은 히어로에서는
+     그 빈 판이 남색 덩어리로 보였다.
+   - 칸을 옮기면 글이 먼저 바뀌고, 바뀐 글이 옛 칸 자리에서 새 칸 자리로
+     0.24초 동안 미끄러졌다. 처음 열 때는 통 왼쪽 끝에서 날아왔다.
+   지금은 판마다 제 자리에 서 있고, 칸을 옮기면 두 판이 제자리에서 겹쳐 바뀐다. */
 export function MegaPanel({ ctl, entries }: { ctl: MenuCtl; entries: NavEntry[] }) {
   const pathname = usePathname();
   const { open, setOpen, cancelClose, scheduleClose } = ctl;
-  const entry = entries.find((m) => m.label === open);
-  const rows = entry?.columns ?? (entry?.items ? [{ title: "", items: entry.items }] : []);
+  const panes = entries.filter(hasPane);
 
   /* 하위 메뉴는 그 칸 바로 밑에 선다. 통 왼쪽 끝에서 시작하면
-     어느 칸에서 나온 건지 알 수 없다. 칸의 x 를 재서 그만큼 민다. */
+     어느 칸에서 나온 건지 알 수 없다. 칸의 x 를 재서 그만큼 민다.
+     여는 판 하나만, 그리기 전에 잰다. 미는 데 전환을 걸지 않는다 —
+     자리는 옮겨 가는 게 아니라 처음부터 거기 있어야 한다. */
   const inRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const box = inRef.current;
     if (!box || !open) return;
+    const pane = document.getElementById(paneId(open));
     const trigger = document.querySelector<HTMLElement>(`[data-trigger="${open}"]`);
-    if (!trigger) return;
-    const t = trigger.getBoundingClientRect();
-    const b = box.getBoundingClientRect();
-    /* 통은 좌우 여백을 갖는다. 그 여백 안쪽이 0 이라 빼 줘야 칸과 맞는다. */
-    const pad = parseFloat(getComputedStyle(box).paddingLeft) || 0;
-    /* 글자 왼쪽에 맞추되 통 밖으로는 안 나간다. 밀 수 있는 끝은 칸들이
-       실제로 차지하는 폭으로 잰다 — 260 으로 박아 두었더니 서비스가
-       넷으로 늘었을 때 오른쪽으로 삐져나갔다. */
-    const cols = box.querySelector<HTMLElement>(".hdr-mega-cols");
-    const colsW = cols ? cols.scrollWidth : 260;
-    const x = Math.max(0, Math.min(t.left - b.left - pad, b.width - pad * 2 - colsW));
-    box.style.setProperty("--mega-x", `${Math.round(x)}px`);
-
-    /* 판 높이는 내용이 정한다. 15rem 에 붙박아 두니 인사이트처럼 줄이
-       다섯인 판은 마지막 줄이 아래 테두리에 붙어 잘렸다.
-       여백(--mega-x)이 0.24초에 걸쳐 밀리는데 높이는 밀기 전에 쟀다.
-       다 밀리고 나서 칸이 접히면 그만큼 아래가 잘렸다(95px).
-       내용 크기가 바뀔 때마다 다시 잰다. */
+    if (!pane || !trigger) return;
     const panel = box.parentElement;
-    const fit = () => panel?.style.setProperty("--mega-h", `${Math.ceil(box.scrollHeight)}px`);
-    fit();
-    const ro = new ResizeObserver(fit);
+
+    const place = () => {
+      const t = trigger.getBoundingClientRect();
+      const b = box.getBoundingClientRect();
+      /* 통은 좌우 여백을 갖는다. 그 여백 안쪽이 0 이라 빼 줘야 칸과 맞는다. */
+      const pad = parseFloat(getComputedStyle(box).paddingLeft) || 0;
+      /* 글자 왼쪽에 맞추되 통 밖으로는 안 나간다. 밀 수 있는 끝은 칸들이
+         실제로 차지하는 폭으로 잰다 — 260 으로 박아 두었더니 서비스가
+         넷으로 늘었을 때 오른쪽으로 삐져나갔다. */
+      const cols = pane.querySelector<HTMLElement>(".hdr-mega-cols");
+      const colsW = cols ? cols.scrollWidth : 260;
+      const x = Math.max(0, Math.min(t.left - b.left - pad, b.width - pad * 2 - colsW));
+      pane.style.setProperty("--mega-x", `${Math.round(x)}px`);
+      /* 판 높이는 내용이 정한다. 15rem 에 붙박아 두니 인사이트처럼 줄이
+         다섯인 판은 마지막 줄이 아래 테두리에 붙어 잘렸다. */
+      panel?.style.setProperty("--mega-h", `${Math.ceil(pane.getBoundingClientRect().height)}px`);
+    };
+    place();
+    /* 열려 있는 동안 창 폭(통)이나 글 크기(판)가 바뀌면 다시 잰다. */
+    const ro = new ResizeObserver(place);
     ro.observe(box);
-    if (cols) ro.observe(cols);
+    ro.observe(pane);
     return () => ro.disconnect();
-  }, [open, setOpen]);
+  }, [open]);
 
   return (
     <div
       id="desktop-navigation-panel"
       className="hdr-mega"
-      inert={!entry}
-      data-open={entry ? "true" : "false"}
+      inert={!open}
+      data-open={open ? "true" : "false"}
       onPointerEnter={cancelClose}
       onPointerLeave={scheduleClose}
-      aria-hidden={!entry}
+      aria-hidden={!open}
     >
       <div ref={inRef} className="hdr-mega-in max-w-[1600px] mx-auto px-6">
-        {entry && (
-          <>
-            <div className="hdr-mega-cols">
-              {rows.map((col, i) => (
-                <div key={col.title || i}>
-                  {col.title && <p className="hdr-mega-coltitle">{col.title}</p>}
-                  <ul>
-                    {col.items.map((item) => (
-                      <li key={item.href}>
-                        <Link
-                          href={item.href}
-                          onClick={() => setOpen(null)}
-                          aria-current={isOn(pathname, item.href) ? "page" : undefined}
-                        >
-                          <span className="hdr-mega-label">{item.label}</span>
-                          {item.hint && <span className="hdr-mega-hint">{item.hint}</span>}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+        {panes.map((entry) => {
+          const on = entry.label === open;
+          const rows = entry.columns ?? [{ title: "", items: entry.items ?? [] }];
+          return (
+            <div
+              key={entry.href}
+              id={paneId(entry.label)}
+              data-on={on ? "true" : "false"}
+              className="hdr-mega-pane"
+              inert={!on}
+            >
+              <div className="hdr-mega-cols">
+                {rows.map((col, i) => (
+                  <div key={col.title || i}>
+                    {col.title && <p className="hdr-mega-coltitle">{col.title}</p>}
+                    <ul>
+                      {col.items.map((item) => (
+                        <li key={item.href}>
+                          <Link
+                            href={item.href}
+                            onClick={() => setOpen(null)}
+                            aria-current={isOn(pathname, item.href) ? "page" : undefined}
+                          >
+                            <span className="hdr-mega-label">{item.label}</span>
+                            {item.hint && <span className="hdr-mega-hint">{item.hint}</span>}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
             </div>
-          </>
-        )}
+          );
+        })}
       </div>
     </div>
   );
