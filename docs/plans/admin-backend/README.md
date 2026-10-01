@@ -108,7 +108,7 @@ Vercel 을 떠나지 못하게 되면 Astra 안(Neon + 객체 저장소)이 대�
 
 ### 0단계 (선행): 문의 신뢰성, 운영 이전
 
-- BE-01 수정(1–2일): Resend 의 `{ error }` 를 확인한다. 받는 주소를 환경 변수로 뺀다.
+- ~~BE-01 수정: Resend 의 `{ error }` 를 확인한다. 받는 주소를 환경 변수로 뺀다.~~ 2026-10-01 완료(BE-02 포함).
 - `dev` → `main` 병합.
 - Vercel 에서 자체 서버로 이전(BE-08 체크리스트): HSTS, HTML 캐시 헤더, 검증 메타, 이전 SHA 로 되돌리기.
   - 이전 자체는 이 계획 밖이고 공수는 따로 잡는다.
@@ -218,24 +218,22 @@ Vercel 을 떠나지 못하게 되면 Astra 안(Neon + 객체 저장소)이 대�
 
 ## 6. 문의 메일 경로
 
-SMTP 는 쓰지 않는다. `resend` SDK 로 Resend 의 HTTPS API 를 부른다(`src/app/api/contact/route.ts:449-481`).
-Resend 는 안에서 Amazon SES 로 보낸다.
+메일은 우리 AWS 계정의 Amazon SES(서울, ap-northeast-2)로 보낸다. `@aws-sdk/client-sesv2` 로 SES 의 HTTPS API 를
+부른다(`src/app/api/contact/route.ts`). SMTP 서버는 두지 않는다. 2026-10-01 에 Resend 에서 옮겼다(주인 결정).
 
 | 항목 | 지금 값 |
 |---|---|
-| 보내는 주소 | `RESEND_FROM_EMAIL`. 없으면 Resend 시험용 `onboarding@resend.dev` 로 떨어진다. 시험용 주소는 Resend 계정 주인에게만 갈 수 있다 |
-| 보내는 도메인 | `meridianco.kr`. Resend 인증이 되어 있다(2026-10-01 DNS 확인): DKIM `resend._domainkey`, `send.` 서브도메인 SPF·MX(us-east-1), DMARC `p=none` |
-| 받는 주소 | `siteConfig.email` = `mscpa@dscpa.co.kr`, 코드에 박혀 있다. 받는 쪽 메일 서버는 `spam.g2w.kr`(스팸 필터) |
-| 회신 | `replyTo` = 문의자 이메일. 받은 메일에서 [답장] 하면 문의자에게 간다 |
-| 키 | Vercel 환경 변수에만 있다. dev 서버에는 없어서 dev 문의 폼은 실패한다 |
+| 보내는 주소 | `CONTACT_FROM_EMAIL` = `no-reply@meridianco.kr`, 필수. 없으면 500 으로 답하고 보내지 않는다 |
+| 보내는 도메인 | `meridianco.kr`. SES 에 등록했고, DNS 는 2026-10-01 에 우리 Cloudflare 로 옮겼다. DKIM CNAME 3개, MAIL FROM `e.meridianco.kr`(MX·SPF), DMARC `p=none` |
+| 받는 주소 | `CONTACT_TO_EMAIL`, 없으면 `siteConfig.email` = `mscpa@dscpa.co.kr`. 받는 쪽 메일 서버는 `spam.g2w.kr`(스팸 필터) |
+| 회신 | Reply-To = 문의자 이메일. 받은 메일에서 [답장] 하면 문의자에게 간다 |
+| 키 | `AWS_ACCESS_KEY_ID`·`AWS_SECRET_ACCESS_KEY`. `no-reply@meridianco.kr` 로만 보낼 수 있는 키를 서버 `.env` 에 둔다 |
 
 **서버를 옮기면서 할 일**
-- **BE-01:** `{ error }` 를 확인한다. 실패하면 방문자에게 실패라고 답하고, 직접 연락처를 보인다.
-- **BE-02:** 받는 주소를 `CONTACT_TO_EMAIL` 로 뺀다. dev 와 시험 발송이 대표 메일함으로 가지 않게 한다. 실제 발송 시험도 한 번 한다.
-- **API 키:** 주인이 Resend 에서 **새 API 키**를 만든다. 발송 전용, `meridianco.kr` 도메인 한정. 새 VM 의 `.env` 에만 둔다.
-- **발신 주소:** `RESEND_FROM_EMAIL` 을 `meridianco.kr` 주소로 명시한다.
+- ~~BE-01, BE-02~~ 2026-10-01 코드 완료. 남은 것은 SES 도메인 인증이 끝난 뒤 dev 에서 시험 수신함으로 한 번 보내 보는 것이다.
+- **Resend 정리:** 지금 운영 중인 빌드는 아직 Resend 로 보낸다. 새 코드가 운영에 올라간 뒤 DNS 의 `resend._domainkey`·`send.` 레코드를 지운다.
 - **속도 제한:** 서버가 한 대라 메모리 속도 제한으로 충분하다. Upstash 를 빼면 `CONTACT_RATE_LIMIT_REQUIRE_SHARED` 는 켜지 않는다. 켜면 문의가 전부 503 이 된다.
-- **처리방침(BE-07):** 문의 내용이 Resend(미국)를 거치고 Resend 에 발송 기록이 남는다. 국외 처리 위탁으로 적어야 한다.
+- **처리방침(BE-07):** 문의 내용은 우리 AWS 계정의 SES 서울 리전을 거친다. 수탁사로 AWS 를 적는다. 국외 이전 항목은 법무가 판단한다.
 
 ## 7. 주인이 정할 것 (기본값은 굵게)
 

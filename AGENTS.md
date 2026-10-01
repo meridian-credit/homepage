@@ -94,16 +94,27 @@ The frontmatter schema and citation rules are in `docs/content-system.md`:
 **Gated routes.** `/preview` returns 404 unless `ENABLE_PREVIEW_PAGE=true`. `/pricing` exists but is kept out of the nav
 and the sitemap, and is noindex.
 
-**`/api/contact`** sends mail through Resend.
+**`/api/contact`** sends mail through Amazon SES (our AWS account, ap-northeast-2) as `no-reply@meridianco.kr`.
 - It checks Origin and Sec-Fetch-Site against `siteConfig.url` plus `CONTACT_ALLOWED_ORIGINS`.
 - Rate limiting is an Upstash sliding window per IP and per email. It falls back to an in-memory map when the
   Upstash env vars are unset; set `CONTACT_RATE_LIMIT_REQUIRE_SHARED=true` to forbid that fallback.
-- Resend SDK 6.x does not throw on a failed send; it returns `{ data: null, error }`. Check `error`, not just
-  `catch`. The route currently ignores it and answers 200 on failure. That is BE-01 in
-  `docs/plans/ui-ux-remediation/backend-backlog.md`, the verified backlog of open backend issues and of what not
-  to build (no DB, CRM, or queue).
-- The recipient is `siteConfig.email`, hardcoded. Before Resend keys go onto any non-production host, make it
-  configurable, or test inquiries reach the real client mailbox.
+- The SES SDK throws when a send is rejected, denied, or can't reach SES. The route then answers 502 with the
+  direct email address, and does the same when no `MessageId` comes back. Only the error name and status are logged,
+  never the visitor's address or message.
+- `CONTACT_FROM_EMAIL` is the switch: without it the route answers 500 and sends nothing, even if AWS credentials
+  are in the environment. The recipient is `CONTACT_TO_EMAIL`, else `siteConfig.email`. The Korean display name goes
+  out as an RFC 2047 encoded-word, which SES requires.
+- DNS for `meridianco.kr` moved to our Cloudflare on 2026-10-01. It holds the SES DKIM CNAMEs and the
+  `e.meridianco.kr` MAIL FROM records. `resend._domainkey` and `send.` belong to the Resend setup that the
+  currently deployed live build still uses; remove them once the live site runs this code.
+- The anti-bot speed check takes `elapsedMs`, which the form measures with `performance.now()` (0 = page open on a
+  first load). Never send a client wall-clock timestamp: a device clock a few minutes off would block every
+  submission.
+- `tests/e2e/contact-route.spec.ts` is the only test that hits the real route. It starts its own `next start` with
+  every `AWS_*` from the shell removed, a fake key, and `AWS_ENDPOINT_URL_SESV2` pointed at an in-process fake SES,
+  so it never uses the shared :3100 server or a real key.
+  The other contact tests fake the response with `page.route`.
+- Open backend issues, and what not to build, are in `docs/plans/ui-ux-remediation/backend-backlog.md`.
 - The full env var list is in `README.md`.
 
 **`/contact` must stay statically prerendered.**
@@ -210,7 +221,7 @@ Tests enforce three rules:
     by hand, run `rm failed && ./deploy.sh`.
   - Path: Cloudflare DNS-only CNAME (grey cloud) → `origin.teamcredit.kr` → Caddy edge on `proxy-seoul-01` (adds
     `X-Robots-Tag: noindex`) → inner NPM proxy host 76 → `accounting_dev:3000`.
-  - The server `.env` sets `CONTACT_ALLOWED_ORIGINS` and `ENABLE_PREVIEW_PAGE=true`. It has no Resend or Upstash
-    keys yet, so the contact form fails there.
+  - The server `.env` sets `CONTACT_ALLOWED_ORIGINS` and `ENABLE_PREVIEW_PAGE=true`. It has no SES or Upstash
+    keys yet, so the contact form answers 500 there. Set `CONTACT_TO_EMAIL` to a test inbox before adding a key.
 - The earlier Cloudflare Workers preview (OpenNext) was removed on 2026-09-30. Workers Free intermittently hit the
   10 ms CPU limit (error 1102), which ruled it out for production.

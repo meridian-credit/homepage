@@ -3,7 +3,7 @@
 > **끝난 옛 계획이다 (2026-09-30 확인).**
 > - 홈은 `51c6c53`(2026-08-11)에서 이 계획대로 바뀌었고, 그 뒤 `ian` 리뉴얼에서 다시 고쳐졌다.
 > - 아래 ⬜ 표시는 갱신하지 않은 것이다.
-> - 지금은 없는 것: 브랜치 `feat/home-redesign`, 워크트리 `~/mh-home`, 원본 `~/hometax-promo/`, `diagnostic-checklist.tsx`, `motion` 의존성.
+> - 지금은 없는 것: 브랜치 `feat/home-redesign`, 워크트리 `~/mh-home`, 원본 `~/hometax-promo/`, `diagnostic-checklist.tsx`, `motion` 의존성, 문의 API 의 `type`·`bottleneck`·`desiredOutput`·`timeline` 처리(2026-10-01 삭제. 쿼리 초안은 `contact-inquiry.tsx` 가 본문에 합친다).
 > - 현재 구조는 `AGENTS.md`, 디자인 규칙은 `docs/DESIGN_SYSTEM.md` 를 본다.
 
 > 만든 날: 2026-08-11

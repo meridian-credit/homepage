@@ -62,7 +62,7 @@ test('text typed before hydration survives it and is what gets sent', async ({ p
   await submit.click();
   const body = (await request).postDataJSON();
   expect(body).toMatchObject({ name: '테스트', email: 'test@example.com', message: '수화 전에 쓴 글' });
-  expect(Date.now() - body.startedAt).toBeGreaterThanOrEqual(900);
+  expect(body.elapsedMs).toBeGreaterThanOrEqual(900);
   await expect(page.locator('form [role=alert]')).toContainText('일시적인 오류');
   // 초안 효과는 수화 직후에 돈다. 응답까지 기다린 뒤에 봐야 「초안이 안 덮었다」가 참으로 검사된다.
   await expect(page.getByText('선택한 서비스·견적 조건을')).toHaveCount(0);

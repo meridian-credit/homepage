@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
+import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import {
-  BOTTLENECK_OPTIONS,
-  COMPANY_STAGE_OPTIONS,
-  CONTACT_TYPE_OPTIONS,
-  DESIRED_OUTPUT_OPTIONS,
-  TIMELINE_OPTIONS,
-  isKnownContactOption,
-} from "@/lib/contact-options";
 import { siteConfig } from "@/lib/constants";
 
 const MAX_BODY_BYTES = 20_000;
@@ -25,6 +17,15 @@ const METHOD_HEADERS = {
   Allow: ALLOWED_METHODS,
   "Cache-Control": "no-store",
 };
+const DIRECT_CONTACT_HINT = `${siteConfig.email}로 직접 보내 주세요.`;
+const SEND_FAILED_MESSAGE = `메일 전송에 실패했습니다. 잠시 후 다시 시도하거나 ${DIRECT_CONTACT_HINT}`;
+/* 문의 메일은 우리 AWS 계정의 서울 리전 SES 로 보낸다. meridianco.kr 은 이 리전에 인증돼 있다.
+   키는 SDK 가 표준 환경 변수(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)에서 읽는다. SDK 기본값에는
+   시간 제한이 없어서, SES 가 답하지 않으면 방문자가 끝없이 기다린다. */
+const ses = new SESv2Client({
+  region: "ap-northeast-2",
+  requestHandler: { connectionTimeout: 3_000, requestTimeout: 10_000 },
+});
 const REQUIRE_SHARED_RATE_LIMIT =
   process.env.CONTACT_RATE_LIMIT_REQUIRE_SHARED === "true";
 
@@ -76,16 +77,6 @@ function readString(
 ) {
   const value = data[key];
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
-}
-
-function readContactOption<T extends readonly string[]>(
-  data: Record<string, unknown>,
-  key: string,
-  options: T,
-  maxLength = 120
-) {
-  const value = readString(data, key, maxLength);
-  return isKnownContactOption(value, options) ? value : "";
 }
 
 function readNumber(data: Record<string, unknown>, key: string) {
@@ -197,6 +188,11 @@ function summarizeError(error: unknown) {
         summary[key] = value;
       }
     }
+    // AWS SDK 오류는 HTTP 상태를 $metadata 안에 둔다.
+    const metadata = error.$metadata;
+    if (isRecord(metadata) && typeof metadata.httpStatusCode === "number") {
+      summary.httpStatusCode = metadata.httpStatusCode;
+    }
   }
   return Object.keys(summary).length > 0 ? summary : { name: "UnknownError" };
 }
@@ -245,22 +241,20 @@ async function withinRateLimit(
   if (limiter) {
     try {
       const result = await limiter.limit(key);
-      return {
-        allowed: result.success,
-        retryAfterSeconds: Math.max(
-          1,
-          Math.ceil((result.reset - Date.now()) / 1000)
-        ),
-      };
-    } catch (error) {
-      warnRateLimitFallback(error);
-      if (REQUIRE_SHARED_RATE_LIMIT) {
+      /* Upstash 가 5초 안에 답하지 않으면 라이브러리는 막지 않고 { success: true, reason: "timeout" } 을
+         돌려준다. 한도를 확인하지 못한 답이므로 Upstash 오류와 똑같이 다룬다. */
+      if (result.reason !== "timeout") {
         return {
-          allowed: false,
-          retryAfterSeconds: 60,
-          unavailable: true,
+          allowed: result.success,
+          retryAfterSeconds: Math.max(
+            1,
+            Math.ceil((result.reset - Date.now()) / 1000)
+          ),
         };
       }
+      warnRateLimitFallback({ name: "RateLimitTimeout" });
+    } catch (error) {
+      warnRateLimitFallback(error);
     }
   }
 
@@ -402,23 +396,10 @@ export async function POST(request: NextRequest) {
   const name = readString(body, "name", 80);
   const email = readString(body, "email", 254).toLowerCase();
   const phone = readString(body, "phone", 40);
-  const type = readContactOption(body, "type", CONTACT_TYPE_OPTIONS, 80);
-  const companyStage = readContactOption(
-    body,
-    "companyStage",
-    COMPANY_STAGE_OPTIONS,
-    80
-  );
-  const bottleneck = readContactOption(body, "bottleneck", BOTTLENECK_OPTIONS);
-  const desiredOutput = readContactOption(
-    body,
-    "desiredOutput",
-    DESIRED_OUTPUT_OPTIONS
-  );
-  const timeline = readContactOption(body, "timeline", TIMELINE_OPTIONS, 80);
   const message = readString(body, "message", 4000);
-  const startedAt = readNumber(body, "startedAt");
-  const elapsedMs = Date.now() - startedAt;
+  /* 폼이 보인 뒤 보낼 때까지 걸린 시간. 브라우저가 자기 단조 시계로 재서 보낸다. 시작 시각을
+     받아 서버 시계로 빼면 기기 시계가 몇 분만 어긋나도 음수가 되어 계속 막힌다. */
+  const elapsedMs = readNumber(body, "elapsedMs");
 
   if (!name || !email || !message) {
     return jsonError("필수 항목을 입력해 주세요.", 400);
@@ -429,7 +410,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (
-    !Number.isFinite(startedAt) ||
+    !Number.isFinite(elapsedMs) ||
     elapsedMs < MIN_SUBMISSION_MS ||
     elapsedMs > MAX_SUBMISSION_MS
   ) {
@@ -446,75 +427,79 @@ export async function POST(request: NextRequest) {
     return rateLimitError(emailLimit);
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    return jsonError("메일 전송 설정이 완료되지 않았습니다.", 500);
+  /* 보내는 주소(no-reply@meridianco.kr)는 SES 에 인증된 도메인이어야 한다. 이 값이 없으면 보내지 않고
+     설정 오류로 답한다. 이 값이 메일을 보내도 되는 서버라는 표시이기도 하다. 개발자 PC 에 AWS 자격 증명이
+     있어도, 이 값을 넣지 않은 서버는 메일을 보내지 않는다. */
+  const fromEmail = process.env.CONTACT_FROM_EMAIL;
+  if (!fromEmail) {
+    return jsonError(`메일 전송 설정이 완료되지 않았습니다. ${DIRECT_CONTACT_HINT}`, 500);
   }
 
   try {
-    const resend = new Resend(apiKey);
-    const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
-    const optionalLines = [
-      type ? `문의 유형: ${type}` : null,
-      companyStage ? `현재 단계: ${companyStage}` : null,
-      bottleneck ? `가장 큰 병목: ${bottleneck}` : null,
-      desiredOutput ? `원하는 결과물: ${desiredOutput}` : null,
-      timeline ? `희망 시점: ${timeline}` : null,
-    ].filter((line): line is string => Boolean(line));
-
     const text = [
       "새로운 홈페이지 문의가 접수되었습니다.",
       "",
       `이름: ${name}`,
       `이메일: ${email}`,
       `전화번호: ${phone || "-"}`,
-      ...optionalLines,
       "",
       message,
     ].join("\n");
 
-    await resend.emails.send({
-      from: `${siteConfig.name} <${fromEmail}>`,
-      to: [siteConfig.email],
-      replyTo: email,
-      subject: `[홈페이지 문의] ${singleLine(type)} - ${singleLine(name)}`,
-      text,
-      html: `
-        <h2>새로운 문의가 접수되었습니다.</h2>
-        <table style="border-collapse: collapse; width: 100%;">
-          <tr>
-            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">이름</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(name)}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">이메일</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(email)}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">전화번호</td>
-            <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(phone || "-")}</td>
-          </tr>
-          ${[
-            type ? `<tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">문의 유형</td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(type)}</td></tr>` : "",
-            companyStage ? `<tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">현재 단계</td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(companyStage)}</td></tr>` : "",
-            bottleneck ? `<tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">가장 큰 병목</td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(bottleneck)}</td></tr>` : "",
-            desiredOutput ? `<tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">원하는 결과물</td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(desiredOutput)}</td></tr>` : "",
-            timeline ? `<tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">희망 시점</td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(timeline)}</td></tr>` : "",
-          ].filter(Boolean).join("")}
-          <tr>
-            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">내용</td>
-            <td style="padding: 8px; border: 1px solid #ddd; white-space: pre-wrap;">${escapeHtml(message)}</td>
-          </tr>
-        </table>
-      `,
-    });
+    const html = `
+      <h2>새로운 문의가 접수되었습니다.</h2>
+      <table style="border-collapse: collapse; width: 100%;">
+        <tr>
+          <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">이름</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(name)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">이메일</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(email)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">전화번호</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(phone || "-")}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">내용</td>
+          <td style="padding: 8px; border: 1px solid #ddd; white-space: pre-wrap;">${escapeHtml(message)}</td>
+        </tr>
+      </table>
+    `;
+
+    /* 표시 이름에 한글이 있으면 SES 는 RFC 2047 encoded-word 로 적어 달라고 한다. */
+    const fromName = `=?UTF-8?B?${Buffer.from(siteConfig.name).toString("base64")}?=`;
+    const { MessageId } = await ses.send(
+      new SendEmailCommand({
+        FromEmailAddress: `${fromName} <${fromEmail}>`,
+        Destination: { ToAddresses: [process.env.CONTACT_TO_EMAIL || siteConfig.email] },
+        ReplyToAddresses: [email],
+        Content: {
+          Simple: {
+            Subject: { Data: `[홈페이지 문의] ${singleLine(name)}`, Charset: "UTF-8" },
+            Body: {
+              Text: { Data: text, Charset: "UTF-8" },
+              Html: { Data: html, Charset: "UTF-8" },
+            },
+          },
+        },
+      })
+    );
+
+    if (!MessageId) {
+      logEmailFailure({ name: "MissingMessageId" });
+      return jsonError(SEND_FAILED_MESSAGE, 502);
+    }
 
     return NextResponse.json(
       { success: true },
       { headers: { "Cache-Control": "no-store" } }
     );
   } catch (error) {
+    /* SES 가 거절하거나(MessageRejected, AccessDenied 등) 닿지 않으면 SDK 가 예외를 던진다. 어느 쪽이든
+       메일은 가지 않았으므로 방문자에게 실패로 알린다. */
     logEmailFailure(error);
-    return jsonError("메일 전송에 실패했습니다.", 500);
+    return jsonError(SEND_FAILED_MESSAGE, 502);
   }
 }

@@ -28,11 +28,13 @@ export default function ContactForm() {
   );
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  /* 폼이 화면에 나타난 때. 서버가 이 값으로 너무 빠른 제출(900ms 미만)을 막는다.
-     처음 들어온 페이지라면 폼은 JS 가 오기 전, 페이지를 연 순간부터 보였다. 수화한
+  /* 폼이 화면에 나타난 때(performance.now 기준). 보낼 때 여기서 잰 경과 시간으로 서버가
+     너무 빠른 제출(900ms 미만)을 막는다. 기기 시계(Date.now)는 서버 시계와 어긋날 수 있어
+     쓰지 않는다. performance.now 는 페이지를 연 순간부터 재는 단조 시계다.
+     처음 들어온 페이지라면 폼은 JS 가 오기 전, 페이지를 연 순간(0)부터 보였다. 수화한
      때로 잡으면, JS 를 기다리며 다 써 둔 사람이 버튼이 켜지자마자 누를 때 막힌다. */
   useEffect(() => {
-    startedAt.current = hydrating.current ? Math.round(performance.timeOrigin) : Date.now();
+    startedAt.current = hydrating.current ? 0 : performance.now();
   }, []);
 
   /* 주소 초안은 사용자가 손대지 않은 칸에만 넣는다. value 가 defaultValue 그대로면 손대지
@@ -58,7 +60,7 @@ export default function ContactForm() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...fields, startedAt: startedAt.current }),
+        body: JSON.stringify({ ...fields, elapsedMs: Math.round(performance.now() - startedAt.current) }),
         signal: AbortSignal.timeout(20000),
       });
 
@@ -119,7 +121,7 @@ export default function ContactForm() {
           </p>
           <button
             onClick={() => {
-              startedAt.current = Date.now();
+              startedAt.current = performance.now();
               setStatus("idle");
               /* 누른 단추가 사라지므로 초점을 새 폼 첫 칸으로 옮긴다. 두지 않으면 body 로 떨어진다. */
               requestAnimationFrame(() => nameRef.current?.focus());

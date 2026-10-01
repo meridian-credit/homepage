@@ -8,22 +8,23 @@
 - **데이터베이스는 필요 없다.**
   - 서비스·구성원·일정·블로그는 모두 코드와 MDX 파일이다.
   - 문의는 저장하지 않고 메일로만 보낸다. 받은편지함이 곧 저장소다.
-- **서버 기능은 세 가지다.** `POST /api/contact`(Resend 로 메일 발송), `GET /api/search`, `llms.txt`.
+- **서버 기능은 세 가지다.** `POST /api/contact`(우리 AWS 의 SES 로 메일 발송), `GET /api/search`, `llms.txt`.
   - Upstash Redis 는 선택 사항이고, 도배 방지 카운터로만 쓴다.
 - **고객 포털과 계약은 별도 앱이다.**
   - 고객 포털: `siteConfig.clientPortalUrl` = `hometax-dashboard.vercel.app`.
   - 계약: `/contract` 가 taxchat 으로 rewrite 된다.
   - 두 앱의 백엔드는 이 저장소에서 판단할 수 없다.
-- **운영 중인 `main` 도 문의 API 코드가 같다.** 따라서 BE-01 은 지금 운영에서도 살아 있는 결함이다.
+- **운영 중인 `main` 도 문의 API 코드가 같다.** BE-01·BE-02 는 2026-10-01 에 `dev` 에서 고쳤고, `main` 에 합치기 전까지
+  운영에는 결함이 남아 있다.
 
 ## 우선순위
 
 | ID | 무엇 | 우선 | 크기 |
 |---|---|---|---|
-| BE-01 | 발송이 실패해도 성공으로 답한다 | **P0** | S |
+| BE-01 | 발송이 실패해도 성공으로 답한다 | **완료** (2026-10-01, `dev`) | S |
 | BE-07 | 개인정보 처리 고지가 없다 | **P0**, 주인·법무 판단 | 문안 뒤 S |
 | BE-08 | Vercel 을 떠날 때 다시 만들 설정 | 운영 이전 전 P0 | S–M |
-| BE-02 | 문의 경로 보완(시계 차이, 받는 주소, 실제 발송 테스트) | P1 | S |
+| BE-02 | 문의 경로 보완(시계 차이, 받는 주소, 실제 발송 테스트) | **완료** (2026-10-01, `dev`). 카운터 키 해시만 BE-07 로 | S |
 | BE-04 | "무료 대시보드 시작하기"가 막다른 길이다 | P1, 문구·동선은 주인 판단 | S |
 | BE-03 | 검색 API 정리 | P2 | S |
 | BE-05 | `/contract` 를 같은 도메인에 둔다 | P2, 주인 판단 | — |
@@ -34,7 +35,16 @@
 
 ## 항목
 
-### BE-01 — 발송 실패를 성공으로 답한다 (P0)
+### BE-01 — 발송 실패를 성공으로 답한다 (P0, 2026-10-01 완료)
+
+> **고친 것:**
+> - 발송을 Resend 에서 우리 AWS 계정의 SES(서울)로 옮겼다(2026-10-01, 주인 결정). 보내는 주소는 `no-reply@meridianco.kr`.
+> - SES SDK 는 거절·권한 오류·연결 실패 때 예외를 던진다. 라우트는 그때와 `MessageId` 가 없을 때 502 와 함께
+>   「잠시 후 다시 시도하거나 대표 메일로 직접 보내 달라」고 답한다. 로그에는 오류 이름·상태만 남는다.
+> - 보내는 주소(`CONTACT_FROM_EMAIL`)가 비면 보내지 않고 500 이다. 시험용 주소로 떨어지는 길은 없다.
+> - 검사: `tests/e2e/contact-route.spec.ts`. 예외를 삼키고 성공으로 답하게 바꿔 돌리면 두 테스트가 200 을 받아 실패한다(확인함).
+>
+> 아래는 고치기 전 기록이다.
 
 - **코드:** `src/app/api/contact/route.ts:476` 이 `await resend.emails.send(...)` 의 결과를 버리고, `:512` 에서 무조건 `{ success: true }` 를 돌려준다.
   - Resend SDK 6.x 는 실패해도 예외를 던지지 않는다. `{ data: null, error }` 를 돌려주므로 `:516` 의 `catch` 까지 가지 않는다.
@@ -46,7 +56,24 @@
   - 발신 주소가 비어 있으면 fallback 하지 않고, 키가 없을 때처럼 설정 오류로 답한다.
 - **검사:** SDK 가 `{ data: null, error }` 를 돌려줄 때 200 이 아닌지 확인한다. 방법은 BE-02 의 실제 발송 테스트에 적었다.
 
-### BE-02 — 문의 경로 보완 (P1)
+### BE-02 — 문의 경로 보완 (P1, 2026-10-01 완료. 카운터 키 해시는 BE-07 과 같이)
+
+> **고친 것:**
+> - 시계: 폼이 `performance.now()` 로 잰 `elapsedMs` 를 보내고, 서버는 범위만 본다. 배포 순간에 열려 있던 옛 폼은
+>   `startedAt` 을 보내므로 「새로고침」 안내를 한 번 받는다. 배포를 되돌릴 때도 새 폼 → 옛 서버로 같은 일이 한 번 생긴다.
+> - 받는 주소: `CONTACT_TO_EMAIL`, 없으면 `siteConfig.email`.
+> - 실제 라우트 테스트: `contact-route.spec.ts` 가 따로 띄운 `next start` 를 가짜 SES(`AWS_ENDPOINT_URL_SESV2`)에 물려
+>   성공·SES 거절·연결 실패·너무 빠른 제출을 확인한다. 진짜 키가 있는 서버에는 보내지 않는다.
+> - Upstash `reason: "timeout"` 은 Upstash 오류와 같이 다룬다. `REQUIRE_SHARED` 면 503, 아니면 메모리 카운터.
+> - 안 쓰는 다섯 필드와 `src/lib/contact-options.ts` 를 지웠다. 메일 제목은 `[홈페이지 문의] 이름` 이다.
+> - **남은 것:**
+>   - 실제 사이트를 돌리는 서버에 이 코드를 올리기 전에, 그 서버에 `CONTACT_FROM_EMAIL` 과 SES 발송 키가 있는지
+>     확인한다. 없으면 모든 문의가 500 또는 502 가 된다.
+>   - meridianco.kr 네임서버가 Cloudflare 로 넘어가 SES 도메인 인증이 끝나면, dev 에서 시험 수신함으로 실제로 한 번
+>     보내 보기. dev 에는 키보다 `CONTACT_TO_EMAIL` 을 먼저 넣는다.
+>   - 카운터 키 해시(BE-07).
+>
+> 아래는 고치기 전 기록이다.
 
 - **기기 시계 차이.** `contact-form.tsx:35` 는 시작 시각을 브라우저 시계로 찍는다. `route.ts:420–437` 은 경과 시간을 서버의 `Date.now()` 로 잰다.
   - 예: 시계가 5분 빠른 PC 에서 2분 동안 쓰면 경과 시간이 음수라 계속 400 이 나고, 새로고침해도 풀리지 않는다.
@@ -97,6 +124,7 @@
 - **실제 흐름:**
   - 입력값은 Vercel iad1(미국)의 함수를 거친다.
   - Resend(미국 AWS us-east-1)를 지나 `siteConfig.email`(`dscpa.co.kr` 메일함)에 도착한다.
+  - 2026-10-01 코드부터는 Resend 대신 우리 AWS 계정의 SES 서울 리전을 지난다. 이 코드가 운영에 올라가면 위 줄을 고친다.
   - Upstash 를 켜면 카운터 키에 IP·이메일 원문이 들어간다.
 - FAQ(`src/lib/faq.ts:42`)는 "계약으로 이어지지 않으면 보관하지 않고 파기합니다"라고 약속한다. 메일함 보관 관행과 맞는지 확인해야 한다.
 - **결정할 것(주인·법무):** 처리 주체, 목적, 보관·파기 기간, 국외 이전 고지, 수탁사 목록.
@@ -107,8 +135,8 @@
 
 운영(`www.meridianco.kr`)은 아직 Vercel 이다. dev(`accounting.teamcredit.kr`, `next start` 컨테이너)와 비교해 아래 차이를 확인했다.
 
-- **자격 증명.** Resend 키를 새로 발급해야 한다. 우리는 Vercel 환경 변수 값을 볼 수 없다.
-  - 발신 도메인 인증(DNS)이 새 키의 계정에 있어야 한다.
+- **자격 증명.** 메일은 우리 AWS 계정의 SES 로 보낸다(2026-10-01). 새 서버에는 `no-reply@meridianco.kr` 로만
+  보낼 수 있는 SES 키와 `CONTACT_FROM_EMAIL` 을 넣는다. Resend 키는 필요 없다.
 - **`CONTACT_RATE_LIMIT_REQUIRE_SHARED`.** 이 값을 `true` 로 둔 채 Upstash 키를 빼면 모든 문의가 503 이 된다.
   - 서버 한 대라면 메모리 카운터로 충분하다. 이 값을 끄고 Upstash 를 빼는 편이 단순하다.
 - **검색엔진 소유 확인.** `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, `NEXT_PUBLIC_NAVER_SITE_VERIFICATION` 은 빌드 때 HTML 에 박힌다.

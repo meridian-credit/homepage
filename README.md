@@ -22,9 +22,13 @@ Where they are set:
 
 The variables:
 
-- `RESEND_API_KEY`: server-only key used by `/api/contact`. Without it the route answers 500 and sends nothing.
-- `RESEND_FROM_EMAIL`: a sender address on a domain verified in Resend. If unset, the route falls back to Resend's
-  test sender, which cannot deliver to the firm's mailbox.
+- `CONTACT_FROM_EMAIL`: required to send. The sender address, `no-reply@meridianco.kr`; `meridianco.kr` is verified
+  in Amazon SES (ap-northeast-2) on our AWS account. Without it `/api/contact` answers 500 and sends nothing, even
+  when AWS credentials are present, so a developer machine with `~/.aws` never mails the firm.
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`: the SES key. The AWS SDK reads them itself. Use a key that may only
+  send as `no-reply@meridianco.kr`. The region (ap-northeast-2) is fixed in the route.
+- `CONTACT_TO_EMAIL`: optional recipient for inquiries. Defaults to `siteConfig.email`, the firm's real mailbox, so
+  set it to a test inbox on any non-production host before giving that host an SES key.
 - `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`: optional. Contact rate limits shared across instances. When
   unset, each instance keeps its own in-memory counters.
 - `CONTACT_RATE_LIMIT_REQUIRE_SHARED`: `true` forbids the in-memory fallback. With this on, a missing or failing
