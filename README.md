@@ -39,6 +39,23 @@ The variables:
 - `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, `NEXT_PUBLIC_NAVER_SITE_VERIFICATION`: search-console ownership meta tags.
   They are baked into the HTML at build time, so a new build host needs them too.
 - `VERCEL`: set by Vercel itself. Analytics and Speed Insights render only when it is `1`.
+- `CONTENT_DB`: dev only. Path to the admin app's SQLite file. When set, the tax calendar and FAQ come from it
+  (read-only); when unset, from `src/lib/schedule.ts` / `src/lib/faq.ts`.
+- `REVALIDATE_SECRET`: dev only. Bearer secret for `POST /api/revalidate`, which the admin calls after a save. Unset
+  means the route answers 404.
+
+The admin app (`admin/`, dev only) reads its own set, from `admin.env` on the dev server (`admin.env.example` lists
+them):
+
+- `CONTENT_DB`: the same SQLite file. The admin creates and migrates it.
+- `ADMIN_URL`: its public origin, `https://accounting-admin.teamcredit.kr`. Login callbacks and cookies use it.
+- `BETTER_AUTH_SECRET`: signs login sessions. Changing it signs everyone out.
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`: a Google OAuth web client whose redirect URI is
+  `<ADMIN_URL>/api/auth/callback/google`.
+- `ADMIN_EMAILS`: comma-separated Google accounts that may enter. When empty, nobody may enter.
+- `REVALIDATE_SECRET`, `PUBLIC_SITE_INTERNAL_URL`: how it asks the public site to redraw (`http://accounting_dev:3000`
+  on the server).
+- `PUBLIC_SITE_URL`, `ADMIN_ENV_BAND`: the 「사이트 보기」 link and the banner at the top.
 
 Only `NEXT_PUBLIC_*` variables reach the browser. Do not put secrets in `NEXT_PUBLIC_*`, `public/`, or committed docs.
 

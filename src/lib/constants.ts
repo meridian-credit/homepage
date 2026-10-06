@@ -209,11 +209,5 @@ export const sitePages: Array<{ href: string; label: string; hint: string; terms
 ];
 
 
-/* ─────────────────────────────────────────────────────────────
-   이번 분기 주요 일정.
-
-   D-day 는 적어 두지 않는다. 하루만 지나도 틀린 숫자가 화면에 남는다.
-   날짜만 두고 남은 날은 볼 때마다 센다.
-   홈의 팝업과 헤더의 큐브가 이 목록 하나를 같이 본다.
-   ───────────────────────────────────────────────────────────── */
-export { scheduleDates } from "./schedule";
+/* 세무 일정은 여기 없다. getSchedule()(src/lib/content/read.ts)로 읽는다 —
+   개발 서버는 관리자가 고친 DB 를, 그 밖은 src/lib/schedule.ts 의 배열을 본다. */

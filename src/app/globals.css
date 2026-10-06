@@ -1901,6 +1901,8 @@ h1, h2, h3, h4 {
 .faq-a {
   padding: 0 40px 26px 0;
   margin-top: -4px;
+  /* 관리자에서 답에 넣은 줄바꿈을 살린다(.ins-faq-a 와 같다). */
+  white-space: pre-line;
 }
 
 /* 펴고 접는 동작.
@@ -5019,6 +5021,8 @@ h1, h2, h3, h4 {
 .ins-faq-a {
   margin: 0;
   padding: 0 3rem 1.6rem .2rem;
+  /* 관리자에서 답에 넣은 줄바꿈을 살린다. */
+  white-space: pre-line;
   font-size: .93rem;
   /* 답은 읽는 글이다. 목록보다 넉넉하게 벌린다. */
   line-height: 1.95;

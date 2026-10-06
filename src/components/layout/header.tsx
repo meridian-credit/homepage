@@ -8,6 +8,7 @@ import { useDialog } from "@/lib/use-dialog";
 import SiteSearch from "./site-search";
 import ScrollProgress from "./scroll-progress";
 import ScheduleCube from "./schedule-cube";
+import type { ScheduleItem } from "@/lib/schedule";
 import Wordmark from "@/components/brand/wordmark";
 import { serviceGroups } from "@/lib/constants";
 
@@ -24,7 +25,14 @@ function contactCta(pathname: string) {
 }
 
 /* hiddenNav — 메뉴에서 뺄 주소(글 없는 블로그 갈래). layout 이 센다. */
-export default function Header({ hiddenNav = [] }: { hiddenNav?: string[] }) {
+export default function Header({
+  hiddenNav = [],
+  schedule,
+}: {
+  hiddenNav?: string[];
+  /* 머리의 일정 큐브에 쓸 일정. 서버(layout)가 읽어 넘긴다 — 관리자에서 고친 값이다. */
+  schedule: ScheduleItem[];
+}) {
   const [mobileOpen, setMobileOpen] = useState(false);
   /* 펼침판은 헤더 안에서 열린다. 어느 칸이 열렸는지 헤더가 들고 있어야
      판 위에 마우스가 있는 동안 닫히지 않는다. */
@@ -145,7 +153,7 @@ export default function Header({ hiddenNav = [] }: { hiddenNav?: string[] }) {
               {/* 다음 마감일. 넓은 화면에서만 선다.
                   문의 단추보다 앞이다 — 단추가 오른쪽 끝을 지켜야 본문
                   오른쪽 끝과 한 줄로 맞는다. */}
-              <ScheduleCube />
+              <ScheduleCube items={schedule} />
               {/* CONTACT 옆 물음표. 누르면 알약 검색창으로 늘어난다. */}
               <SiteSearch />
               {/* 홈(promo)의 .btn .btn-fill 과 같은 생김새.

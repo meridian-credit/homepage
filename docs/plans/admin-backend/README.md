@@ -136,6 +136,41 @@ Vercel 을 떠나지 못하게 되면 Astra 안(Neon + 객체 저장소)이 대�
 
 ### 2단계: 기반과 일정·FAQ 관리자 (7–10일)
 
+> **2026-10-06 진행: 개발 서버에만 열었다.** 주인 결정: 반영 대상은 우선 개발 사이트만, 로그인은 Google 계정,
+> 첫 범위는 세무 일정·FAQ. 주소는 https://accounting-admin.teamcredit.kr.
+>
+> 아래 계획과 다르게 한 것:
+> - **Drizzle 을 쓰지 않았다.**
+>   - 표 넷짜리에 SQL 이전 한 개라 better-sqlite3 와 `PRAGMA user_version` 으로 충분했다
+>     (`src/lib/content/schema.ts`).
+>   - drizzle-kit 은 esbuild 취약점 경고를 새로 끌어왔다.
+> - **`(site)` route group 대신 별도 앱(`admin/`)이다.**
+>   - 같은 저장소와 같은 node_modules 를 쓰고 `next build admin` 으로 따로 빌드한다.
+>   - 공개 layout 을 옮기지 않아도 되고, `main` 에는 관리자 화면이 실리지 않는다.
+>   - 그래서 `proxy.ts` 로 호스트를 나누지 않는다.
+> - **역할이 없다.** 허용 목록(`ADMIN_EMAILS`)에 있으면 저장하고 바로 반영한다. 「편집자는 게시하지 못한다」는 역할을
+>   들일 때 다시 본다.
+> - **`faq.ts`·`schedule.ts` 의 배열을 남겼다.** 운영(Vercel)이 아직 DB 없이 이 배열을 읽는다. 운영을 옮길 때 지운다.
+> - **`NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` 를 고정하지 않았다.**
+>   - 관리자 액션은 클로저를 쓰지 않는다.
+>   - 배포 전에 연 화면도 코드가 같으면 그대로 저장된다(재빌드로 확인).
+>   - 요청이 실패하면 「새로고침해 주세요」가 나오고, 적던 내용은 화면에 남는다.
+> - **백업은 서버 안 매일 사본(30일)만 있다.** S3 반출과 복원 연습은 운영을 옮길 때 한다.
+>
+> 계획대로 한 것:
+> - 저장 순서는 「권한 → 검증 → 트랜잭션(판 번호 확인 · 감사 기록) → 전체 갱신」이다.
+> - 빌드는 DB 사본을 읽는다. 사본은 이미지 층에 남지 않고, 사본이 없으면 빌드가 실패한다.
+> - noindex, no-store.
+> - 공개 서버는 뜰 때마다 스스로 모든 쪽을 다시 그리게 한다(`src/instrumentation.ts`).
+>   - 「다시 그리기」 표시는 메모리에만 있고, 되돌린 이미지는 빌드 때 사본에서 시작한다.
+>   - 그래서 저장 뒤의 재시작·되돌리기에도 DB 의 지금 내용이 나온다.
+> - CI 에서 better-sqlite3 를 rebuild 하고 관리자 e2e 를 돌린다.
+>
+> 수용 기준 확인(`admin/tests/admin.spec.ts`, 10건):
+> - 세션이 없거나 허용 목록 밖이면 화면과 액션이 거절된다. 액션은 화면을 거치지 않은 요청으로도 확인했다.
+> - FAQ 를 고치면 `/faq` · `/contact` 에 반영된다.
+> - 사본 DB 로 빌드해도 `/contact` 는 prerender 그대로다.
+
 이 단계만으로도 가치가 선다. 대표가 개발자 없이 세무 일정을 채우고 FAQ 를 고친다.
 - **기반:** SQLite(WAL)와 Drizzle 스키마·마이그레이션, 공용 Zod 스키마.
   - `src/server/db`, `src/server/content/{read,write}`.

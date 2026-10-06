@@ -11,12 +11,14 @@ import { toSafeJsonLd } from "@/lib/json-ld";
  * blog-hero 를 같이 쓰는 이유는 손 안에서 첫 화면을 접는 규칙까지
  * 그대로 물려받기 위해서다.
  *
- * 답은 src/lib/faq.ts 하나에서 온다 — 컨택트 페이지도 같은 것을 본다.
+ * 답은 getFaq() 하나에서 온다 — 컨택트 페이지도 같은 것을 본다. 개발 서버는 관리자 앱의 DB,
+ * 그 밖에서는 src/lib/faq.ts 다.
  */
 
 import type { Metadata } from "next";
 import { pageOpenGraph } from "@/lib/og";
-import { contactFaq } from "@/lib/faq";
+import { getFaq } from "@/lib/content/read";
+import type { FaqItem } from "@/lib/faq";
 import { AnimateOnScroll, LineReveal } from "@/components/motion";
 import HeroVideo from "@/components/layout/hero-video";
 import FaqList from "./faq-list";
@@ -34,22 +36,25 @@ export const metadata: Metadata = {
 };
 
 /* 검색엔진이 문답을 그대로 읽게 둔다. 접혀 있어도 구조는 남는다. */
-const faqJsonLd = {
+const faqJsonLd = (items: FaqItem[]) => ({
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  mainEntity: contactFaq.map((f) => ({
+  mainEntity: items.map((f) => ({
     "@type": "Question",
     name: f.q,
     acceptedAnswer: { "@type": "Answer", text: f.a },
   })),
-};
+});
 
 export default function FaqPage() {
+  /* 관리자에서 고친 문답을 쪽을 다시 만들 때마다 새로 읽는다. 모듈 맨 위에서 읽으면 프로세스가
+     살아 있는 동안 처음 값에 묶인다. */
+  const faq = getFaq();
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: toSafeJsonLd(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: toSafeJsonLd(faqJsonLd(faq)) }}
       />
 
       <section className="blog-hero page-hero relative overflow-hidden bg-deep text-white">
@@ -95,11 +100,11 @@ export default function FaqPage() {
             <div className="ins-tabs">
               <span className="is-on">자주 묻는 질문</span>
             </div>
-            <p className="ins-count">{contactFaq.length}개</p>
+            <p className="ins-count">{faq.length}개</p>
           </div>
 
           <AnimateOnScroll variant="fadeUp">
-            <FaqList items={contactFaq} />
+            <FaqList items={faq} />
           </AnimateOnScroll>
         </div>
       </section>

@@ -44,3 +44,22 @@
   - no generic related posts on the audit/PA/IPO/deal services; a statutory-vs-actual deadline note; search-only terms; tighter table padding at ≤380px.
 - Dev now sends through SES: IAM user `meridian-homepage-contact-dev`, allowed only `ses:SendEmail` from no-reply@meridianco.kr (other senders verified as denied). The key is in the 600 server .env, and the recipient is the SES simulator.
 - Still the owner's call: the phone and address (P0-4; the owner removed the phone on 2026-04-30 in 6563d9f, and a later client-review commit re-added it), a Client Login link in the header, and the comparative ad wording.
+2026-10-06 19:50 — Admin, stage 2 (tax calendar + FAQ), is on dev only, at https://accounting-admin.teamcredit.kr. Owner's choices: dev site first, Google login, calendar and FAQ first.
+- Shape:
+  - A separate Next app in `admin/`, from the same repo and `node_modules`, built with `next build admin`. No `(site)` route group, no `proxy.ts` host split, and no admin surface on `main`.
+  - SQLite through better-sqlite3 with `PRAGMA user_version` migrations, not Drizzle (drizzle-kit pulled in esbuild advisories and four tables don't need it).
+  - Better Auth with Google only. `ADMIN_EMAILS` is re-checked on every page and every action. No roles.
+- Public read path: `getSchedule()` / `getFaq()` (`src/lib/content/read.ts`) read the DB only when `CONTENT_DB` is set, otherwise the code arrays. Production and CI behave as before.
+- Publishing: the admin calls `/api/revalidate` after a save.
+  - The route reads the DB first and answers 500 if it can't, because a failed regeneration silently keeps the old page.
+  - The public server also revalidates itself on every start (`src/instrumentation.ts`). The "stale" marks live in memory, and a rollback or recreate starts from the build-time snapshot. The critic found that a web rollback would otherwise bring back old content.
+- Dev deploy: build and swap the admin (it migrates), snapshot the DB to `data/build.db`, then build the public image with the snapshot bind-mounted only during `npm run build`.
+- Ops: a daily local backup is kept 30 days, and `data/` is 700 because it holds sessions. Google OAuth tokens are encrypted.
+- Not done:
+  - S3 off-site backup and a restore drill; do them when production moves.
+  - Roles.
+  - Deleting the code arrays, which waits until production reads the DB.
+- Tests: `admin/tests/admin.spec.ts` (11, in CI after the public e2e, because it rewrites `.next` pages).
+  - No session, an unlisted account, and a replayed server action without a session are all refused.
+  - An edit reaches `/faq` and `/contact`.
+  - Conflict, revert, and save-failure paths are covered.

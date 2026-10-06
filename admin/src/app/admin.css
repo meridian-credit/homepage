@@ -1,0 +1,77 @@
+/* 관리자 화면. 공개 사이트의 디자인을 가져오지 않는다 — 여기서는 읽고 고치기 쉬운 것이 전부다. */
+:root {
+  --bg: #f6f7f9;
+  --card: #fff;
+  --line: #dfe3ea;
+  --tx: #16191f;
+  --muted: #5b6472;
+  --blue: #2b5bff;
+  --red: #c62828;
+  --red-bg: #fdecec;
+  --ok: #1b7f3b;
+  --ok-bg: #e8f5ec;
+  --warn-bg: #fff6e0;
+}
+* { box-sizing: border-box; }
+html { font-size: 16px; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--tx);
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+a { color: var(--blue); }
+.env-band { background: #3a2a00; color: #ffe08a; text-align: center; font-size: .875rem; padding: 6px 12px; }
+.top { background: var(--card); border-bottom: 1px solid var(--line); }
+.top-in { max-width: 1040px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; gap: 24px; min-height: 56px; flex-wrap: wrap; }
+.brand { font-weight: 700; color: var(--tx); text-decoration: none; }
+.nav { display: flex; gap: 4px; flex-wrap: wrap; }
+.nav a { padding: 6px 10px; border-radius: 6px; color: var(--muted); text-decoration: none; }
+.nav a[aria-current="page"] { background: #eef2ff; color: var(--blue); font-weight: 600; }
+.who { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: .875rem; color: var(--muted); }
+main { max-width: 1040px; margin: 0 auto; padding: 28px 20px 80px; }
+h1 { font-size: 1.5rem; margin: 0 0 6px; }
+h2 { font-size: 1.125rem; margin: 0 0 12px; }
+.lead { color: var(--muted); margin: 0 0 24px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 20px; }
+.stat { font-size: 1.75rem; font-weight: 700; }
+.stat.bad { color: var(--red); }
+.muted { color: var(--muted); font-size: .875rem; }
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--card); color: var(--tx); border-radius: 8px; padding: 8px 14px; font: inherit; cursor: pointer; text-decoration: none; }
+.btn:hover { border-color: #b8c0cc; }
+.btn-primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.btn-primary:hover { background: #1f49d6; }
+.btn-danger { color: var(--red); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-sm { padding: 4px 10px; font-size: .875rem; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+label { font-weight: 600; font-size: .875rem; }
+input, textarea { font: inherit; font-size: 16px; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; width: 100%; background: #fff; color: var(--tx); }
+textarea { resize: vertical; min-height: 88px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: .8125rem; color: var(--muted); font-weight: 600; }
+.row-actions { white-space: nowrap; text-align: right; }
+.bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
+.msg { border-radius: 8px; padding: 12px 14px; margin: 0 0 16px; }
+.msg-ok { background: var(--ok-bg); color: var(--ok); }
+.msg-error { background: var(--red-bg); color: var(--red); }
+.msg-warn { background: var(--warn-bg); color: #6b4e00; }
+.msg ul { margin: 6px 0 0; padding-left: 20px; }
+.faq-row { border: 1px solid var(--line); border-radius: 8px; padding: 14px; margin-bottom: 12px; display: grid; gap: 8px; }
+.faq-head { display: flex; align-items: center; gap: 8px; }
+.faq-head strong { margin-right: auto; }
+.list { list-style: none; margin: 0; padding: 0; }
+.list li { padding: 10px 0; border-bottom: 1px solid var(--line); display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+.list li:last-child { border-bottom: 0; }
+.login { max-width: 420px; margin: 12vh auto; text-align: center; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+@media (max-width: 640px) {
+  .sched-table thead { display: none; }
+  .sched-table tr { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .sched-table td { border: 0; padding: 0; }
+  .sched-table td:first-child { grid-column: 1 / -1; }
+}

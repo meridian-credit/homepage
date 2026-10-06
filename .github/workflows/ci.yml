@@ -79,6 +79,12 @@ jobs:
           node scripts/qa/https.mjs > /tmp/homepage-https.log 2>&1 &
           npm run test:e2e -- --workers=2
 
+      # 관리자 앱(admin/). 공개 시험보다 뒤에 둔다 — 이 시험은 저장을 반영하면서 공개 빌드(.next)의 FAQ · 일정 쪽을 새로 그려 둔다.
+      - name: Admin app tests
+        run: |
+          npx next build admin
+          npx playwright test -c admin/playwright.config.ts
+
       - name: Upload browser failures and traces
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -87,4 +93,5 @@ jobs:
           path: |
             playwright-report/
             test-results/
+            admin/.e2e/results/
           retention-days: 14

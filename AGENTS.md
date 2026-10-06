@@ -38,10 +38,14 @@ npm run audit:content        # frontmatter checks on content/posts/*.mdx (CI gat
 # Playwright e2e. playwright.config.ts starts `next start` on :3100 itself, so build first.
 npm run build && npm run test:e2e
 npx playwright test tests/e2e/flows.spec.ts -g "menu focus" --project=desktop   # one test, one project
+
+# Admin app (admin/): its own build, and e2e that starts the admin on :3310 and the public site on :3210.
+npx next build admin
+npx playwright test -c admin/playwright.config.ts
 ```
 
 CI (`.github/workflows/ci.yml`, Node 22) runs `npm audit`, `npm audit signatures`, audit:content, lint, build, then
-e2e across four projects (desktop, mobile, webkit, firefox). CI puts `node scripts/qa/https.mjs` in front of :3100 and
+e2e across four projects (desktop, mobile, webkit, firefox), then the admin build and admin e2e. CI puts `node scripts/qa/https.mjs` in front of :3100 and
 sets `QA_BASE_URL=https://localhost:3443`. That local TLS proxy makes the tests run under the real production CSP,
 including `upgrade-insecure-requests`. Reproduce it the same way when a change touches headers or CSP.
 
@@ -57,7 +61,7 @@ Other browser QA scripts in `scripts/qa/` all expect a server on :3100:
 
 ## Architecture
 
-**Site data is code, not a CMS.**
+**Site data is code, except the tax calendar and FAQ on dev.**
 - `src/lib/data.ts` holds `services` (fields drive the services pages, home, and search), `members`, and `personas`.
 - `src/lib/constants.ts` holds `siteConfig` (name, URL, contacts) and `navMenu`. It also holds `serviceGroups`, the
   single source of the 4-group / 8-service taxonomy that menus, lists, and strips all read. `orderedServices`
@@ -65,6 +69,10 @@ Other browser QA scripts in `scripts/qa/` all expect a server on :3100:
 - `sitePages` (also in `constants.ts`) feeds the in-site search index (`/api/search`). `/pricing` and `/preview` are
   deliberately absent from it and from `sitemap.ts`. Both pages set `robots: { index: false }` in their own metadata,
   and `robots.ts` also disallows `/preview`. Keep these consistent.
+- The tax calendar and the FAQ are read only through `getSchedule()` / `getFaq()` in `src/lib/content/read.ts`.
+  - With `CONTENT_DB` set (the dev server), they read the admin app's SQLite file read-only.
+  - Without it (production, CI, local), they return the arrays in `src/lib/schedule.ts` / `src/lib/faq.ts`.
+  - The arrays also seed a new DB. Edits made in the admin never flow back into them.
 - `src/lib/schedule.ts` holds NTS tax-calendar dates plus `scheduleReviewedAt`. D-day is computed at view time in
   Asia/Seoul; never store a D-day number.
   - List only months NTS has actually published; don't guess dates.
@@ -81,6 +89,36 @@ The frontmatter schema and citation rules are in `docs/content-system.md`:
 - `/blog` ships its first page of posts in the static HTML. `blog/page.tsx` renders the same `BlogContent`, without a
   query, as the `<Suspense>` fallback. Only `BlogContentFromUrl` calls `useSearchParams`. A `null` fallback here once
   left the HTML without a single post and caused CLS of 0.6. `tests/e2e/blog-rendering.spec.ts` guards against that.
+
+**Admin app** (`admin/`) edits the tax calendar and FAQ. It runs only on dev for now; see `docs/plans/admin-backend/`.
+- It is a separate Next app in the same repo and `node_modules`, built with `next build admin` and served at
+  https://accounting-admin.teamcredit.kr. It imports public code through `@/` and its own through `@admin/`.
+  - It is separate rather than a route group so the public layout stays untouched and `main` ships no admin
+    surface.
+  - The separate host also keeps the admin session away from `/contract`, which runs another app's JS on the site
+    origin.
+- Login is Better Auth with Google only. An account may enter only if its email is in `ADMIN_EMAILS`.
+  `requireAdmin()` re-checks that on every page and in every server action, so removing an email locks it out on the
+  next request. There are no roles.
+- The content is one SQLite file (WAL), `CONTENT_DB`.
+  - The admin is its only writer. On start it applies `MIGRATIONS` from `src/lib/content/schema.ts` and seeds from
+    the code arrays once.
+  - Migrations only add. The previous public build may still be reading the same file.
+- Every save runs in one transaction: check the revision, replace the list, bump the revision, and write an audit
+  row with the before and after.
+  - A stale revision is refused, so two tabs can't overwrite each other.
+  - 변경 기록 restores an older state as a new save.
+- After a save the admin POSTs the public site's `/api/revalidate` (bearer `REVALIDATE_SECRET`; 404 when unset),
+  then warms `/`, `/faq`, `/contact`, `/portal`.
+  - The route reads the DB first and answers 500 if it can't. A failed regeneration would otherwise keep serving
+    the old page while the admin reported success.
+  - Pages stay statically prerendered. Next writes the regenerated HTML into `.next/server/app`, but it keeps the
+    "stale" marks in memory, and a new or rolled-back image starts from its build snapshot.
+  - So the public server revalidates itself once on every start (`src/instrumentation.ts`). That only runs when
+    `CONTENT_DB` and `REVALIDATE_SECRET` are set, and it calls `127.0.0.1:$PORT`. Give the port as `PORT`, not
+    `-p`.
+  - The admin e2e therefore leaves edited FAQ/schedule pages in the local `.next`. Run it after the public e2e, or
+    rebuild.
 
 **Routing and headers** live in `next.config.ts`:
 - A strict CSP and security headers apply to every path except `/contract/**`. A new third-party script, image, or
@@ -214,15 +252,31 @@ Tests enforce three rules:
     sends no HSTS and `s-maxage=31536000`. Before moving production, go through BE-08 in
     `docs/plans/ui-ux-remediation/backend-backlog.md`.
 - **CI runs only on PRs and `main` pushes.** A `dev` push is checked only by the server's own build.
-- **Dev: https://accounting.teamcredit.kr serves the `dev` branch.** A push to `dev` deploys itself in about a minute.
+- **Dev: https://accounting.teamcredit.kr serves the `dev` branch, and https://accounting-admin.teamcredit.kr its
+  admin.** A push to `dev` deploys both in a few minutes.
   - The ubuntu crontab on `proxmox-ubuntu` runs `/opt/stacks/accounting_dev/deploy.sh` every minute. The script
     polls the branch head (public repo, so no credentials and no inbound webhook or runner) and builds an image
-    tagged with the commit SHA. It then swaps the `accounting_dev` container and rolls back if the new one doesn't
-    answer within 60s. The log is `deploy.log` in that directory.
+    tagged with the commit SHA. The log is `deploy.log` in that directory. The order:
+    1. Build and swap `accounting_admin`. It migrates the DB on start.
+    2. Snapshot the DB to `data/build.db`.
+    3. Build the public image. The snapshot is bind-mounted only during `npm run build`, so a missing snapshot
+       fails the build and the image never contains the DB.
+    4. Swap `accounting_dev`. On start it revalidates itself, which picks up edits saved during the build.
+  - Either container rolls back to the previous image if it doesn't answer within 60s. Only the two newest images
+    of each are kept.
   - A failed build leaves the running container in place. A failed SHA is not retried until the next push; to retry
     by hand, run `rm failed && ./deploy.sh`.
   - Path: Cloudflare DNS-only CNAME (grey cloud) → `origin.teamcredit.kr` → Caddy edge on `proxy-seoul-01` (adds
-    `X-Robots-Tag: noindex`) → inner NPM proxy host 76 → `accounting_dev:3000`.
+    `X-Robots-Tag: noindex`) → inner NPM proxy host 76 → `accounting_dev:3000`. The admin host takes the same path
+    through NPM host 77 to `accounting_admin:3000`.
+  - The content DB is `data/content.db`, mounted at `/data` in both containers. `data/` is mode 700, because the DB
+    also holds the login sessions.
+  - A daily copy goes to `data/backups/` and is kept 30 days (ubuntu crontab; failures go to `backup.log`).
+  - To restore, stop both containers, because the web one holds the file open too. Copy a backup over
+    `content.db`, delete `content.db-wal` and `content.db-shm`, then start the admin and then the web container.
+    The web container redraws itself on start.
+  - The admin's settings are in `admin.env` (mode 600). `admin.env.example` lists them: Google OAuth client,
+    `ADMIN_EMAILS`, `BETTER_AUTH_SECRET`, and the same `REVALIDATE_SECRET` as `.env`.
   - The server `.env` (mode 600) sets `CONTACT_ALLOWED_ORIGINS` and `ENABLE_PREVIEW_PAGE=true`.
   - It also holds the SES key of the IAM user `meridian-homepage-contact-dev`. That key may only call `ses:SendEmail`
     as `no-reply@meridianco.kr`.

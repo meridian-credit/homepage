@@ -21,6 +21,7 @@ import SmoothScrollProvider from "@/components/providers/smooth-scroll-provider"
 import { siteConfig, insightCategories } from "@/lib/constants";
 import { ogImage, pageOpenGraph } from "@/lib/og";
 import { getAllPosts } from "@/lib/posts";
+import { getSchedule } from "@/lib/content/read";
 import ScrollToTop from "@/components/layout/scroll-to-top";
 
 /* 워드마크 'Meridian.' 을 찍는 서체(.brand-word, 600 정체만 쓴다).
@@ -157,7 +158,8 @@ export default function RootLayout({
         <SmoothScrollProvider>
           {/* 「본문 바로가기」는 첫 Tab 이어야 쓸모가 있다. 헤더 뒤에 두면 메뉴 열한 칸을 지나야 닿았다. */}
           <a href="#main-content" className="skip-link">본문 바로가기</a>
-          <Header hiddenNav={emptyInsightLinks()} />
+          {/* 머리의 일정 큐브도 관리자에서 고친 일정을 본다. layout 이 읽어 넘긴다. */}
+          <Header hiddenNav={emptyInsightLinks()} schedule={getSchedule().items} />
           <main id="main-content" tabIndex={-1} className="flex-1 pt-20">{children}</main>
           <Footer />
         </SmoothScrollProvider>

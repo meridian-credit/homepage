@@ -5,7 +5,8 @@ import Image from "next/image";
 import { siteConfig } from "@/lib/constants";
 import ContactForm from "@/components/contact/contact-form";
 import { AnimateOnScroll, LineReveal } from "@/components/motion";
-import { contactFaq } from "@/lib/faq";
+import { getFaq } from "@/lib/content/read";
+import type { FaqItem } from "@/lib/faq";
 import HeroVideo from "@/components/layout/hero-video";
 
 const description = "현재 상황과 필요한 서비스를 알려주시면 적용 범위와 다음 단계를 정리해 드립니다.";
@@ -28,18 +29,20 @@ const contactInfo = [
 ];
 
 /* 검색엔진이 FAQ를 그대로 읽어가도록 같은 내용을 구조화해서 한 벌 더 넣는다. */
-const faqJsonLd = {
+const faqJsonLd = (items: FaqItem[]) => ({
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  mainEntity: contactFaq.map((item) => ({
+  mainEntity: items.map((item) => ({
     "@type": "Question",
     name: item.q,
     acceptedAnswer: { "@type": "Answer", text: item.a },
   })),
-};
+});
 
 
 export default function ContactPage() {
+  /* 관리자에서 고친 문답을 쪽을 다시 만들 때마다 새로 읽는다(faq/page.tsx 와 같다). */
+  const faq = getFaq();
   return (
     <>
       {/* Hero */}
@@ -162,7 +165,7 @@ export default function ContactPage() {
 
             <AnimateOnScroll variant="fadeUp" delay={0.15} className="lg:col-span-8">
               <div className="border-t border-border">
-                {contactFaq.map((item) => (
+                {faq.map((item) => (
                   <details
                     key={item.q}
                     name="contact-faq"
@@ -187,7 +190,7 @@ export default function ContactPage() {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: toSafeJsonLd(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: toSafeJsonLd(faqJsonLd(faq)) }}
       />
     </>
   );

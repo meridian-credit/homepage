@@ -18,16 +18,14 @@
 
 import { useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { scheduleDates } from "@/lib/constants";
-
-import { daysLeft, dday, ntsThisMonthUrl } from "@/lib/schedule";
+import { daysLeft, dday, ntsThisMonthUrl, type ScheduleItem } from "@/lib/schedule";
 import { useToday } from "@/lib/use-today";
 import { useDialog } from "@/lib/use-dialog";
 const dotted = (ymd: string) => ymd.replaceAll('-', '.');
 
-export default function ScheduleCube() {
+export default function ScheduleCube({ items: all }: { items: ScheduleItem[] }) {
   const today = useToday();
-  const items = today ? scheduleDates.filter(it => daysLeft(it.when, today) >= 0) : [];
+  const items = today ? all.filter(it => daysLeft(it.when, today) >= 0) : [];
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);

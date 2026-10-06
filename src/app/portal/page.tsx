@@ -10,7 +10,7 @@ import "../promo.css";
 
 /* 이번 분기 주요 일정. 홈에 있던 것을 그대로 가져왔다.
    D-day 는 적지 않는다. 하루만 지나도 틀린 숫자가 화면에 남는다. */
-import { scheduleDates as SCHEDULE_DATES } from "@/lib/schedule";
+import { getSchedule } from "@/lib/content/read";
 
 const title = "회계사가 정리한 자료를 한 화면에서 보는 세무 대시보드";
 const description =
@@ -27,6 +27,8 @@ export const metadata: Metadata = {
    홈에 길게 붙어 있던 구간을 통째로 옮겼다 — 지운 것은 없다.
    홈은 메리디안이 어떤 곳인지 말하고, 숫자와 화면 이야기는 여기서 한다. */
 export default function Portal() {
+  /* 일정은 관리자에서 고친다. 쪽을 다시 만들 때마다 새로 읽는다(src/lib/content/read.ts). */
+  const SCHEDULE_DATES = getSchedule().items;
   return (
     <div className="promo">
       <PromoMotion />
