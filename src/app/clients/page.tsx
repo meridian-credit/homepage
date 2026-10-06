@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/og";
 import Link from "next/link";
 import { personas, services } from "@/lib/data";
 import { AnimateOnScroll, LineReveal } from "@/components/motion";
 import HeroVideo from "@/components/layout/hero-video";
 import StagePicker from "@/components/clients/stage-picker";
 
+const description =
+  "설립 직후부터 성장기, 중요한 결정 직전까지. 단계별로 필요한 세무 서비스를 정리합니다.";
+
 export const metadata: Metadata = {
   title: "고객 유형별 안내",
-  description:
-    "설립 직후부터 성장기, 중요한 결정 직전까지. 단계별로 필요한 세무 서비스를 정리합니다.",
+  description,
+  openGraph: pageOpenGraph("/clients", "고객 유형별 안내", description),
   alternates: {
     canonical: "/clients",
   },

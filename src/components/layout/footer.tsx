@@ -195,9 +195,14 @@ export default function Footer() {
         <p className="text-xs text-neutral-400 tracking-wide">
           &copy; {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
         </p>
-        <p className="text-xs text-neutral-400">
-          Seoul, South Korea
-        </p>
+        {/* 처리방침은 굵게 보이는 링크로 둔다. 개인정보 보호법 제30조가 「쉽게 확인할 수 있게」
+            공개하라고 하고, 감독기관 지침도 다른 고지와 구별되게 표시하라고 한다. */}
+        <div className="flex items-center gap-4 text-xs text-neutral-400">
+          <Link href="/privacy" className="font-semibold text-neutral-200 hover:text-white transition-colors">
+            개인정보 처리방침
+          </Link>
+          <span>Seoul, South Korea</span>
+        </div>
       </div>
     </footer>
   );

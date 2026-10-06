@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import Link from "next/link";
 import { siteConfig } from "@/lib/constants";
 import InquiryDraft from "./contact-inquiry";
 
@@ -27,6 +28,9 @@ export default function ContactForm() {
     "idle"
   );
   const [errorMessage, setErrorMessage] = useState<string>("");
+  /* 다시 눌러도 안 될 수 있는 실패(서버·발송 오류, 요청 제한, 출처 거부, 응답 없음)에는 메일·카카오톡으로
+     바로 갈 수 있는 링크를 붙인다. 입력 형식 오류(400)는 고쳐서 다시 보내면 되니 붙이지 않는다. */
+  const [offerDirect, setOfferDirect] = useState(false);
 
   /* 폼이 화면에 나타난 때(performance.now 기준). 보낼 때 여기서 잰 경과 시간으로 서버가
      너무 빠른 제출(900ms 미만)을 막는다. 기기 시계(Date.now)는 서버 시계와 어긋날 수 있어
@@ -54,6 +58,7 @@ export default function ContactForm() {
     submitting.current = true;
     setStatus("sending");
     setErrorMessage("");
+    setOfferDirect(false);
     const fields = Object.fromEntries(new FormData(e.currentTarget));
 
     try {
@@ -77,10 +82,12 @@ export default function ContactForm() {
           // ignore
         }
         setErrorMessage(res.status === 429 ? "요청이 많습니다. 잠시 후 다시 시도해 주세요." : serverMessage || `전송에 실패했습니다 (${res.status}).`);
+        setOfferDirect(res.status === 403 || res.status === 429 || res.status >= 500);
         setStatus("error");
       }
     } catch {
       setErrorMessage("응답을 확인하지 못해 접수 여부가 확실하지 않습니다. 입력 내용은 유지됩니다. 잠시 후 확인하거나 직접 연락해 주세요.");
+      setOfferDirect(true);
       setStatus("error");
     } finally {
       submitting.current = false;
@@ -138,7 +145,7 @@ export default function ContactForm() {
   return (
     <>
       {draftReader}
-      <form method="post" onSubmit={handleSubmit} className="space-y-8" aria-busy={status === "sending"}>
+      <form method="post" onSubmit={handleSubmit} className="contact-form space-y-8" aria-busy={status === "sending"}>
         {draft && <p className="text-sm text-muted">선택한 서비스·견적 조건을 아래 현재 상황에 담았습니다. 확인하고 수정해 주세요.</p>}
         <div className="sr-only" aria-hidden="true">
           <label htmlFor={fieldId("website")}>Website</label>
@@ -219,17 +226,32 @@ export default function ContactForm() {
         </div>
 
         {status === "error" && (
-          <div ref={statusRef} tabIndex={-1} role="alert" className="flex items-center gap-3 py-4 px-5 bg-red-50 border border-red-100">
+          <div ref={statusRef} tabIndex={-1} role="alert" className="flex items-start gap-3 py-4 px-5 bg-red-50 border border-red-100">
             <span className="w-5 h-5 rounded-full border border-red-400 flex items-center justify-center flex-shrink-0">
               <span className="text-red-500 text-xs font-bold">!</span>
             </span>
-            <p className="text-sm text-red-600">
-              {errorMessage || "전송에 실패했습니다. 잠시 후 다시 시도해 주세요."}
-            </p>
+            <div className="text-sm text-red-600">
+              <p>{errorMessage || "전송에 실패했습니다. 잠시 후 다시 시도해 주세요."}</p>
+              {offerDirect && (
+                <p className="mt-2">
+                  <a href={`mailto:${siteConfig.email}`} className="underline underline-offset-4">이메일로 보내기</a>
+                  {" · "}
+                  <a href={siteConfig.kakaoChannelUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">카카오톡 채널로 문의</a>
+                </p>
+              )}
+            </div>
           </div>
         )}
 
         <div className="pt-4">
+          {/* 계약 전 상담 요청에 따른 처리라 동의 체크박스 대신 고지 한 줄을 둔다(개인정보 보호법 제15조
+              제1항 제4호). JS 가 없어도 보인다. */}
+          <p className="mb-6 text-sm text-muted">
+            보내 주신 정보는 문의에 답하는 데에만 쓰고, 계약으로 이어지지 않으면 상담 후 지웁니다. 자세한
+            내용은{" "}
+            <Link href="/privacy" className="underline underline-offset-4">개인정보 처리방침</Link>을 확인해
+            주세요.
+          </p>
           <button
             type="submit"
             disabled={!hydrated || status === "sending"}

@@ -114,14 +114,18 @@ export default function SchedulePopup({ items, trigger, auto = true }: { items: 
         </p>
 
         <div className="schp-ft">
-          <label className="schp-chk">
-            <input
-              type="checkbox"
-              checked={dontShow}
-              onChange={(e) => setDontShow(e.target.checked)}
-            />
-            <span>24시간 동안 보지 않기</span>
-          </label>
+          {/* 스스로 뜨지 않는 곳(포탈)에서는 「보지 않기」가 할 일이 없다. 눌러도 아무것도
+              바뀌지 않는 칸이라 스스로 뜰 때만 둔다. */}
+          {auto && (
+            <label className="schp-chk">
+              <input
+                type="checkbox"
+                checked={dontShow}
+                onChange={(e) => setDontShow(e.target.checked)}
+              />
+              <span>24시간 동안 보지 않기</span>
+            </label>
+          )}
           <button type="button" className="btn btn-fill schp-close" onClick={close}>
             닫기
           </button>

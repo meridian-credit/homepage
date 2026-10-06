@@ -1,5 +1,6 @@
 import EvidenceDemo from "@/components/home/evidence-demo";
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/og";
 import { orderedServices } from "@/lib/constants";
 import { siteConfig } from "@/lib/constants";
 import PromoMotion from "@/components/home/promo-motion";
@@ -11,11 +12,15 @@ import "../promo.css";
    D-day 는 적지 않는다. 하루만 지나도 틀린 숫자가 화면에 남는다. */
 import { scheduleDates as SCHEDULE_DATES } from "@/lib/schedule";
 
+const title = "회계사가 정리한 자료를 한 화면에서 보는 세무 대시보드";
+const description =
+  "기장을 맡기시면 회사 전용 세무 대시보드가 무료로 제공됩니다. 홈택스·카드·통장 자료를 매일 자동으로 모으고, 지금 이 순간의 손익과 부가세를 봅니다.";
+
 export const metadata: Metadata = {
   alternates: { canonical: "/portal" },
-  title: "회계사가 정리한 자료를 한 화면에서 보는 세무 대시보드",
-  description:
-    "기장을 맡기시면 회사 전용 세무 대시보드가 무료로 제공됩니다. 홈택스·카드·통장 자료를 매일 자동으로 모으고, 지금 이 순간의 손익과 부가세를 봅니다.",
+  title,
+  description,
+  openGraph: pageOpenGraph("/portal", title, description),
 };
 
 /* 대시보드 이야기만 모아둔 페이지.
@@ -56,15 +61,16 @@ export default function Portal() {
           <p className="hero-sub"><span className="c">기장을 맡기시면</span><span className="c"><b>회사 전용 세무 대시보드</b>가 무료로 제공됩니다.</span></p>
           <div className="hero-cta">
             <a className="btn btn-fill" href="#end">기장 이관 상담하기</a>
-            {/* 헤더의 '대시보드 시작하기'와 같은 곳으로 간다. 이름도 같게 —
-                같은 일을 하는 버튼은 어디서든 같은 이름이어야 한다. */}
+            {/* 홈의 같은 버튼과 같은 곳(고객 전용 로그인 화면)으로 간다. 이름도 같게 —
+                같은 일을 하는 버튼은 어디서든 같은 이름이어야 한다. 가입이 없는 화면이라
+                「시작하기」가 아니라 「로그인」이다. */}
             <a
               className="btn btn-line"
               href={siteConfig.clientPortalUrl}
               target="_blank"
               rel="noopener noreferrer"
             >
-              대시보드 시작하기
+              고객 대시보드 로그인
             </a>
           </div>
           <p className="cta-note"><span className="s">상담은 무료입니다.</span><span className="s">쓰던 사무소에서 넘어오는 절차는 저희가 처리합니다.</span></p>

@@ -18,6 +18,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
+import { flushSync } from "react-dom";
 import { oneLine, type Service } from "@/lib/data";
 import { serviceGroups, orderedServices } from "@/lib/constants";
 import { useHandheld } from "@/lib/use-media";
@@ -92,7 +93,14 @@ export default function ServicePicker() {
                         className={`spick-item ${isOpen ? "is-on" : ""}`}
                         aria-expanded={isOpen}
                         aria-controls={`spick-fold-${slug}`}
-                        onClick={() => setOpen(isOpen ? null : i)}
+                        onClick={(e) => {
+                          const row = e.currentTarget;
+                          flushSync(() => setOpen(isOpen ? null : i));
+                          /* 위에서 펼쳐 둔 줄이 접히면 그 높이만큼 아래가 끌려 올라가, 누른 줄이
+                             화면 위로 사라졌다(iPhone 에서 1288px → -181px). 헤더 밑으로 숨었을
+                             때만 그 줄을 헤더 바로 밑으로 데려온다. */
+                          if (row.getBoundingClientRect().top < 80) row.scrollIntoView({ block: "start" });
+                        }}
                       >
                         <ServiceIcon name={s.icon} className="spick-icon" />
                         <span className="spick-no">

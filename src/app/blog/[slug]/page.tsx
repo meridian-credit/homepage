@@ -13,6 +13,7 @@ import {
 } from "@/lib/content-system";
 import { getCategoryStyle } from "@/lib/category-colors";
 import { siteConfig } from "@/lib/constants";
+import { ogImage } from "@/lib/og";
 import { getAllPosts, getPostBySlug, getRelatedPosts } from "@/lib/posts";
 import HeroVideo from "@/components/layout/hero-video";
 import { AnimateOnScroll, LineReveal } from "@/components/motion";
@@ -53,8 +54,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     alternates: {
       canonical: articleUrl,
     },
+    /* 표지가 없는 글(거의 전부)도 공유 카드에 그림이 서도록 사이트 공통 그림으로 받친다.
+       openGraph 를 통째로 갈아 끼우므로 사이트 이름 · 언어도 여기서 다시 적는다(src/lib/og.ts). */
     openGraph: {
       type: "article",
+      siteName: siteConfig.name,
+      locale: "ko_KR",
       url: articleUrl,
       title: post.meta.title,
       description: post.meta.description,
@@ -62,13 +67,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       modifiedTime,
       authors: [post.meta.author ?? siteConfig.founder],
       tags: post.meta.keywords,
-      images: image ? [{ url: image, alt: post.meta.title }] : undefined,
+      images: [image ? { url: image, alt: post.meta.title } : ogImage],
     },
     twitter: {
-      card: image ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title: post.meta.title,
       description: post.meta.description,
-      images: image ? [image] : undefined,
+      images: [image ?? ogImage.url],
     },
     robots: {
       index: true,

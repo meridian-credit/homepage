@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/og";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { services, oneLine } from "@/lib/data";
@@ -22,9 +23,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const service = services.find((s) => s.slug === slug);
   if (!service) return {};
+  const description = oneLine(service.description);
   return {
     title: service.title,
-    description: oneLine(service.description),
+    description,
+    openGraph: pageOpenGraph(`/services/${service.slug}`, service.title, description),
     alternates: {
       canonical: `/services/${service.slug}`,
     },

@@ -45,11 +45,12 @@ const nextConfig: NextConfig = {
       },
       {
         /* 문답이 /blog 안의 탭이던 시절 주소. 메뉴가 여기로 보냈으니
-           남이 받아 둔 링크가 있을 수 있다. */
+           남이 받아 둔 링크가 있을 수 있다. 문답은 /faq 로 아주 옮겼으니 영구(308)로 보낸다 —
+           임시(307)면 검색엔진이 옛 주소를 계속 붙들고 있는다. */
         source: "/blog",
         has: [{ type: "query", key: "tab", value: "faq" }],
         destination: "/faq",
-        permanent: false,
+        permanent: true,
       },
       {
         source: "/practice",

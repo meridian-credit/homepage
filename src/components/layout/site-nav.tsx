@@ -42,6 +42,14 @@ function isOn(pathname: string, href: string) {
   return pathname === path || pathname.startsWith(path + "/");
 }
 
+/* 펼침판 안의 항목은 주소가 꼭 같을 때만 「현재 쪽」이다. ?cat= 이 붙은 항목은 경로만으로 어느
+   것인지 알 수 없어 표시하지 않는다 — 경로만 보면 BLOG 의 항목이 한꺼번에 전부 현재 쪽이 됐다.
+   헤더에서 useSearchParams 를 읽으면 Suspense 밖이라 모든 쪽의 정적 생성이 깨진다. */
+function isItemOn(pathname: string, href: string) {
+  if (href.includes("?")) return false;
+  return pathname === href.split("#")[0];
+}
+
 /* 펼침판은 하위가 있는 칸마다 하나씩이다. 칸의 aria-controls 가 제 판을 가리킨다. */
 const hasPane = (entry: NavEntry) => Boolean(entry.items || entry.columns);
 const paneId = (label: string) => `desktop-navigation-${label.toLowerCase().replace(/\s+/g, "-")}`;
@@ -245,7 +253,7 @@ export function MobileNav({ onNavigate, entries }: { onNavigate: () => void; ent
                             href={item.href}
                             onClick={onNavigate}
                             className="mnav-sublink"
-                            aria-current={isOn(pathname, item.href) ? "page" : undefined}
+                            aria-current={isItemOn(pathname, item.href) ? "page" : undefined}
                           >
                             {item.label}
                           </Link>
@@ -350,7 +358,7 @@ export function MegaPanel({ ctl, entries }: { ctl: MenuCtl; entries: NavEntry[] 
                           <Link
                             href={item.href}
                             onClick={() => setOpen(null)}
-                            aria-current={isOn(pathname, item.href) ? "page" : undefined}
+                            aria-current={isItemOn(pathname, item.href) ? "page" : undefined}
                           >
                             <span className="hdr-mega-label">{item.label}</span>
                             {item.hint && <span className="hdr-mega-hint">{item.hint}</span>}

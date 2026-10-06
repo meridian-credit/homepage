@@ -1,5 +1,6 @@
 import { toSafeJsonLd } from "@/lib/json-ld";
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/og";
 import Image from "next/image";
 import { siteConfig } from "@/lib/constants";
 import ContactForm from "@/components/contact/contact-form";
@@ -7,9 +8,12 @@ import { AnimateOnScroll, LineReveal } from "@/components/motion";
 import { contactFaq } from "@/lib/faq";
 import HeroVideo from "@/components/layout/hero-video";
 
+const description = "현재 상황과 필요한 서비스를 알려주시면 적용 범위와 다음 단계를 정리해 드립니다.";
+
 export const metadata: Metadata = {
   title: "문의",
-  description: "현재 상황과 필요한 서비스를 알려주시면 적용 범위와 다음 단계를 정리해 드립니다.",
+  description,
+  openGraph: pageOpenGraph("/contact", "문의", description),
   alternates: {
     canonical: "/contact",
   },

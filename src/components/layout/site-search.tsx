@@ -30,7 +30,9 @@ interface SearchItem {
    이름을 찾는다. 무엇을 찾는 자리인지 그대로 적는다(첨삭 #11). */
 const PLACEHOLDER = "서비스 검색 · 예: 세무기장, 기업실사, 결산 지원";
 
-export default function SiteSearch() {
+/* onNavigate: 결과로 이동할 때 바깥에 알린다. 모바일 메뉴 안에 놓인 검색은 이것으로 메뉴를 닫는다.
+   안 닫으면 주소는 바뀌는데 메뉴가 새 페이지를 덮은 채 남고 스크롤도 잠겨 있다. */
+export default function SiteSearch({ onNavigate }: { onNavigate?: () => void } = {}) {
   const router = useRouter();
   const listId = useId();
   const [loadState, setLoadState] = useState<"idle" | "loading" | "ready" | "error">("idle");
@@ -126,6 +128,7 @@ export default function SiteSearch() {
   function go(href: string) {
     setOpen(false);
     setQ("");
+    onNavigate?.();
     router.push(href);
   }
 
@@ -204,6 +207,7 @@ export default function SiteSearch() {
                 onClick={() => {
                   setOpen(false);
                   setQ("");
+                  onNavigate?.();
                 }}
                 className={`site-search-row${i === cursor ? " is-on" : ""}`}
               >

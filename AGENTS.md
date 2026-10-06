@@ -114,6 +114,8 @@ and the sitemap, and is noindex.
   every `AWS_*` from the shell removed, a fake key, and `AWS_ENDPOINT_URL_SESV2` pointed at an in-process fake SES,
   so it never uses the shared :3100 server or a real key.
   The other contact tests fake the response with `page.route`.
+- `/privacy` (개인정보 처리방침) describes this route's data flow. When a processor changes, update its 「처리 위탁」 table:
+  production hosting, Upstash, or the mailbox.
 - Open backend issues, and what not to build, are in `docs/plans/ui-ux-remediation/backend-backlog.md`.
 - The full env var list is in `README.md`.
 
@@ -221,7 +223,9 @@ Tests enforce three rules:
     by hand, run `rm failed && ./deploy.sh`.
   - Path: Cloudflare DNS-only CNAME (grey cloud) → `origin.teamcredit.kr` → Caddy edge on `proxy-seoul-01` (adds
     `X-Robots-Tag: noindex`) → inner NPM proxy host 76 → `accounting_dev:3000`.
-  - The server `.env` sets `CONTACT_ALLOWED_ORIGINS` and `ENABLE_PREVIEW_PAGE=true`. It has no SES or Upstash
-    keys yet, so the contact form answers 500 there. Set `CONTACT_TO_EMAIL` to a test inbox before adding a key.
+  - The server `.env` (mode 600) sets `CONTACT_ALLOWED_ORIGINS` and `ENABLE_PREVIEW_PAGE=true`.
+  - It also holds the SES key of the IAM user `meridian-homepage-contact-dev`. That key may only call `ses:SendEmail`
+    as `no-reply@meridianco.kr`.
+  - `CONTACT_TO_EMAIL` there is the SES mailbox simulator, so dev sends reach no real inbox. There are no Upstash keys.
 - The earlier Cloudflare Workers preview (OpenNext) was removed on 2026-09-30. Workers Free intermittently hit the
   10 ms CPU limit (error 1102), which ruled it out for production.

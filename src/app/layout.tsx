@@ -19,6 +19,7 @@ import ScrollCue from "@/components/layout/scroll-cue";
 import Footer from "@/components/layout/footer";
 import SmoothScrollProvider from "@/components/providers/smooth-scroll-provider";
 import { siteConfig, insightCategories } from "@/lib/constants";
+import { ogImage, pageOpenGraph } from "@/lib/og";
 import { getAllPosts } from "@/lib/posts";
 import ScrollToTop from "@/components/layout/scroll-to-top";
 
@@ -69,20 +70,13 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
-  openGraph: {
-    title: `${siteConfig.title} | ${siteConfig.name}`,
-    description: siteConfig.description,
-    type: "website",
-    locale: "ko_KR",
-    siteName: siteConfig.name,
-    images: [{ url: "/home-hero-poster.jpg", alt: "Meridian 세무·회계 자문" }],
-    url: siteConfig.url,
-  },
+  /* 홈의 카드. 다른 쪽은 저마다 pageOpenGraph 로 제 것을 적는다(src/lib/og.ts). */
+  openGraph: pageOpenGraph("/", siteConfig.title, siteConfig.description),
+  /* 제목 · 설명은 적지 않는다. 적어 두면 모든 쪽이 홈의 제목을 물려받는다. 없으면 X 는 쪽마다의
+     og:title · og:description 을 쓴다. */
   twitter: {
     card: "summary_large_image",
-    images: ["/home-hero-poster.jpg"],
-    title: `${siteConfig.title} | ${siteConfig.name}`,
-    description: siteConfig.description,
+    images: [ogImage.url],
   },
   robots: {
     index: true,
@@ -161,8 +155,9 @@ export default function RootLayout({
         {/* 헤더 유리가 뒤를 휘게 하는 필터. 화면에 안 보이지만 이게 있어야 굴절이 돈다. */}
         <GlassFilterDefs />
         <SmoothScrollProvider>
-          <Header hiddenNav={emptyInsightLinks()} />
+          {/* 「본문 바로가기」는 첫 Tab 이어야 쓸모가 있다. 헤더 뒤에 두면 메뉴 열한 칸을 지나야 닿았다. */}
           <a href="#main-content" className="skip-link">본문 바로가기</a>
+          <Header hiddenNav={emptyInsightLinks()} />
           <main id="main-content" tabIndex={-1} className="flex-1 pt-20">{children}</main>
           <Footer />
         </SmoothScrollProvider>

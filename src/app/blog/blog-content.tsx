@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { insightCategories } from "@/lib/constants";
 import { getCategoryStyle } from "@/lib/category-colors";
 import { splitHeadline } from "@/lib/headline";
@@ -106,7 +106,14 @@ export default function BlogContent({ posts, query = "" }: BlogContentProps) {
     if (replace) window.history.replaceState(null, '', url);
     else window.history.pushState(null, '', url);
   };
-  const setPage = (value: number) => updateQuery({ page: String(value) });
+  /* 판 번호는 목록 맨 아래에 있다. 주소만 바꾸면 화면이 아래에 머물러 새 판의 첫 글들이 화면 위로
+     지나가 있었다. 목록 머리가 화면 위로 올라가 있을 때만 그 자리로 올린다. */
+  const listTop = useRef<HTMLElement>(null);
+  const setPage = (value: number) => {
+    updateQuery({ page: String(value) });
+    const top = listTop.current;
+    if (top && top.getBoundingClientRect().top < 0) top.scrollIntoView({ block: "start" });
+  };
   const setQ = (value: string) => updateQuery({ q: value, page: '' }, true);
   const [lead, setLead] = useState(0);
 
@@ -265,7 +272,9 @@ export default function BlogContent({ posts, query = "" }: BlogContentProps) {
 
         {(
           <>
-            <nav className="ins-cats" aria-label="갈래">
+            {/* id 는 지우지 않는다. 전역 [id] { scroll-margin-top } 이 있어야 위 setPage 의 스크롤이
+                고정 헤더 밑에 멈춘다. */}
+            <nav ref={listTop} id="blog-list" className="ins-cats" aria-label="갈래">
               {/* 글 없는 갈래는 칩도 뺀다(메뉴와 같다). 주소로 곧장 들어온 갈래는
                   비었어도 남겨 둔다 — 지금 어디에 있는지는 보여야 한다. */}
               {insightCategories.filter((c) => c.slug === active.slug || countOf(c.match) > 0).map((c, i) => (

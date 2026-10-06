@@ -193,16 +193,19 @@ export const navLinks = navMenu.map(({ href, label }) => ({ href, label }));
    (자기 metadata 가 noindex, /preview 는 robots.ts 도 막는다) 사이트 안 검색에만
    나오면 앞뒤가 안 맞는다.
    ───────────────────────────────────────────────────────────── */
-export const sitePages: Array<{ href: string; label: string; hint: string }> = [
+export const sitePages: Array<{ href: string; label: string; hint: string; terms?: string }> = [
   { href: "/", label: "홈", hint: "메리디안" },
   { href: "/about", label: "회사 소개", hint: "메리디안" },
   { href: "/members", label: "회계사 소개", hint: "박민상 회계사" },
   { href: "/services", label: "서비스", hint: "네 갈래 · 여덟 가지" },
   { href: "/clients", label: "고객사", hint: "대표의 단계별" },
   { href: "/blog", label: "BLOG", hint: "세무·회계 실무 글" },
-  { href: "/faq", label: "자주 묻는 질문", hint: "상담 전에 자주 나오는 것" },
+  { href: "/faq", label: "자주 묻는 질문", hint: "상담 전에 자주 나오는 것", terms: "비용 수임료 보수 회신 기장 이관 준비 서류" },
   { href: "/portal", label: "대시보드", hint: "고객 전용 화면" },
-  { href: "/contact", label: "문의", hint: "상담 신청" },
+  /* terms 는 화면에 안 보이고 검색에만 쓰는 말이다. 연락처를 찾는 사람은 「전화번호」·「주소」로
+     검색하는데, 그 말이 어디에도 없어 결과가 비었다. */
+  { href: "/contact", label: "문의", hint: "상담 신청", terms: "연락처 전화번호 이메일 메일 주소 카카오톡 오시는 길" },
+  { href: "/privacy", label: "개인정보 처리방침", hint: "문의 양식으로 받는 정보" },
 ];
 
 

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/og";
 import { Suspense } from "react";
 import { getAllPosts } from "@/lib/posts";
 import { AnimateOnScroll, LineReveal } from "@/components/motion";
@@ -9,13 +10,11 @@ export const metadata: Metadata = {
   title: "실무 메모",
   description:
     "사업을 굴리다 자주 부딪히는 세무·회계·거래 이슈를 현장 관점으로 풉니다.",
-  openGraph: {
-    title: "실무 메모",
-    description:
-      "사업을 굴리다 자주 부딪히는 세무·회계·거래 이슈를 현장 관점으로 풉니다.",
-    type: "website",
-    url: "/blog",
-  },
+  openGraph: pageOpenGraph(
+    "/blog",
+    "실무 메모",
+    "사업을 굴리다 자주 부딪히는 세무·회계·거래 이슈를 현장 관점으로 풉니다."
+  ),
   alternates: {
     canonical: "/blog",
   },

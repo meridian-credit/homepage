@@ -15,6 +15,7 @@ import { toSafeJsonLd } from "@/lib/json-ld";
  */
 
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/og";
 import { contactFaq } from "@/lib/faq";
 import { AnimateOnScroll, LineReveal } from "@/components/motion";
 import HeroVideo from "@/components/layout/hero-video";
@@ -24,13 +25,11 @@ export const metadata: Metadata = {
   title: "자주 묻는 질문",
   description:
     "상담 전에 자주 나오는 질문과 답. 회신 시점, 비용, 기장 이관, 준비 서류를 먼저 적어 둡니다.",
-  openGraph: {
-    title: "자주 묻는 질문",
-    description:
-      "상담 전에 자주 나오는 질문과 답. 회신 시점, 비용, 기장 이관, 준비 서류를 먼저 적어 둡니다.",
-    type: "website",
-    url: "/faq",
-  },
+  openGraph: pageOpenGraph(
+    "/faq",
+    "자주 묻는 질문",
+    "상담 전에 자주 나오는 질문과 답. 회신 시점, 비용, 기장 이관, 준비 서류를 먼저 적어 둡니다."
+  ),
   alternates: { canonical: "/faq" },
 };
 

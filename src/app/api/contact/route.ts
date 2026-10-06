@@ -217,6 +217,13 @@ function withinMemoryRateLimit(key: string): RateLimitResult {
   const current = memoryRateLimit.get(key);
   if (!current) {
     memoryRateLimit.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    /* 위의 정리는 다음 문의가 와야 돈다. 문의가 드문 사이트라 그 사이 IP·이메일이 몇 시간씩 메모리에
+       남았다. 처리방침은 「길어야 20분」이라고 적었으니 창이 끝나면 스스로 지운다. 그사이 같은 키로 새
+       창이 열렸으면 그 창은 건드리지 않는다. unref — 이 타이머 때문에 프로세스가 안 끝나면 안 된다. */
+    setTimeout(() => {
+      const entry = memoryRateLimit.get(key);
+      if (entry && entry.resetAt <= Date.now()) memoryRateLimit.delete(key);
+    }, RATE_LIMIT_WINDOW_MS).unref?.();
     return { allowed: true, retryAfterSeconds: 0 };
   }
 

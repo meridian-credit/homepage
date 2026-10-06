@@ -569,7 +569,7 @@ h2.sec { font-size: clamp(1.9rem, 4.4vw, var(--t-3)); margin-top: var(--s3); max
   margin-top: var(--s5);
   display: inline-flex; align-items: center; gap: var(--s2);
   padding: 10px 14px;
-  /* 모서리는 사이트의 모든 버튼과 같은 10px. '대시보드 시작하기'가 기준이다. */
+  /* 모서리는 사이트의 모든 버튼과 같은 10px. '고객 대시보드 로그인'이 기준이다. */
   border: 1px solid var(--w-3); border-radius: 10px;
   background: var(--w); cursor: pointer;
   font-family: inherit;
@@ -767,7 +767,8 @@ h2.sec { font-size: clamp(1.9rem, 4.4vw, var(--t-3)); margin-top: var(--s3); max
   font-size: var(--t--1); color: var(--tx-2); cursor: pointer;
 }
 .schp-chk input { width: 16px; height: 16px; accent-color: var(--blue); cursor: pointer; }
-.schp-close { padding-block: 10px; }
+/* 「보지 않기」 칸이 없을 때(포탈)도 닫기는 오른쪽 끝에 선다. */
+.schp-close { padding-block: 10px; margin-left: auto; }
 
 @media (prefers-reduced-motion: reduce) {
   .schp, .schp-panel { animation: none; }

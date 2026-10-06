@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/og";
 import Image from "next/image";
 import Link from "next/link";
 import { members } from "@/lib/data";
@@ -24,6 +25,7 @@ import MeridianGlobe from "@/components/about/meridian-globe";
 export const metadata: Metadata = {
   title: "회사 소개",
   description: siteConfig.description,
+  openGraph: pageOpenGraph("/about", "회사 소개", siteConfig.description),
   alternates: {
     canonical: "/about",
   },
@@ -208,13 +210,15 @@ export default function AboutPage() {
 
           <AnimateOnScroll variant="fadeUp" delay={0.12}>
             <div className="abt-affil">
+              {/* 법적 무게가 있는 문단이라 이름을 손으로 적지 않는다. 여기만 「메리디안
+                  어드바이저리」로 남아 사이트의 다른 곳과 이름이 달랐다. */}
               <p>
-                <strong>메리디안 어드바이저리</strong>는 박민상 공인회계사가
+                <strong>{siteConfig.name}</strong>는 박민상 공인회계사가
                 운영하는 개인 자문 브랜드이며, 별도의 법인이 아닙니다.
               </p>
               <p>
-                박민상 공인회계사는 <strong>동성회계법인</strong> 소속이며,
-                메리디안 어드바이저리를 통해 수임하는 모든 업무는 동성회계법인과의
+                박민상 공인회계사는 <strong>동성회계법인</strong> 소속이며,{" "}
+                {siteConfig.name}를 통해 수임하는 모든 업무는 동성회계법인과의
                 계약에 따라 수행됩니다.
               </p>
 

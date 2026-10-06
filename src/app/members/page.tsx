@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/og";
 import Image from "next/image";
 import Link from "next/link";
 import { members } from "@/lib/data";
@@ -10,6 +11,7 @@ import HeroVideo from "@/components/layout/hero-video";
 export const metadata: Metadata = {
   title: "회계사 소개",
   description: "메리디안 택스 어드바이저리의 사람을 소개합니다.",
+  openGraph: pageOpenGraph("/members", "회계사 소개", "메리디안 택스 어드바이저리의 사람을 소개합니다."),
   alternates: {
     canonical: "/members",
   },

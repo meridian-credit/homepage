@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
+import { pageOpenGraph } from "@/lib/og";
 import Link from "next/link";
 import { AnimateOnScroll, LineReveal } from "@/components/motion";
 import HeroVideo from "@/components/layout/hero-video";
 import ServicePicker from "@/components/services/service-picker";
 
+const description =
+  "세무자문 · 회계감사 · 회계자문 · 재무자문. 네 갈래 아래 여덟 가지 업무를 안내합니다.";
+
 export const metadata: Metadata = {
   title: "서비스",
-  description:
-    "세무자문 · 회계감사 · 회계자문 · 재무자문. 네 갈래 아래 여덟 가지 업무를 안내합니다.",
+  description,
+  openGraph: pageOpenGraph("/services", "서비스", description),
   alternates: {
     canonical: "/services",
   },
@@ -188,8 +192,12 @@ export default function ServicesPage() {
             원천세 신고 · 납부
           </p>
 
+          {/* 여기 날짜는 해마다 같은 법정 기한이다. 헤더의 일정은 올해 실제 마감일이라 휴일이면
+              하루 이틀 밀린다(2026년 10.25 → 10.26). 그 차이를 적어 두지 않으면 둘 중 하나가
+              틀린 것으로 읽힌다. */}
           <p className="mt-10 text-xs text-muted leading-relaxed">
-            ※ 국세청 기준 주요 신고·납부 기한. 담당 법인의 신고 의무 및 마감일은 실제와 상이할 수 있습니다.
+            ※ 국세청 기준 주요 신고·납부 법정 기한. 기한이 토요일·일요일·공휴일이면 그다음 날까지입니다.
+            담당 법인의 신고 의무 및 마감일은 실제와 상이할 수 있습니다.
           </p>
         </div>
       </section>

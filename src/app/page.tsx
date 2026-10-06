@@ -99,13 +99,15 @@ export default function Home() {
               </p>
 
               <div className="hero-cta rise">
+                {/* 가입 없이 아이디·비밀번호만 묻는 고객 전용 화면이다. 「무료 … 시작하기」라고 부르면 처음
+                    온 사람이 눌러도 시작할 것이 없다. 아직 고객이 아닌 사람은 옆의 「알아보기」로 간다. */}
                 <a
                   className="btn btn-fill"
                   href={siteConfig.clientPortalUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  무료 대시보드 시작하기
+                  고객 대시보드 로그인
                 </a>
                 <a className="btn btn-line" href="/portal">알아보기</a>
               </div>

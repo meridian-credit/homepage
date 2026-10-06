@@ -217,7 +217,7 @@ export default function Header({ hiddenNav = [] }: { hiddenNav?: string[] }) {
         <div className="mnav-shell">
           {/* 검색은 데스크톱에만 있었다. 손으로 쓰는 사람이 더 많다. */}
           <div className="mnav-search">
-            <SiteSearch />
+            <SiteSearch onNavigate={() => setMobileOpen(false)} />
           </div>
 
           <MobileNav onNavigate={() => setMobileOpen(false)} entries={entries} />
