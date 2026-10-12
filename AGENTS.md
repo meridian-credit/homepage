@@ -120,6 +120,22 @@ The frontmatter schema and citation rules are in `docs/content-system.md`:
   row with the before and after.
   - A stale revision is refused, so two tabs can't overwrite each other.
   - 변경 기록 restores an older state as a new save.
+- The UI was rebuilt from scratch on 2026-10-12. The design, the decisions and the "add a content type" checklist
+  are in `docs/plans/admin-backend/ui.md`.
+  - Each type has a client-safe model in `admin/src/content/<type>.ts`: the zod rules that the browser and the server
+    both run, and `describe(before, after)`. The history page builds its summary lines from that diff, not from the
+    stored summary. `content/registry.ts` lists the types for the menu, home and history filter.
+  - `admin/src/editing/use-editor.ts` is the one save flow: working copy, change count, save-bar states, Ctrl+S and
+    the leave warning.
+    - Unsaved edits are kept in `localStorage` (`meridian-admin:draft:<kind>`) with their base revision. Saving,
+      discarding or logging out clears them.
+    - Save actions answer `signed-out` instead of redirecting, so the typed text survives an expired session.
+  - Restore is `previewRestore(id)` then `restoreBefore(id, revision)`. A save made after the preview is refused,
+    not overwritten.
+  - A failed publish is remembered in `content_meta` (`admin.publishFailed`) and shown on every page until a
+    republish succeeds. The public site never reads that key.
+  - Styles are tokens plus numbered sections in `admin/src/app/admin.css`. There is no Tailwind, and the icons are
+    inline SVG (`admin/src/ui/icons.tsx`).
 - After a save the admin POSTs the public site's `/api/revalidate` (bearer `REVALIDATE_SECRET`; 404 when unset),
   then warms `/`, `/faq`, `/contact`, `/portal`.
   - The route reads the DB first and answers 500 if it can't. A failed regeneration would otherwise keep serving

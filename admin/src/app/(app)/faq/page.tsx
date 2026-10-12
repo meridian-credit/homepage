@@ -1,17 +1,21 @@
+import { contentType } from "@admin/content/registry";
 import { readFaq } from "@admin/lib/content";
 import { requireAdmin } from "@admin/lib/session";
-import FaqForm from "./faq-form";
+import { PageHeader } from "@admin/ui/page-header";
+import FaqEditor from "./faq-editor";
 
 export const metadata = { title: "자주 묻는 질문" };
 
 export default async function FaqPage() {
   await requireAdmin();
   const state = readFaq();
+  const type = contentType("faq");
+  const site = process.env.PUBLIC_SITE_URL;
+  const siteUrl = site ? `${site}${type.sitePath}` : undefined;
   return (
     <>
-      <h1>자주 묻는 질문</h1>
-      <p className="lead">FAQ 쪽과 문의 쪽 아래에 같은 목록이 나옵니다. 검색 엔진용 구조화 데이터도 이 목록으로 만듭니다.</p>
-      <FaqForm initial={state.items} revision={state.revision} />
+      <PageHeader title={type.label} desc={type.appears} siteHref={siteUrl} historyHref="/history?type=faq" />
+      <FaqEditor data={{ items: state.items }} revision={state.revision} siteUrl={siteUrl} />
     </>
   );
 }

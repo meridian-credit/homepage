@@ -1,12 +1,16 @@
 import "server-only";
+import { rememberPublish } from "./content";
 
 /* 저장한 내용을 공개 사이트에 반영한다.
    1) 공개 사이트의 /api/revalidate 를 불러 모든 쪽을 「다음 방문 때 다시 만들기」로 표시한다.
    2) 일정 · FAQ 가 보이는 쪽을 한 번씩 불러 둔다. 표시만 하면 첫 방문자가 옛 쪽을 한 번 볼 수 있다.
+   3) 결과를 기억한다. 실패하면 모든 관리자 화면 위에 띠가 뜨고, 다음에 성공하면 사라진다.
    공개 사이트는 같은 서버의 컨테이너라 내부 주소(PUBLIC_SITE_INTERNAL_URL)로 부른다. */
 const WARM_PATHS = ["/", "/faq", "/contact", "/portal"];
 
-export async function publishToSite(): Promise<{ ok: true } | { ok: false; detail: string }> {
+type Published = { ok: true } | { ok: false; detail: string };
+
+async function request(): Promise<Published> {
   const base = process.env.PUBLIC_SITE_INTERNAL_URL;
   const secret = process.env.REVALIDATE_SECRET;
   if (!base || !secret) return { ok: false, detail: "사이트 반영 설정(PUBLIC_SITE_INTERNAL_URL, REVALIDATE_SECRET)이 없습니다." };
@@ -24,4 +28,11 @@ export async function publishToSite(): Promise<{ ok: true } | { ok: false; detai
     await fetch(`${base}${path}`, { signal: AbortSignal.timeout(15000) }).catch(() => undefined);
   }
   return { ok: true };
+}
+
+/* what: 실패했을 때 띠에 적을 이름(「자주 묻는 질문을」). 다시 반영할 때는 비워 앞의 이름을 그대로 둔다. */
+export async function publishToSite(what?: string): Promise<Published> {
+  const result = await request();
+  rememberPublish(result, what);
+  return result;
 }

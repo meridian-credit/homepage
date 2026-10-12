@@ -9,18 +9,25 @@ import { getAuth } from "./auth";
    계정은 서버에서만 만들므로 세션이 있으면 관리자다. 계정을 지우거나 비밀번호를 바꾸면 세션도 지워져
    다음 요청부터 막힌다(admin/scripts/user.mjs). 아이디가 없는 사용자(Google 로그인 시절에 생길 수 있던 것)의
    세션은 세션으로 치지 않는다 — 그런 계정은 user.mjs 로 찾지도 지우지도 못한다. */
-const adminSession = async () => {
+const adminSession = cache(async () => {
   /* headers() 를 먼저 부른다. 그래야 빌드 때 이 쪽들을 미리 그리지 않고(요청마다 그림) DB 도 열지 않는다. */
   const requestHeaders = await headers();
   const session = await getAuth().api.getSession({ headers: requestHeaders });
-  return session?.user.username ? { ...session, username: session.user.username } : null;
-};
-
-export const requireAdmin = cache(async () => {
-  const session = await adminSession();
-  if (!session) redirect("/login");
-  return { ...session.user, actor: session.username };
+  const username = session?.user.username;
+  if (!session || !username) return null;
+  return { ...session.user, actor: username, username };
 });
+
+/* 화면(쪽)용. 로그인이 없으면 로그인 화면으로 보낸다. */
+export async function requireAdmin() {
+  const user = await adminSession();
+  if (!user) redirect("/login");
+  return user;
+}
+
+/* 저장 액션용. 로그인이 끝났으면 null — 액션 안에서 로그인 화면으로 보내면 적던 내용이 화면과 함께 사라진다.
+   그래서 액션은 「로그인이 끝났다」고만 답하고, 화면이 적던 내용을 이 기기에 둔 채 다시 로그인하게 한다. */
+export const adminOrNull = adminSession;
 
 /* 로그인 화면용. 막지 않고 지금 세션만 알려 준다. */
 export const currentSession = adminSession;
