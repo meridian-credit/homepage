@@ -17,7 +17,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 Where they are set:
 
-- Production (`www.meridianco.kr`): the Vercel project's environment variables.
+- Production (`www.meridianco.kr`): `/opt/stacks/accounting_prod/.env` on `proxmox-ubuntu`, with `env.example` beside it.
 - Dev (`accounting.teamcredit.kr`): `/opt/stacks/accounting_dev/.env` on `proxmox-ubuntu`, with `env.example` beside it.
 
 The variables:
@@ -38,7 +38,7 @@ The variables:
 - `ENABLE_PREVIEW_PAGE`: `true` serves `/preview`. Leave it unset in production.
 - `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, `NEXT_PUBLIC_NAVER_SITE_VERIFICATION`: search-console ownership meta tags.
   They are baked into the HTML at build time, so a new build host needs them too.
-- `VERCEL`: set by Vercel itself. Analytics and Speed Insights render only when it is `1`.
+- `VERCEL`: set by Vercel itself. Analytics and Speed Insights render only when it is `1`. No current host sets it.
 - `CONTENT_DB`: dev only. Path to the admin app's SQLite file. When set, the tax calendar and FAQ come from it
   (read-only); when unset, from `src/lib/schedule.ts` / `src/lib/faq.ts`.
 - `REVALIDATE_SECRET`: dev only. Bearer secret for `POST /api/revalidate`, which the admin calls after a save. Unset
@@ -77,7 +77,6 @@ for the other QA scripts.
 
 ## Deploy
 
-- Production runs on Vercel from `main`. Reach `main` through a PR. `.vercelignore` keeps `.env*`, docs, reports and
-  local screenshots out of the upload.
+- Production (https://www.meridianco.kr) runs on our server from `main` since 2026-10-12. Reach `main` through a PR.
+  Once that commit's CI passes, the server deploys it within a minute or so. Details are in `AGENTS.md` → Deploy.
 - A push to `dev` deploys https://accounting.teamcredit.kr in about a minute (self-hosted, pull-based).
-- Before moving production off Vercel, go through BE-08 in `docs/plans/ui-ux-remediation/backend-backlog.md`.

@@ -26,8 +26,11 @@ export function authOptions() {
     secret: process.env.BETTER_AUTH_SECRET,
     database: getDb(),
     emailAndPassword: { enabled: true, disableSignUp: true, minPasswordLength: 12, maxPasswordLength: 128 },
+    /* 로그인 유지 30일(주인 결정 2026-10-12, 2단계 인증 없이). 한 달에 한 번쯤 들어와도 다시 로그인하지 않게.
+       하루에 한 번 이상 쓰면 그날부터 다시 30일로 늘어난다(updateAge). 서버에서 비밀번호를 바꾸거나 계정을 지우면
+       user.mjs 가 그 사람의 세션을 지우므로, 기간이 길어도 바로 끊을 수 있다. */
     session: {
-      expiresIn: 60 * 60 * 24 * 7,
+      expiresIn: 60 * 60 * 24 * 30,
       updateAge: 60 * 60 * 24,
     },
     rateLimit: {

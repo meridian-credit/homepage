@@ -433,7 +433,7 @@ export default function Portal() {
           <p className="lede rise"><span className="s">상담에서 실제 대시보드를 보여드립니다.</span><span className="s">그다음에 정하셔도 늦지 않습니다.</span></p>
           <div className="hero-cta rise" style={{'justifyContent': 'center', 'marginTop': 'var(--s5)'}}>
             <a className="btn btn-fill" href="/contact">기장 이관 상담하기</a>
-            <a className="btn btn-line" href={`tel:${siteConfig.tel}`}>전화 문의</a>
+            <a className="btn btn-line" href={siteConfig.kakaoChannelUrl} target="_blank" rel="noreferrer noopener">카카오톡 문의</a>
           </div>
           <p className="cta-note rise">상담은 무료입니다.</p>
         </div>

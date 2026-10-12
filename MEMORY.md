@@ -77,3 +77,16 @@
 - An open redirect through `?next=/<TAB>/host`, because browsers strip tabs. The old check was mutation-tested and fails the new test.
 It also found that text typed into the new-schedule box but never added was silently dropped on save. Saving is now blocked until it is added or cleared.
 Owner questions still open: a weekly mail when the schedule runs under 30 days, the 7-day login, a display name for the account, and in-app password change.
+2026-10-12 20:11 — Production moves off Vercel to our server, by the owner's decision. Pushing `main` would not have shipped anyway: the Vercel Git link has been dead since the 2026-09-28 repo transfer, and the last production deploy is db9e3a3 (2026-08-02). www.meridianco.kr now serves `main` from `proxmox-ubuntu` (`/opt/stacks/accounting_prod`). It uses dev's pull-based cron with one addition: a new `main` head ships only after that commit's CI run passed. Owner pushes to `main` are therefore gated too.
+- What Vercel used to add, the Caddy edge now adds: HSTS, and `max-age=0, must-revalidate` on HTML.
+- Mail goes through SES with a separate production IAM user, to `siteConfig.email` as before.
+- The search-console tokens are carried over.
+- There is no content DB in production; the admin stays on dev.
+- Rollback to Vercel is a DNS change; that project still serves db9e3a3.
+- Details: AGENTS.md → Deploy, BE-08.
+Owner decisions the same day:
+- The phone number is taken off the site, keeping the address. The same call was made on 2026-04-30 (6563d9f). The four 「전화 문의」 buttons become 「카카오톡 문의」, and `telephone` leaves the JSON-LD. `siteConfig.tel` is gone, so any reuse fails type-checking.
+- The privacy-policy draft goes live before legal review. Having none was worse, and with our server the 「SES only」 processor line is true.
+- Admin login lasts 30 days, without 2FA.
+- No schedule-runway mail for now.
+- The display name and in-app password change wait for the owner.

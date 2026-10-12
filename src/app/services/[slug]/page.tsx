@@ -377,10 +377,15 @@ export default async function ServiceDetailPage({ params }: Props) {
               >
                 문의하기 <span aria-hidden>&rarr;</span>
               </Link>
-              {/* 「전화로 문의」라 적어 두고 문의 양식으로 보내고 있었다.
-                  누르면 바로 걸린다(첨삭 #88). */}
-              <a href={`tel:${siteConfig.tel}`} className="svc-ask-btn svc-ask-btn--line">
-                전화 문의
+              {/* 첨삭 #88 의 「전화 문의」(누르면 바로 걸리던 단추)는 전화번호를 내리며 카카오톡 채널로 바꿨다
+                  (2026-10-12). 이것도 양식을 거치지 않고 바로 채널을 연다. */}
+              <a
+                href={siteConfig.kakaoChannelUrl}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="svc-ask-btn svc-ask-btn--line"
+              >
+                카카오톡 문의
               </a>
             </div>
             <p className="svc-ask-note">상담은 무료입니다.</p>

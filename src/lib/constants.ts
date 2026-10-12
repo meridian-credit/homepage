@@ -52,6 +52,8 @@ export const siteConfig = {
     "단순 신고 대행이 아닌 세무 관리. 매일의 장부에서 신고와 자문까지, 한 사람이 끝까지 책임지는 부티크 세무·재무 자문.",
   url: "https://www.meridianco.kr",
   email: "mscpa@dscpa.co.kr",
+  /* 전화번호는 사이트에 두지 않는다(주인 결정 2026-10-12. 4월 6563d9f 에서도 같은 이유로 뺐다).
+     전화 대신 카카오톡 채널 · 메일 · 문의 양식으로 받는다. */
   kakaoChannelUrl: "https://pf.kakao.com/_xcAyvn",
   location: "Seoul · Online Meeting",
   /* 하단에 실제 사업장 주소를 적는다(첨삭 #39). 도로명 두 줄.
@@ -65,7 +67,6 @@ export const siteConfig = {
     addressRegion: "서울특별시",
     addressCountry: "KR",
   },
-  tel: "02-6953-2820",
   founder: "박민상 회계사",
   affiliation:
     "박민상 공인회계사는 동성회계법인 소속이며, 본 사이트는 자문 · 인사이트 활동을 소개하기 위한 개인 브랜드 공간입니다. 회계감사 · 세무 기장 · 세무 조정 · 세무 신고 등 법정 업무는 모두 동성회계법인 명의로 정식 수행됩니다.",

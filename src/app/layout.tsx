@@ -100,8 +100,6 @@ const organizationJsonLd = {
   url: siteConfig.url,
   description: siteConfig.description,
   email: siteConfig.email,
-  /* 국제 표기. 02-… 앞의 0 을 국가 번호로 바꾼다. */
-  telephone: siteConfig.tel.replace(/^0/, "+82-"),
   address: { "@type": "PostalAddress", ...siteConfig.postalAddress },
   areaServed: "KR",
   inLanguage: "ko-KR",

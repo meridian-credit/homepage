@@ -116,16 +116,6 @@ export default function Footer() {
                   {siteConfig.email}
                 </a>
               </p>
-              <p>
-                <span className="text-neutral-400 text-xs uppercase tracking-wider">Tel</span>
-                <br />
-                <a
-                  href={`tel:${siteConfig.tel}`}
-                  className="hover:text-white transition-colors"
-                >
-                  {siteConfig.tel}
-                </a>
-              </p>
               <p className="mt-2 leading-relaxed">
                 <span className="text-neutral-400 text-xs uppercase tracking-wider">Address</span>
                 <br />

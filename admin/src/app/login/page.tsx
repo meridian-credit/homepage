@@ -38,7 +38,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <LoginForm next={next} />
           <p className="login-help">비밀번호를 잊었거나 계정이 필요하면 사이트 담당 개발자에게 연락해 주세요. 이 화면에서는 비밀번호를 바꿀 수 없습니다.</p>
         </div>
-        <p className="login-foot">로그인은 7일 동안 유지됩니다. 함께 쓰는 컴퓨터라면 다 쓴 뒤 로그아웃해 주세요.</p>
+        <p className="login-foot">로그인은 30일 동안 유지됩니다. 함께 쓰는 컴퓨터라면 다 쓴 뒤 로그아웃해 주세요.</p>
       </div>
     </main>
   );

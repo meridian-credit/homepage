@@ -17,7 +17,7 @@ nextjs-agent-rules markers above — `next dev` rewrites only the text between t
 
 Marketing site for 메리디안 택스 어드바이저리 (MERIDIAN, https://www.meridianco.kr), a boutique tax / accounting
 advisory firm. Next.js 16 App Router, React 19, Tailwind v4, TypeScript. All user-facing copy is Korean. Production
-runs on Vercel.
+runs on our own server since 2026-10-12, not Vercel (see Deploy).
 
 Git: the only remote is `origin` = `meridian-credit/homepage`, the owner's organization repo. It was transferred from
 `nonesty5/homepage` (noted 2026-09-28); GitHub still redirects the old URL. Treat `main` as production and reach it
@@ -79,7 +79,7 @@ Other browser QA scripts in `scripts/qa/` all expect a server on :3100:
   - Once every listed date has passed, the header cube and the `/portal` popup link to this month's NTS page.
   - `npm run audit:content` puts a warning first when under 30 days of dates remain.
     `.github/workflows/schedule-check.yml` runs the same check weekly and fails, as a reminder to refill the list.
-    GitHub runs scheduled workflows only from the default branch, so it stays inactive until this reaches `main`.
+    GitHub runs scheduled workflows only from the default branch (`main`).
 
 **Blog.** Posts are `content/posts/*.mdx`, parsed by `src/lib/posts.ts` (gray-matter, next-mdx-remote, remark-gfm).
 The frontmatter schema and citation rules are in `docs/content-system.md`:
@@ -171,8 +171,8 @@ and the sitemap, and is noindex.
   are in the environment. The recipient is `CONTACT_TO_EMAIL`, else `siteConfig.email`. The Korean display name goes
   out as an RFC 2047 encoded-word, which SES requires.
 - DNS for `meridianco.kr` moved to our Cloudflare on 2026-10-01. It holds the SES DKIM CNAMEs and the
-  `e.meridianco.kr` MAIL FROM records. `resend._domainkey` and `send.` belong to the Resend setup that the
-  currently deployed live build still uses; remove them once the live site runs this code.
+  `e.meridianco.kr` MAIL FROM records. `resend._domainkey` and `send.` belong to the Resend setup of the old Vercel
+  build. Production runs this code since 2026-10-12; remove them once a rollback to Vercel is no longer wanted.
 - The anti-bot speed check takes `elapsedMs`, which the form measures with `performance.now()` (0 = page open on a
   first load). Never send a client wall-clock timestamp: a device clock a few minutes off would block every
   submission.
@@ -273,12 +273,27 @@ Tests enforce three rules:
 
 ## Deploy
 
-- **Production:** `www.meridianco.kr` is still on Vercel. Its DNS is at Gabia; the owner plans to leave Vercel.
-  `.vercelignore` keeps `docs/`, `image/`, and local artifacts out of the upload. Vercel Analytics and Speed Insights
-  render only when `VERCEL=1`, so other hosts don't 404 on `/_vercel/*`.
-  - Vercel supplies things `next start` does not. Prod sends HSTS and `max-age=0, must-revalidate` on HTML; `next start`
-    sends no HSTS and `s-maxage=31536000`. Before moving production, go through BE-08 in
-    `docs/plans/ui-ux-remediation/backend-backlog.md`.
+- **Production: https://www.meridianco.kr serves `main` from `proxmox-ubuntu`** (moved off Vercel 2026-10-12, owner's
+  decision; the Vercel Git link had been broken since the repo transfer).
+  - Stack `/opt/stacks/accounting_prod`, container `accounting_prod`. The ubuntu crontab runs its `deploy.sh` every
+    minute (tag `# accounting-prod-deploy`). It works like dev's, with two differences:
+    - It deploys a new `main` head only after that commit's `CI` run passed. It reads the result from the public
+      Actions API without a token. A pass on the PR counts, so fast-forwarding `main` to a green PR head ships at
+      once. A failed CI marks the SHA `failed`; after a green re-run, `rm failed && ./deploy.sh`.
+    - It has no content DB. The tax calendar and FAQ come from the code arrays; the admin stays on dev.
+  - Path: Cloudflare DNS-only (`www` CNAME and the apex, flattened) → `origin.teamcredit.kr` → its own site block in the
+    Caddy edge on `proxy-seoul-01` → inner NPM → `accounting_prod:3000`. The apex is redirected to www by
+    `next.config.ts`.
+  - The Caddy block adds what Vercel used to: HSTS `max-age=63072000`, and `public, max-age=0, must-revalidate` on
+    HTML in place of `next start`'s `s-maxage=31536000`. It adds no `X-Robots-Tag`.
+  - `.env` (mode 600) holds the SES key of the IAM user `meridian-homepage-contact-prod` (same send-only policy as
+    dev's), `CONTACT_FROM_EMAIL`, and the two search-console tokens, which `compose.yaml` passes as build args.
+    `CONTACT_TO_EMAIL` is unset, so inquiries go to `siteConfig.email`. `env.example` lists what is deliberately
+    absent.
+  - Rollback within the server: the previous image is kept. Rollback to Vercel: point `www` back to
+    `cname.vercel-dns.com` and the apex to `76.76.21.21`. The Vercel project still serves `db9e3a3` (2026-08-02),
+    whose form mails through Resend.
+  - Vercel Analytics and Speed Insights render only when `VERCEL=1`, so they are gone on this host.
 - **CI runs only on PRs and `main` pushes.** A `dev` push is checked only by the server's own build.
 - **Dev: https://accounting.teamcredit.kr serves the `dev` branch, and https://accounting-admin.teamcredit.kr its
   admin.** A push to `dev` deploys both in a few minutes.

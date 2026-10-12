@@ -243,7 +243,7 @@ export default function Home() {
             </p>
             <div className="creed-cta rise">
               <a className="btn btn-fill" href="/contact">기장 이관 상담하기</a>
-              <a className="btn btn-line" href={`tel:${siteConfig.tel}`}>전화 문의</a>
+              <a className="btn btn-line" href={siteConfig.kakaoChannelUrl} target="_blank" rel="noreferrer noopener">카카오톡 문의</a>
             </div>
             <p className="cta-note rise" style={{ color: "#7E90AB" }}>상담은 무료입니다.</p>
           </div>
