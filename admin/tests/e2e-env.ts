@@ -12,10 +12,6 @@ export const ENV = {
   BETTER_AUTH_SECRET: "e2e-only-better-auth-secret-0123456789abcdef",
   REVALIDATE_SECRET: "e2e-only-revalidate-secret",
   ADMIN_URL: ADMIN,
-  GOOGLE_CLIENT_ID: "e2e-client-id.apps.googleusercontent.com",
-  GOOGLE_CLIENT_SECRET: "e2e-client-secret",
-  /* 대소문자 · 공백이 섞여도 맞춰 보는지 함께 본다. */
-  ADMIN_EMAILS: " Admin@Example.com , other@example.com",
   PUBLIC_SITE_INTERNAL_URL: PUBLIC,
   PUBLIC_SITE_URL: PUBLIC,
 };

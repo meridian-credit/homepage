@@ -7,7 +7,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const user = await requireAdmin();
   return (
     <>
-      <TopBar email={user.email} siteUrl={process.env.PUBLIC_SITE_URL} />
+      <TopBar name={user.actor} siteUrl={process.env.PUBLIC_SITE_URL} />
       <main>{children}</main>
     </>
   );

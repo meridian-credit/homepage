@@ -50,12 +50,12 @@ them):
 - `CONTENT_DB`: the same SQLite file. The admin creates and migrates it.
 - `ADMIN_URL`: its public origin, `https://accounting-admin.teamcredit.kr`. Login callbacks and cookies use it.
 - `BETTER_AUTH_SECRET`: signs login sessions. Changing it signs everyone out.
-- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`: a Google OAuth web client whose redirect URI is
-  `<ADMIN_URL>/api/auth/callback/google`.
-- `ADMIN_EMAILS`: comma-separated Google accounts that may enter. When empty, nobody may enter.
 - `REVALIDATE_SECRET`, `PUBLIC_SITE_INTERNAL_URL`: how it asks the public site to redraw (`http://accounting_dev:3000`
   on the server).
 - `PUBLIC_SITE_URL`, `ADMIN_ENV_BAND`: the 「사이트 보기」 link and the banner at the top.
+
+Admin accounts are not env vars: there is no sign-up, so an operator creates them with `admin/scripts/user.mjs`
+(see the script header).
 
 Only `NEXT_PUBLIC_*` variables reach the browser. Do not put secrets in `NEXT_PUBLIC_*`, `public/`, or committed docs.
 

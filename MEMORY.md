@@ -63,3 +63,11 @@
   - No session, an unlisted account, and a replayed server action without a session are all refused.
   - An edit reaches `/faq` and `/contact`.
   - Conflict, revert, and save-failure paths are covered.
+2026-10-12 12:40 — Admin login switched from Google to username + password (owner's request).
+- Better Auth `username` plugin with sign-up disabled. A user-create hook throws, so the served app can never create a user.
+- Operators manage accounts with `admin/scripts/user.mjs` (`add` / `passwd` / `remove` / `list`, password on stdin only) inside the admin container. `passwd` and `remove` delete that user's sessions. Any session whose user has a username is an admin. No roles, no TOTP yet.
+- The auth route opens only `POST sign-in/username`, `POST sign-out` and `GET get-session`, and 404s every other Better Auth endpoint. The critic showed why:
+  - `/sign-in/email` skipped the custom sign-in limit (the email `<name>@users.invalid` is guessable from the repo).
+  - `/is-username-available`, `/update-user` and `/sign-up/email` revealed whether a username exists.
+  - A logged-in user could rename themselves or change the password over HTTP.
+- Sign-in is limited to 10 per 15 minutes per IP. The IP comes from `X-Real-IP`, set by the inner NPM. Through Caddy → NPM, `X-Forwarded-For` holds two values, and Better Auth then falls back to one bucket shared by all.

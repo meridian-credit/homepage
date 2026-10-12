@@ -97,9 +97,21 @@ The frontmatter schema and citation rules are in `docs/content-system.md`:
     surface.
   - The separate host also keeps the admin session away from `/contract`, which runs another app's JS on the site
     origin.
-- Login is Better Auth with Google only. An account may enter only if its email is in `ADMIN_EMAILS`.
-  `requireAdmin()` re-checks that on every page and in every server action, so removing an email locks it out on the
-  next request. There are no roles.
+- Login is Better Auth with username and password. The owner switched from Google on 2026-10-12.
+  - The auth route opens only `POST sign-in/username`, `POST sign-out` and `GET get-session`; everything else in
+    Better Auth answers 404.
+    - Otherwise `/sign-in/email` skips the sign-in limit, and several routes reveal whether a username exists.
+    - Users could also rename themselves or change passwords over HTTP.
+  - Sign-up is off, and a user-create hook refuses every creation. Accounts exist only if an operator made one with
+    `admin/scripts/user.mjs` (`add` / `passwd` / `remove` / `list`, password on stdin) inside the admin container. So
+    any valid session is an admin.
+  - `passwd` and `remove` delete that user's sessions. `requireAdmin()` runs on every page and in every server
+    action, so the user is locked out on the next request. There are no roles.
+  - Sign-in is limited to 10 tries per 15 minutes per client IP. Better Auth reads the IP from `X-Real-IP`, which the
+    inner NPM sets to the real client.
+    - With two proxies `X-Forwarded-For` holds two addresses, and Better Auth then falls back to one bucket shared
+      by everyone.
+    - The username and password rules appear in both `auth.ts` and `user.mjs`. Change them together.
 - The content is one SQLite file (WAL), `CONTENT_DB`.
   - The admin is its only writer. On start it applies `MIGRATIONS` from `src/lib/content/schema.ts` and seeds from
     the code arrays once.
@@ -269,14 +281,16 @@ Tests enforce three rules:
   - Path: Cloudflare DNS-only CNAME (grey cloud) → `origin.teamcredit.kr` → Caddy edge on `proxy-seoul-01` (adds
     `X-Robots-Tag: noindex`) → inner NPM proxy host 76 → `accounting_dev:3000`. The admin host takes the same path
     through NPM host 77 to `accounting_admin:3000`.
-  - The content DB is `data/content.db`, mounted at `/data` in both containers. `data/` is mode 700, because the DB
-    also holds the login sessions.
+  - The content DB is `data/content.db`, mounted at `/data` in both containers. `data/` is mode 700, because the DB,
+    its `build.db` snapshot and the backups also hold the login sessions and password hashes.
   - A daily copy goes to `data/backups/` and is kept 30 days (ubuntu crontab; failures go to `backup.log`).
   - To restore, stop both containers, because the web one holds the file open too. Copy a backup over
     `content.db`, delete `content.db-wal` and `content.db-shm`, then start the admin and then the web container.
     The web container redraws itself on start.
-  - The admin's settings are in `admin.env` (mode 600). `admin.env.example` lists them: Google OAuth client,
-    `ADMIN_EMAILS`, `BETTER_AUTH_SECRET`, and the same `REVALIDATE_SECRET` as `.env`.
+  - The admin's settings are in `admin.env` (mode 600). `admin.env.example` lists them: `BETTER_AUTH_SECRET`, and
+    the same `REVALIDATE_SECRET` as `.env`.
+  - Accounts are managed with
+    `printf '%s' "$PW" | docker exec -i accounting_admin node admin/scripts/user.mjs add <username>`.
   - The server `.env` (mode 600) sets `CONTACT_ALLOWED_ORIGINS` and `ENABLE_PREVIEW_PAGE=true`.
   - It also holds the SES key of the IAM user `meridian-homepage-contact-dev`. That key may only call `ses:SendEmail`
     as `no-reply@meridianco.kr`.

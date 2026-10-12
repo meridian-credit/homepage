@@ -11,7 +11,7 @@ const LINKS = [
   { href: "/history", label: "변경 기록" },
 ];
 
-export default function TopBar({ email, siteUrl }: { email: string; siteUrl?: string }) {
+export default function TopBar({ name, siteUrl }: { name: string; siteUrl?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   return (
@@ -29,7 +29,7 @@ export default function TopBar({ email, siteUrl }: { email: string; siteUrl?: st
           {siteUrl ? (
             <a href={siteUrl} target="_blank" rel="noopener noreferrer">사이트 보기</a>
           ) : null}
-          <span>{email}</span>
+          <span>{name}</span>
           <button
             type="button"
             className="btn btn-sm"

@@ -26,7 +26,7 @@ export async function saveSchedule(
   const parsed = scheduleInput.safeParse(input);
   if (!parsed.success) return { ok: false, error: firstIssue(parsed.error) };
   if (!revision.safeParse(baseRevision).success) return { ok: false, error: "잘못된 요청입니다." };
-  const result = writeSchedule(user.email, parsed.data, baseRevision);
+  const result = writeSchedule(user.actor, parsed.data, baseRevision);
   if (!result.ok) return { ok: false, error: CONFLICT, conflict: true };
   const saved = readSchedule();
   return {
@@ -43,7 +43,7 @@ export async function saveFaq(input: { items: FaqItem[] }, baseRevision: number)
   const parsed = faqInput.safeParse(input);
   if (!parsed.success) return { ok: false, error: firstIssue(parsed.error) };
   if (!revision.safeParse(baseRevision).success) return { ok: false, error: "잘못된 요청입니다." };
-  const result = writeFaq(user.email, parsed.data, baseRevision);
+  const result = writeFaq(user.actor, parsed.data, baseRevision);
   if (!result.ok) return { ok: false, error: CONFLICT, conflict: true };
   const saved = readFaq();
   return { ok: true, revision: result.revision, saved: { items: saved.items }, warnings: [], published: await publishToSite() };
@@ -60,12 +60,12 @@ export async function restoreBefore(eventId: number): Promise<{ ok: true; publis
   if (event.kind === "schedule") {
     const parsed = scheduleInput.safeParse(event.before);
     if (!parsed.success) return { ok: false, error: `되돌릴 수 없습니다 — ${firstIssue(parsed.error)}` };
-    const result = writeSchedule(user.email, parsed.data, readSchedule().revision, summary);
+    const result = writeSchedule(user.actor, parsed.data, readSchedule().revision, summary);
     if (!result.ok) return { ok: false, error: CONFLICT };
   } else {
     const parsed = faqInput.safeParse(event.before);
     if (!parsed.success) return { ok: false, error: `되돌릴 수 없습니다 — ${firstIssue(parsed.error)}` };
-    const result = writeFaq(user.email, parsed.data, readFaq().revision, summary);
+    const result = writeFaq(user.actor, parsed.data, readFaq().revision, summary);
     if (!result.ok) return { ok: false, error: CONFLICT };
   }
   return { ok: true, published: await publishToSite() };
