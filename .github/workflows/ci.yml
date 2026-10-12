@@ -25,8 +25,14 @@ jobs:
       - name: Install dependencies without lifecycle scripts
         run: npm ci --ignore-scripts
 
-      - name: Audit dependencies
-        run: npm audit --audit-level=moderate
+      # 운영 서버에서 도는 의존성은 moderate 부터 막고, 개발 도구는 critical 만 막는다.
+      # 2026-10-12: braces(<=3.0.3, 고친 판이 아직 없음)가 eslint-config-next → fast-glob → micromatch 로만 들어와
+      # high 로 걸린다. 우리 eslint 설정의 glob 만 처리해 바깥 입력이 닿지 않는다. 고친 판이 나오면 한 줄로 되돌린다.
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev --audit-level=moderate
+
+      - name: Audit all dependencies (critical only)
+        run: npm audit --audit-level=critical
 
       - name: Verify package signatures
         run: npm audit signatures

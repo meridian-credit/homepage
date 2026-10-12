@@ -44,7 +44,8 @@ npx next build admin
 npx playwright test -c admin/playwright.config.ts
 ```
 
-CI (`.github/workflows/ci.yml`, Node 22) runs `npm audit`, `npm audit signatures`, audit:content, lint, build, then
+CI (`.github/workflows/ci.yml`, Node 22) runs `npm audit` (runtime deps fail from moderate, dev tools only on
+critical; see the comment there), `npm audit signatures`, audit:content, lint, build, then
 e2e across four projects (desktop, mobile, webkit, firefox), then the admin build and admin e2e. CI puts `node scripts/qa/https.mjs` in front of :3100 and
 sets `QA_BASE_URL=https://localhost:3443`. That local TLS proxy makes the tests run under the real production CSP,
 including `upgrade-insecure-requests`. Reproduce it the same way when a change touches headers or CSP.

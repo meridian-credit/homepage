@@ -90,3 +90,8 @@ Owner decisions the same day:
 - Admin login lasts 30 days, without 2FA.
 - No schedule-runway mail for now.
 - The display name and in-app password change wait for the owner.
+2026-10-12 20:18 — The first CI run on the dev→main PR (#20) failed at `npm audit`. There were 13 advisories. The one that matters is critical: next 16.0.0–16.3.7, which includes cache poisoning of self-hosted SSG/ISR pages, exactly what the move makes us. The fixes:
+- next and eslint-config-next go to 16.3.8, the patch release. 16.4.0 was skipped.
+- `npm audit fix` without `--force` brings in sharp 0.35.5, source-map-js and brace-expansion.
+- sprintf-js has no fixed release. It entered only through gray-matter → js-yaml 3 → argparse 1, which js-yaml 3 uses only in its CLI. A nested override pins that argparse to 2, which has no sprintf-js.
+- braces (≤3.0.3) also has no fixed release, and it reaches us only through the lint toolchain. CI now fails from moderate on runtime deps (`--omit=dev`) and only on critical for the full tree. Revert to the single strict line once braces ships a fix.
