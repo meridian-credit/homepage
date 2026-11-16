@@ -42,7 +42,7 @@ export default function Home() {
         <a href="#portal" data-sec="portal"><span className="lb">대시보드</span><span className="cir"></span></a>
         <a href="#svc" data-sec="svc"><span className="lb">하는 일</span><span className="cir"></span></a>
         <a href="#vs" data-sec="vs"><span className="lb">무엇이 다른가</span><span className="cir"></span></a>
-        <a href="#insight" data-sec="insight"><span className="lb">인사이트</span><span className="cir"></span></a>
+        {posts.length > 0 && <a href="#insight" data-sec="insight"><span className="lb">인사이트</span><span className="cir"></span></a>}
         <a href="#end" data-sec="end"><span className="lb">상담</span><span className="cir"></span></a>
       </nav>
 
@@ -210,6 +210,8 @@ export default function Home() {
       {/* 7. 대표 회계사 구역은 뺐다. 회계사 소개는 /members 가 원본이고,
           홈에서 얼굴부터 내밀 자리는 아니다. 헤더 PEOPLE 과 어바웃에서 간다. */}
 
+      {/* 글이 한 편도 없으면 제목만 남은 빈 구역이 되므로 앵커와 함께 뺀다. */}
+      {posts.length > 0 && (
       <section id="insight">
         <div className="wrap">
           <p className="tick rise">Our thinking</p>
@@ -226,6 +228,7 @@ export default function Home() {
           <p style={{'marginTop': 'var(--s4)', 'textAlign': 'right'}}><Link href="/blog" style={{'fontSize': 'var(--t-0)', 'fontWeight': '600', 'color': 'var(--blue)', 'textDecoration': 'none'}}>모든 글 보기 →</Link></p>
         </div>
       </section>
+      )}
 
       {/* 8. 맺음. 「우리 회사 자료로 먼저 보시고」 한 장은 뺐다 — 같은 자리에서
           같은 일을 하는 선언문이 이미 있다. 그 선언문을 여기로 옮겨 왔다. */}
