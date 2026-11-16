@@ -148,6 +148,8 @@ the fields and citation rules are in `docs/content-system.md`.
   - Post history goes to its own `post_event` table, not `audit_event`, so a rolled-back admin that knows only
     `schedule` and `faq` never meets a `post` row. The history page merges both.
   - The slug is locked while a post is published. 완전히 지우기 (from the trash) also deletes that post's history.
+  - Post ids are never reused: `createPost` picks max(id in `post`, `post_id` in `post_event`) + 1. SQLite would
+    otherwise hand a deleted last id to the next post, attaching the old post's history and preview links to it.
   - An image dropped from every draft and published copy is deleted at once; history alone does not keep it.
   - The editor is Milkdown (`admin/src/editing/markdown-editor.tsx`). It removes Milkdown's own `strong`/`emphasis`
     serializers so `**25%**로` is saved as `**25%**&#xB85C;`, which CommonMark reads as bold. `admin/tests/posts.spec.ts`

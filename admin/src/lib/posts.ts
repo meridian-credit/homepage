@@ -136,20 +136,31 @@ const conflict = (row: PostRow): PostWrite => ({
 });
 
 /* 새 글. 빈 초안을 만들고 id 를 돌려준다. 열기만 하고 아무것도 저장하지 않은 지 하루 넘은 빈 초안은 이때 치운다.
-   빈 초안을 다시 쓰지 않는다 — 두 탭이 [새 글]을 누르면 한 글을 나눠 쓰다 이 기기 보관이 서로 덮인다. */
+   빈 초안을 다시 쓰지 않는다 — 두 탭이 [새 글]을 누르면 한 글을 나눠 쓰다 이 기기 보관이 서로 덮인다.
+   id 는 지운 글의 것도 다시 쓰지 않는다. SQLite 는 맨 끝 id 가 지워지면 그 번호를 다시 내주는데(AUTOINCREMENT 가
+   없는 표), 그러면 지운 글의 기록 · 미리 보기 주소 · 이 기기 보관이 새 글에 붙는다. 새 글을 지울 때 앞 글의
+   「지웠다」 기록까지 지워지고, 그 기록의 되돌리기가 새 글을 빈 초안으로 돌린다(2026-11-16 dev 에서 본 일).
+   표는 이미 dev 에 만들어져 있어 바꾸지 않고, 글 · 기록에 나온 가장 큰 id 다음 번호를 직접 준다. 완전히 지운
+   글도 「지웠다」 한 줄이 남으므로 그 번호까지 센다. 치우기보다 먼저 세어, 방금 치운 빈 초안의 번호도 건너뛴다. */
 export function createPost(actor: string) {
   const db = getDb();
   return db.transaction(() => {
+    const { next } = db
+      .prepare(`SELECT MAX(COALESCE((SELECT MAX(id) FROM post), 0), COALESCE((SELECT MAX(post_id) FROM post_event), 0)) + 1 AS next`)
+      .get() as { next: number };
     const dayAgo = new Date(Date.now() - 86_400_000).toISOString();
     db.prepare(
       `DELETE FROM post WHERE revision = 0 AND saved_at IS NULL AND created_at < ? AND id NOT IN (SELECT post_id FROM post_public)`
     ).run(dayAgo);
     purgeUploads();
     const at = new Date().toISOString();
-    const { lastInsertRowid } = db
-      .prepare(`INSERT INTO post (slug, draft, revision, created_at, created_by) VALUES (NULL, ?, 0, ?, ?)`)
-      .run(storeJson(EMPTY_POST), at, actor);
-    return Number(lastInsertRowid);
+    db.prepare(`INSERT INTO post (id, slug, draft, revision, created_at, created_by) VALUES (?, NULL, ?, 0, ?, ?)`).run(
+      next,
+      storeJson(EMPTY_POST),
+      at,
+      actor
+    );
+    return next;
   })();
 }
 

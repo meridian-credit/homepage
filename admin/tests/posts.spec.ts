@@ -358,4 +358,10 @@ test("내린 글은 404 가 되고, 휴지통에서 되살리거나 완전히 �
   expect(query<{ n: number }>(`SELECT count(*) AS n FROM post WHERE id = ?`, postId).n).toBe(0);
   expect(query<{ n: number }>(`SELECT count(*) AS n FROM post_event WHERE post_id = ? AND after_json <> 'null'`, postId).n).toBe(0);
   expect((await fetchPublic(`/uploads/${imageName}`)).status).toBe(404);
+
+  /* 지운 글의 번호를 새 글이 다시 받지 않는다. 받으면 지운 글의 기록 · 미리 보기 주소가 새 글에 붙는다. */
+  await page.locator("#post-new").click();
+  await expect(page).toHaveURL(/\/posts\/\d+$/);
+  expect(Number(page.url().split("/").pop())).toBeGreaterThan(postId);
+  expect(query<{ n: number }>(`SELECT count(*) AS n FROM post_event WHERE post_id = ? AND after_json = 'null'`, postId).n).toBe(1);
 });
