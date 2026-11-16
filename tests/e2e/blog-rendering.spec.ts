@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { test, expect, type Page } from '@playwright/test';
 
 const postSlugs = (page: Page) =>
@@ -11,8 +11,9 @@ test('blog is in the prerender manifest', () => {
 
 /* 정적 HTML 이 수화 뒤 화면과 같은 목록을 이미 들고 있어야 한다. 예전 fallback 은 null 이라
    HTML 에 글이 없었고, 수화 뒤 목록이 들어오며 아래를 밀었다. */
-/* 글을 새로 쓰는 동안(2026-11) 공개 글이 없다. 비교할 목록이 없으면 이 검사는 뜻이 없다. */
-const hasPosts = readdirSync('content/posts').some(name => name.endsWith('.mdx') && !name.startsWith('_'));
+/* 글은 관리자 DB 에 있다(2026-11-16). DB 없이 빌드한 사이트(CI)에는 글이 없고, 비교할 목록이 없으면 이 검사는
+   뜻이 없다. 글이 있는지는 빌드된 /blog HTML 로 본다. DB 를 붙인 글 그리기는 관리자 e2e(admin/tests)가 지킨다. */
+const hasPosts = /href="\/blog\/[a-z0-9-]+"/.test(readFileSync('.next/server/app/blog.html', 'utf8'));
 
 test('blog lists the same posts with and without JavaScript', async ({ browser, baseURL, page }) => {
   test.skip(!hasPosts, '공개 글이 없다');

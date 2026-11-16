@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { dday, seoulToday } from "@/lib/schedule";
 import { describeEvent } from "@admin/content/history";
+import { describePostEvent, REVIEW_DAYS } from "@admin/content/post";
 import { CONTENT_TYPES, contentType, type ContentKind } from "@admin/content/registry";
 import { scheduleStatus } from "@admin/content/schedule";
 import { lastSaves, listAudit, readFaq, readPublishFailure, readSchedule } from "@admin/lib/content";
+import { lastPostSave, listPostEvents, listPosts } from "@admin/lib/posts";
 import { ddayTone, monthDay, monthDot, seoulDateTime, weekday, whenSaved } from "@admin/lib/format";
 import { requireAdmin } from "@admin/lib/session";
 import { Icon } from "@admin/ui/icons";
@@ -21,14 +23,33 @@ export default async function Home() {
   const faq = readFaq();
   const status = scheduleStatus(schedule.items, today);
   const failure = readPublishFailure();
-  const saves = lastSaves();
-  const recent = listAudit({ limit: 4 });
+  const saves: ReturnType<typeof lastSaves> & { post?: { at: string; actor: string } } = { ...lastSaves(), post: lastPostSave() ?? undefined };
+  const recent = [
+    ...listAudit({ limit: 4 }).map((e) => {
+      const { title, detail, restore } = describeEvent(e, today);
+      return { key: `a${e.id}`, kind: e.kind as ContentKind, at: e.at, actor: e.actor, title, detail, restore };
+    }),
+    ...listPostEvents({ limit: 4 }).map((e) => {
+      const { summary, changes } = describePostEvent(e.before, e.after);
+      return { key: `p${e.id}`, kind: "post" as ContentKind, at: e.at, actor: e.actor, title: summary, detail: changes[0]?.text ?? "", restore: null as string | null };
+    }),
+  ]
+    .sort((a, b) => b.at.localeCompare(a.at))
+    .slice(0, 4);
+  /* 블로그 글: 초안, 게시본과 다른 글, 검토 기준일이 오래된 게시 글. */
+  const posts = listPosts().filter((p) => !p.trashedAt);
+  const livePosts = posts.filter((p) => p.live);
+  const draftPosts = posts.filter((p) => !p.live && p.revision > 0);
+  const changedPosts = livePosts.filter((p) => p.live!.dirty);
+  const age = (ymd: string) => Math.round((Date.parse(`${today}T00:00:00Z`) - Date.parse(`${ymd}T00:00:00Z`)) / 86400000);
+  const duePosts = livePosts.filter((p) => p.draft.lastChecked && age(p.draft.lastChecked) > REVIEW_DAYS);
   const [y, m, d] = today.split("-").map(Number);
   const greeting = user.name && user.name !== user.username ? `안녕하세요, ${user.name} 님` : "안녕하세요";
 
   const meta: Record<ContentKind, string> = {
     schedule: status.last ? `${schedule.items.length}건 · ${monthDay(status.last.when, today)}까지` : `${schedule.items.length}건 · 보일 일정 없음`,
     faq: `${faq.items.length}개 · FAQ · 문의 페이지`,
+    post: `게시 ${livePosts.length}편 · 초안 ${draftPosts.length}편`,
   };
 
   return (
@@ -125,6 +146,47 @@ export default async function Home() {
               <p className="card-body muted">사이트에 보일 일정이 없습니다. 대신 국세청 이번 달 일정 링크가 나옵니다.</p>
             )}
           </section>
+
+          <section className="card" aria-labelledby="posts-h">
+            <div className="card-head">
+              <div>
+                <h2 id="posts-h">블로그 글</h2>
+                <span className="sub">
+                  게시 {livePosts.length}편 · 초안 {draftPosts.length}편
+                </span>
+              </div>
+              <Link className="btn btn-sm btn-ghost" href="/posts">
+                글 목록
+                <Icon name="right" small />
+              </Link>
+            </div>
+            {changedPosts.length || duePosts.length || draftPosts.length ? (
+              <ul className="post-todo">
+                {changedPosts.map((p) => (
+                  <li key={`c${p.id}`}>
+                    <span className="st st-changed">고친 내용 미게시</span>
+                    <Link href={`/posts/${p.id}`}>{p.draft.title || "제목 없음"}</Link>
+                  </li>
+                ))}
+                {duePosts.map((p) => (
+                  <li key={`d${p.id}`}>
+                    <span className="st st-due">검토 {age(p.draft.lastChecked)}일 지남</span>
+                    <Link href={`/posts/${p.id}`}>{p.draft.title || "제목 없음"}</Link>
+                  </li>
+                ))}
+                {draftPosts.slice(0, 3).map((p) => (
+                  <li key={`r${p.id}`}>
+                    <span className="st st-draft">초안</span>
+                    <Link href={`/posts/${p.id}`}>{p.draft.title || "제목 없음"}</Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="card-body muted">
+                {livePosts.length ? `손볼 글이 없습니다. 게시한 글의 검토 기준일이 ${REVIEW_DAYS}일을 넘으면 여기에 나옵니다.` : "아직 게시한 글이 없습니다. [글 목록]에서 [새 글]을 눌러 시작하세요."}
+              </p>
+            )}
+          </section>
         </div>
 
         <div className="stack">
@@ -167,10 +229,10 @@ export default async function Home() {
             {recent.length ? (
               <ul className="feed">
                 {recent.map((e) => {
-                  const { title, detail, restore } = describeEvent(e, today);
+                  const { title, detail, restore } = e;
                   const { date, time } = seoulDateTime(e.at);
                   return (
-                    <li key={e.id}>
+                    <li key={e.key}>
                       <time className="num" dateTime={e.at}>
                         {monthDot(date)} {time}
                       </time>

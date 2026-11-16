@@ -6,10 +6,15 @@ import { sitePages } from "@/lib/constants";
 /**
  * 검색 목록.
  *
- * 글 파일은 서버에서만 읽을 수 있어서 목록을 여기서 한 번 만든다.
+ * 글은 서버에서만 읽을 수 있어서(관리자 DB) 목록을 여기서 만든다.
  * 헤더 검색창이 이걸 받아 화면에서 거른다.
- * 글이 54개뿐이라 글자를 칠 때마다 서버로 물어볼 이유가 없다.
+ * 글이 수십 편이라 글자를 칠 때마다 서버로 물어볼 이유가 없다.
+ *
+ * 정적 응답으로 담아 두고, 관리자가 글을 게시 · 내리면 다른 쪽과 함께 다시 만든다(/api/revalidate).
+ * 예전에는 모듈 변수에 담아 두어 서버를 다시 띄우기 전까지 새 글이 검색되지 않았다.
+ * 브라우저도 5분만 들고 있게 한다 — 1시간이면 방금 게시한 글이 그 사람의 검색에 한 시간 동안 안 나온다.
  */
+export const dynamic = "force-static";
 
 export interface SearchItem {
   title: string;
@@ -18,8 +23,6 @@ export interface SearchItem {
   hint: string;
   terms: string;
 }
-
-let cache: SearchItem[] | null = null;
 
 function build(): SearchItem[] {
   const items: SearchItem[] = [];
@@ -64,8 +67,7 @@ function build(): SearchItem[] {
 }
 
 export async function GET() {
-  if (!cache) cache = build();
-  return NextResponse.json(cache, {
-    headers: { "Cache-Control": "public, max-age=3600" },
+  return NextResponse.json(build(), {
+    headers: { "Cache-Control": "public, max-age=300" },
   });
 }

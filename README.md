@@ -40,9 +40,11 @@ The variables:
   They are baked into the HTML at build time, so a new build host needs them too.
 - `VERCEL`: set by Vercel itself. Analytics and Speed Insights render only when it is `1`. No current host sets it.
 - `CONTENT_DB`: set on the servers (production and dev). Path to the admin app's SQLite file. When set, the tax
-  calendar and FAQ come from it (read-only); when unset (CI, local), from `src/lib/schedule.ts` / `src/lib/faq.ts`.
+  calendar, the FAQ, the blog posts and their images come from it (read-only). When unset (CI, local), the calendar
+  and FAQ come from `src/lib/schedule.ts` / `src/lib/faq.ts` and the blog has no posts.
 - `REVALIDATE_SECRET`: set on the servers. Bearer secret for `POST /api/revalidate`, which the admin calls after a
-  save. Unset means the route answers 404.
+  save. Unset means the route answers 404. It also keys the signed blog preview links (`/blog-preview/<id>`), so
+  without it previews answer 404.
 
 The admin app (`admin/`) reads its own set, from `admin.env` on each server (`admin.env.example` there lists them):
 
@@ -52,7 +54,7 @@ The admin app (`admin/`) reads its own set, from `admin.env` on each server (`ad
 - `BETTER_AUTH_SECRET`: signs login sessions. Changing it signs everyone out.
 - `REVALIDATE_SECRET`, `PUBLIC_SITE_INTERNAL_URL`: how it asks the public site to redraw (`http://accounting_prod:3000`
   or `http://accounting_dev:3000` on the server).
-- `PUBLIC_SITE_URL`: the 「사이트 열기」 link.
+- `PUBLIC_SITE_URL`: the 「사이트 열기」 link, and the origin of blog preview links.
 - `ADMIN_ENV_BAND`: the banner at the top. Dev only; production leaves it unset, so it shows no banner.
 
 Admin accounts are not env vars: there is no sign-up, so an operator creates them with `admin/scripts/user.mjs`

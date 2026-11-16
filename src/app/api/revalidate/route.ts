@@ -1,9 +1,11 @@
 import { timingSafeEqual } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { getFaq, getSchedule } from "@/lib/content/read";
+import { getFaq, getPublishedPosts, getSchedule } from "@/lib/content/read";
 
-/* 관리자 앱(admin/)이 세무 일정 · FAQ 를 저장한 뒤 부른다. 모든 쪽에 「다음 방문 때 다시 만든다」고 표시한다.
-   일정 큐브가 모든 쪽의 머리에 있어서 쪽 하나만 고르지 않고 layout 전체를 표시한다.
+/* 관리자 앱(admin/)이 세무 일정 · FAQ 를 저장하거나 블로그 글을 게시 · 내린 뒤 부른다. 모든 쪽에 「다음 방문 때
+   다시 만든다」고 표시한다. 일정 큐브와 메뉴(글 없는 갈래 숨기기)가 모든 쪽의 머리에 있어서 쪽 하나만 고르지 않고
+   layout 전체를 표시한다. 쪽이 아닌 정적 응답(sitemap · llms.txt · 검색 목록)도 /layout 표시를 달고 있어 함께 다시
+   만들어진다.
    REVALIDATE_SECRET 이 없는 곳(운영 · CI)에서는 없는 주소처럼 404 로 답한다. */
 export async function POST(request: Request) {
   const secret = process.env.REVALIDATE_SECRET;
@@ -21,6 +23,7 @@ export async function POST(request: Request) {
   try {
     getSchedule();
     getFaq();
+    getPublishedPosts();
   } catch (error) {
     console.error("[revalidate] 콘텐츠 DB 를 읽지 못함", error instanceof Error ? error.message : error);
     return Response.json({ error: "content_unreadable" }, { status: 500 });

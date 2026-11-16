@@ -113,3 +113,13 @@ Owner decisions the same day:
 - The production images now carry `com.teamcredit.keep=true`, so the weekly host prune no longer deletes rollback images.
 - The weekly `schedule-check.yml` and content-audit's runway warning still read only the code arrays. Production no longer shows those, so the checks can fail while the admin shows a full schedule, or pass while it runs empty.
 - Setup details are in AGENTS.md → Deploy.
+2026-11-16 19:58 — Blog posts are now written in the admin with Milkdown and stored in the content DB (owner's request: "Milkdown 으로, comprehensive 한 기능"). Plan and decisions: docs/plans/admin-backend/blog.md. What is worth keeping:
+- Body is GFM Markdown. The public site renders it with remark → hast → JSX, not MDX: MDX would execute `{…}` from a stolen admin account on the public server, and one stray `{` or `<` breaks a post. Raw HTML is dropped. `content/`, gray-matter and next-mdx-remote are gone.
+- Each post has a draft (`post`) and a published copy (`post_public`); the public site reads only the latter. Saving changes the draft only; 게시 copies it.
+- Post history lives in its own `post_event` table, not in `audit_event` with a new kind. An independent review (critic, Opus xhigh) caught that a rolled-back admin knows only `schedule`/`faq` and would crash on a `post` row in the shared table.
+- Images are BLOBs in the DB, so the existing backups and build snapshots cover them without new volume paths. sharp re-encodes to WebP (magic-byte check, ≤1600 px, metadata stripped); the name is a content hash, served `immutable`. An image dropped from every draft and published copy is deleted at once — history alone does not keep it, so a client document photo removed from a post also leaves the public URL.
+- Previews are signed links (HMAC keyed from `REVALIDATE_SECRET`, 1 hour) because the admin session lives on another host. No new secret on either server.
+- After a publish or unpublish the admin fetches the post and `/blog` and checks `data-published-at` (or the 404). "Revalidate answered 200" alone does not prove the page changed.
+- Rejected for now: scheduled publishing, roles (one account), duplicate-post, slug change while published (locked instead of a redirect table), a raw Markdown pane, co-editing.
+- Rolling the public site back to a pre-blog image makes every published post 404. Once posts exist, fix forward instead.
+- Open owner questions: roles, whether 「세율 · 기한」 posts without sources should block or warn (block now), retiring schedule-check.yml.

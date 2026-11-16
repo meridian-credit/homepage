@@ -532,6 +532,34 @@ h1, h2, h3, h4 {
   color: var(--color-strong);
 }
 
+/* 넓은 표는 표만 옆으로 민다(src/components/blog/post-body.tsx 가 감싼다). 문서 전체가 가로로 늘지 않게. */
+.prose .table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 2rem 0;
+}
+
+.prose .table-scroll > table {
+  margin: 0;
+}
+
+/* 관리자 미리 보기(/blog-preview) 맨 위 띠. 공개 글과 헷갈리지 않게 화면 위에 붙어 있다. */
+.post-preview-band {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  padding: 0.625rem 1.5rem;
+  background: #fef3c7;
+  color: #78350f;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.post-preview-band strong {
+  margin-right: 0.5rem;
+}
+
 .prose hr {
   border: none;
   height: 1px;

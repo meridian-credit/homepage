@@ -33,7 +33,7 @@ npm ci
 npm run dev                  # http://localhost:3000
 npm run lint
 npm run build
-npm run audit:content        # frontmatter checks on content/posts/*.mdx (CI gate)
+npm run audit:content        # tax-calendar runway check (CI gate); post checks moved to the admin's publish check
 
 # Playwright e2e. playwright.config.ts starts `next start` on :3100 itself, so build first.
 npm run build && npm run test:e2e
@@ -62,7 +62,7 @@ Other browser QA scripts in `scripts/qa/` all expect a server on :3100:
 
 ## Architecture
 
-**Site data is code, except the tax calendar and FAQ, which the servers read from the admin's DB.**
+**Site data is code, except the tax calendar, the FAQ and the blog, which the servers read from the admin's DB.**
 - `src/lib/data.ts` holds `services` (fields drive the services pages, home, and search), `members`, and `personas`.
 - `src/lib/constants.ts` holds `siteConfig` (name, URL, contacts) and `navMenu`. It also holds `serviceGroups`, the
   single source of the 4-group / 8-service taxonomy that menus, lists, and strips all read. `orderedServices`
@@ -84,16 +84,32 @@ Other browser QA scripts in `scripts/qa/` all expect a server on :3100:
   - Both checks read only the arrays. Since production reads the DB, the schedule visitors see is filled in the
     admin, and the admin home shows its real runway.
 
-**Blog.** Posts are `content/posts/*.mdx`, parsed by `src/lib/posts.ts` (gray-matter, next-mdx-remote, remark-gfm).
-The frontmatter schema and citation rules are in `docs/content-system.md`:
-- Any post stating rates, deadlines, thresholds, or law changes needs `sourceLinks`, primary authority first.
+**Blog.** Since 2026-11-16 posts are written in the admin (블로그 글) and live in the content DB; there is no
+`content/` directory, no MDX and no gray-matter. The plan and the decisions are in `docs/plans/admin-backend/blog.md`;
+the fields and citation rules are in `docs/content-system.md`.
+- The public site reads only the published copy (`post_public`) through `src/lib/posts.ts`, which keeps the old
+  file-era function names and `PostMeta` shape, so its consumers (blog, home, services, search, sitemap, llms.txt,
+  menu) did not change. Without `CONTENT_DB` (CI, local) there are no posts.
+- The body is GFM Markdown. `src/components/blog/post-body.tsx` renders it with remark → hast → JSX
+  (`src/lib/content/markdown.ts`). Raw HTML is dropped, links are kept only when safe, and images render only from
+  `/uploads/<24 hex>.webp` with the width and height stored in the DB.
+- Images are BLOBs in the DB (`upload` table), so the existing backups and build snapshots cover them.
+  `/uploads/[name]` serves them `immutable`; the name is a content hash.
+- `/blog/[slug]` and the signed preview `/blog-preview/[id]?t=<exp>.<sig>` render the same `PostView`. The preview
+  signature is HMAC keyed from `REVALIDATE_SECRET`, valid for 1 hour, noindex, and disallowed in `robots.ts`.
+- `<article data-published-at>` carries the last publish time. The admin checks it after a publish to confirm the
+  site really redrew.
+- `/api/search` is `force-static` and has no module cache, so a redraw rebuilds it. `scripts/fonts/subset.mjs`
+  reads published posts, FAQ and schedule text from `CONTENT_DB` when set.
+- Any post stating rates, deadlines, thresholds, or law changes needs sources, primary authority first. The admin
+  enforces it when 「세율 · 기한 …을 다룹니다」 is on.
 - `services: [slug]` attaches a 업무경험 post to that service's detail page.
 - Related posts rank by `relatedSlugs`, then category, then keyword overlap.
 - `/blog` ships its first page of posts in the static HTML. `blog/page.tsx` renders the same `BlogContent`, without a
   query, as the `<Suspense>` fallback. Only `BlogContentFromUrl` calls `useSearchParams`. A `null` fallback here once
   left the HTML without a single post and caused CLS of 0.6. `tests/e2e/blog-rendering.spec.ts` guards against that.
 
-**Admin app** (`admin/`) edits the tax calendar and FAQ; see `docs/plans/admin-backend/`.
+**Admin app** (`admin/`) edits the tax calendar, the FAQ and the blog; see `docs/plans/admin-backend/`.
 - It runs in two places, each with its own DB and accounts:
   - Production: https://admin.meridianco.kr (since 2026-11-16). A save redraws www.meridianco.kr.
   - Dev: https://accounting-admin.teamcredit.kr, kept for trials. A save redraws only the dev site.
@@ -126,6 +142,18 @@ The frontmatter schema and citation rules are in `docs/content-system.md`:
   row with the before and after.
   - A stale revision is refused, so two tabs can't overwrite each other.
   - 변경 기록 restores an older state as a new save.
+- Blog posts differ (`admin/src/lib/posts.ts`, `admin/src/app/post-actions.ts`):
+  - Each post has its own revision, a working copy (`post.draft`) and a published copy (`post_public`). 저장 changes
+    only the draft; 게시 copies it to the site.
+  - Post history goes to its own `post_event` table, not `audit_event`, so a rolled-back admin that knows only
+    `schedule` and `faq` never meets a `post` row. The history page merges both.
+  - The slug is locked while a post is published. 완전히 지우기 (from the trash) also deletes that post's history.
+  - An image dropped from every draft and published copy is deleted at once; history alone does not keep it.
+  - The editor is Milkdown (`admin/src/editing/markdown-editor.tsx`). It removes Milkdown's own `strong`/`emphasis`
+    serializers so `**25%**로` is saved as `**25%**&#xB85C;`, which CommonMark reads as bold. `admin/tests/posts.spec.ts`
+    guards it.
+  - Uploads are re-encoded by sharp (JPEG/PNG/WebP by magic bytes, ≤15 MB, ≤1600 px wide, metadata stripped).
+    The admin's server action body limit is 16 MB.
 - The UI was rebuilt from scratch on 2026-10-12. The design, the decisions and the "add a content type" checklist
   are in `docs/plans/admin-backend/ui.md`.
   - Each type has a client-safe model in `admin/src/content/<type>.ts`: the zod rules that the browser and the server
@@ -143,7 +171,8 @@ The frontmatter schema and citation rules are in `docs/content-system.md`:
   - Styles are tokens plus numbered sections in `admin/src/app/admin.css`. There is no Tailwind, and the icons are
     inline SVG (`admin/src/ui/icons.tsx`).
 - After a save the admin POSTs the public site's `/api/revalidate` (bearer `REVALIDATE_SECRET`; 404 when unset),
-  then warms `/`, `/faq`, `/contact`, `/portal`.
+  then warms `/`, `/faq`, `/contact`, `/portal` (for a post: `/`, `/blog`, the post, `/api/search`). A post publish
+  or unpublish is then verified by fetching the post (200 with its `data-published-at`, or 404) and `/blog`.
   - The route reads the DB first and answers 500 if it can't. A failed regeneration would otherwise keep serving
     the old page while the admin reported success.
   - Pages stay statically prerendered. Next writes the regenerated HTML into `.next/server/app`, but it keeps the
@@ -151,8 +180,8 @@ The frontmatter schema and citation rules are in `docs/content-system.md`:
   - So the public server revalidates itself once on every start (`src/instrumentation.ts`). That only runs when
     `CONTENT_DB` and `REVALIDATE_SECRET` are set, and it calls `127.0.0.1:$PORT`. Give the port as `PORT`, not
     `-p`.
-  - The admin e2e therefore leaves edited FAQ/schedule pages in the local `.next`. Run it after the public e2e, or
-    rebuild.
+  - The admin e2e therefore leaves edited FAQ/schedule pages and test posts in the local `.next`. Run it after the
+    public e2e, or rebuild.
 
 **Routing and headers** live in `next.config.ts`:
 - A strict CSP and security headers apply to every path except `/contract/**`. A new third-party script, image, or

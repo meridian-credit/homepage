@@ -1,11 +1,11 @@
 import { describeFaq, type FaqData } from "./faq";
-import type { ContentKind } from "./registry";
+import type { AuditKind } from "./registry";
 import { describeSchedule, type ScheduleData } from "./schedule";
 import type { Change } from "./types";
 
 /* 변경 기록 한 건을 사람이 읽을 모양으로. 저장할 때 남긴 summary 대신 전 · 후를 다시 비교한다 —
    옛 기록(「일정 6건 → 7건」)도 같은 말로 읽히게. 되돌림인지는 summary 의 머리로 안다. */
-export function describeEvent(event: { kind: ContentKind; summary: string; before: unknown; after: unknown }, today: string) {
+export function describeEvent(event: { kind: AuditKind; summary: string; before: unknown; after: unknown }, today: string) {
   const { changes, summary } =
     event.kind === "schedule"
       ? describeSchedule(event.before as ScheduleData, event.after as ScheduleData, today)

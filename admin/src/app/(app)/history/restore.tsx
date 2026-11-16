@@ -2,22 +2,37 @@
 
 import { useRouter } from "next/navigation";
 import { createContext, use, useRef, useState } from "react";
-import { previewRestore, restoreBefore, type RestorePreview } from "@admin/app/actions";
-import { contentType } from "@admin/content/registry";
+import Link from "next/link";
+import { previewRestore, restoreBefore } from "@admin/app/actions";
+import { previewPostRestore, restorePostBefore } from "@admin/app/post-actions";
+import { contentType, type ContentKind } from "@admin/content/registry";
+import type { Change } from "@admin/content/types";
 import { whenSaved } from "@admin/lib/format";
 import { DiffList } from "@admin/ui/diff-list";
 import { Icon } from "@admin/ui/icons";
 
 /* 되돌리기. 누르면 먼저 「지금과 달라지는 점」을 보인다(docs/plans/admin-backend/ui.md).
    기록은 목록 통째의 사진이라, 옛 저장으로 되돌리면 그 뒤의 변경도 함께 되돌아간다. 그것을 확인 창에 숨기지 않는다.
-   미리 본 때의 판 번호로 되돌린다 — 그 사이 누가 저장했으면 서버가 거절하고, 다시 보여 준다. */
+   미리 본 때의 판 번호로 되돌린다 — 그 사이 누가 저장했으면 서버가 거절하고, 다시 보여 준다.
+   블로그 글 기록(post_event)은 글 한 편의 기록이고, 되돌리면 그 글의 초안만 돌아간다(사이트는 [게시]를 눌러야 바뀐다).
+   기록 열쇠: 일정 · FAQ 는 「a<id>」, 글은 「p<id>」 — 두 표의 번호가 겹친다. */
 
-const OpenRestore = createContext<(id: number) => void>(() => {});
+const OpenRestore = createContext<(key: string) => void>(() => {});
 const SPOKEN = { add: "다시 들어감: ", del: "빠짐: ", mod: "바뀜: " } as const;
 
 /* 미리 보기는 어느 기록의 것인지 같이 들고 다닌다. A 를 열었다 닫고 B 를 열 때 A 의 답이 늦게 와도, 확인 단추는
    보이는 미리 보기의 기록만 되돌린다. */
-type Preview = Extract<RestorePreview, { ok: true }> & { id: number };
+type Preview = {
+  key: string;
+  kind: ContentKind;
+  at: string;
+  changes: Change[];
+  later: number;
+  blocked: string | null;
+  revision: number;
+  title?: string;
+};
+const parseKey = (key: string) => ({ post: key.startsWith("p"), id: Number(key.slice(1)) });
 type View =
   | { step: "loading" }
   | { step: "preview"; preview: Preview }
@@ -27,34 +42,40 @@ type View =
 export function RestoreScope({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
-  const opened = useRef<number | null>(null);
+  const opened = useRef<string | null>(null);
   const [view, setView] = useState<View>({ step: "loading" });
-  const [done, setDone] = useState<{ subject: string; label: string } | null>(null);
+  const [done, setDone] = useState<{ subject: string; label: string; postId?: number } | null>(null);
 
-  const load = async (id: number) => {
+  const load = async (key: string) => {
     setView({ step: "loading" });
-    const result = await previewRestore(id).catch(() => null);
-    if (opened.current !== id) return;
+    const { post, id } = parseKey(key);
+    const result = post ? await previewPostRestore(id).catch(() => null) : await previewRestore(id).catch(() => null);
+    if (opened.current !== key) return;
     if (!result) setView({ step: "error", message: "확인하지 못했습니다. 연결을 확인하고 다시 눌러 주세요." });
-    else if (result.ok) setView({ step: "preview", preview: { ...result, id } });
+    else if (result.ok) setView({ step: "preview", preview: { kind: "post", ...result, key } });
     else if (result.reason === "signed-out") setView({ step: "error", message: "로그인이 끝났습니다. 새로고침해서 다시 로그인해 주세요." });
     else setView({ step: "error", message: "그 기록을 찾지 못했습니다. 새로고침해 주세요." });
   };
 
-  const open = (id: number) => {
-    opened.current = id;
+  const open = (key: string) => {
+    opened.current = key;
     setDone(null);
     dialog.current?.showModal();
-    void load(id);
+    void load(key);
   };
 
   const confirm = async (preview: Preview) => {
     setView({ step: "restoring", preview });
-    const result = await restoreBefore(preview.id, preview.revision).catch(() => null);
+    const { post, id } = parseKey(preview.key);
+    const result = post ? await restorePostBefore(id, preview.revision).catch(() => null) : await restoreBefore(id, preview.revision).catch(() => null);
     const type = contentType(preview.kind);
     if (result?.ok) {
       dialog.current?.close();
-      setDone({ subject: type.subject, label: `${whenSaved(preview.at)} 저장 이전으로` });
+      setDone({
+        subject: post ? `「${preview.title}」 초안이` : type.subject,
+        label: `${whenSaved(preview.at)} 저장 이전으로`,
+        postId: "postId" in result ? result.postId : undefined,
+      });
       /* 반영 실패면 서버가 기억하고, 다시 그린 쪽 위에 띠가 뜬다. */
       router.refresh();
       return;
@@ -69,7 +90,7 @@ export function RestoreScope({ children }: { children: React.ReactNode }) {
             ? result.message
             : "그 기록을 찾지 못했습니다. 새로고침해 주세요.";
     if (result && !result.ok && result.reason === "conflict") {
-      await load(preview.id);
+      await load(preview.key);
       setView((v) => (v.step === "preview" ? { step: "error", message, preview: v.preview } : v));
       return;
     }
@@ -90,7 +111,15 @@ export function RestoreScope({ children }: { children: React.ReactNode }) {
               <div className="banner-title">되돌렸습니다</div>
               <p className="banner-text">
                 {done.subject} {done.label} 돌아갔습니다. 아래 맨 위에 새 기록으로 남았습니다.
+                {done.postId ? " 사이트의 글은 그대로입니다 — 편집 화면에서 [게시]를 눌러야 바뀝니다." : ""}
               </p>
+              {done.postId ? (
+                <div className="banner-actions">
+                  <Link className="btn btn-sm" href={`/posts/${done.postId}`}>
+                    편집 화면 열기
+                  </Link>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -123,13 +152,17 @@ export function RestoreScope({ children }: { children: React.ReactNode }) {
             ) : (
               <>
                 <p>
-                  {type.subject} 그 저장 직전 모습으로 돌아갑니다.{" "}
+                  {preview.kind === "post" ? `「${preview.title}」의 초안이` : type.subject} 그 저장 직전 모습으로 돌아갑니다.{" "}
                   {preview.later ? <strong>이 저장 뒤에 한 변경 {preview.later}건도 함께 되돌아갑니다.</strong> : null} 지금과 달라지는 점:
                 </p>
                 <div className="diff-box">
                   <DiffList changes={preview.changes} labels={SPOKEN} blockLabels={["지금", "되돌린 뒤"]} />
                 </div>
-                <p>되돌린 것도 새 기록으로 남으니, 마음이 바뀌면 다시 되돌릴 수 있습니다. 사이트에도 바로 반영됩니다.</p>
+                <p>
+                  {preview.kind === "post"
+                    ? "되돌린 것도 새 기록으로 남습니다. 사이트의 글은 그대로이고, 편집 화면에서 [게시]를 눌러야 바뀝니다."
+                    : "되돌린 것도 새 기록으로 남으니, 마음이 바뀌면 다시 되돌릴 수 있습니다. 사이트에도 바로 반영됩니다."}
+                </p>
               </>
             )
           ) : null}
@@ -152,7 +185,7 @@ export function RestoreScope({ children }: { children: React.ReactNode }) {
               onClick={() => void confirm(preview)}
             >
               {view.step === "restoring" ? <span className="spinner" aria-hidden="true" /> : null}
-              {view.step === "restoring" ? "되돌리는 중…" : "되돌리고 반영"}
+              {view.step === "restoring" ? "되돌리는 중…" : preview.kind === "post" ? "초안 되돌리기" : "되돌리고 반영"}
             </button>
           ) : null}
         </div>
@@ -161,10 +194,10 @@ export function RestoreScope({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function RestoreButton({ id }: { id: number }) {
+export function RestoreButton({ eventKey }: { eventKey: string }) {
   const open = use(OpenRestore);
   return (
-    <button type="button" className="btn" onClick={() => open(id)}>
+    <button type="button" className="btn" onClick={() => open(eventKey)}>
       <Icon name="undo" />이 저장 이전으로 되돌리기
     </button>
   );

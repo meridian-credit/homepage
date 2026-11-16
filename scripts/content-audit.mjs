@@ -1,87 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import matter from "gray-matter";
 
-const postsDirectory = path.join(process.cwd(), "content/posts");
-const today = new Date();
-today.setHours(23, 59, 59, 999);
-
+/* 블로그 글 검사는 2026-11-16 에 관리자의 게시 전 검사로 옮겼다(admin/src/content/post.ts publishIssues).
+   글이 파일이 아니라 DB 에 있고, 막을 것은 게시하는 그 자리에서 막는다. 여기는 세무 일정만 본다. */
 const errors = [];
 const warnings = [];
-
-function isValidDate(value) {
-  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return false;
-  }
-
-  return Number.isFinite(new Date(`${value}T00:00:00+09:00`).getTime());
-}
-
-function isHttpUrl(value) {
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-
-for (const fileName of fs.readdirSync(postsDirectory).filter((name) => name.endsWith(".mdx"))) {
-  const fullPath = path.join(postsDirectory, fileName);
-  const { data } = matter(fs.readFileSync(fullPath, "utf8"));
-
-  if (data.published === false) {
-    continue;
-  }
-
-  for (const key of ["title", "description", "date", "category"]) {
-    if (typeof data[key] !== "string" || data[key].trim().length === 0) {
-      errors.push(`${fileName}: missing required frontmatter "${key}"`);
-    }
-  }
-
-  if (!isValidDate(data.date)) {
-    errors.push(`${fileName}: invalid date "${data.date ?? ""}"`);
-  } else if (new Date(`${data.date}T00:00:00+09:00`) > today) {
-    errors.push(`${fileName}: date is in the future (${data.date})`);
-  }
-
-  if (data.updatedAt && !isValidDate(data.updatedAt)) {
-    errors.push(`${fileName}: invalid updatedAt "${data.updatedAt}"`);
-  }
-
-  if (data.lastChecked && !isValidDate(data.lastChecked)) {
-    errors.push(`${fileName}: invalid lastChecked "${data.lastChecked}"`);
-  }
-
-  if (data.lastChecked && isValidDate(data.lastChecked) && today - new Date(`${data.lastChecked}T00:00:00+09:00`) > 120 * 86400000) {
-    warnings.push(`${fileName}: editorial review is older than 120 days (${data.lastChecked})`);
-  }
-
-  if (!data.lastChecked) {
-    warnings.push(`${fileName}: missing lastChecked`);
-  }
-
-  if (!Array.isArray(data.sourceLinks) || data.sourceLinks.length === 0) {
-    warnings.push(`${fileName}: missing sourceLinks`);
-  } else {
-    for (const [index, source] of data.sourceLinks.entries()) {
-      if (!source || typeof source !== "object") {
-        errors.push(`${fileName}: sourceLinks[${index}] must be an object`);
-        continue;
-      }
-
-      if (typeof source.label !== "string" || source.label.trim().length === 0) {
-        errors.push(`${fileName}: sourceLinks[${index}] missing label`);
-      }
-
-      if (typeof source.url !== "string" || !isHttpUrl(source.url)) {
-        errors.push(`${fileName}: sourceLinks[${index}] invalid URL`);
-      }
-    }
-  }
-}
 
 /* 세무 일정이 얼마나 남았나. 다 지나면 헤더가 「이번 달 국세청 일정」 링크로
    바뀌어 망가지지는 않지만, 다음 달 일정을 채울 때가 됐다는 뜻이다.

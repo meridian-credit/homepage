@@ -32,7 +32,10 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   turbopack: { root },
   outputFileTracingRoot: root,
-  serverExternalPackages: ["better-sqlite3"],
+  serverExternalPackages: ["better-sqlite3", "sharp"],
+  /* 블로그 사진 올리기는 서버 액션으로 받는다(15MB 까지, admin/src/lib/upload.ts). 기본 한도 1MB 로는 휴대폰 사진이
+     안 들어간다. multipart 머리 몫으로 1MB 를 더 둔다. */
+  experimental: { serverActions: { bodySizeLimit: "16mb" } },
   async headers() {
     return [
       {

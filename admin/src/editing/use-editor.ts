@@ -11,7 +11,8 @@ import type { Change, Published, SaveResult } from "@admin/content/types";
    - 저장: 「저장하고 반영」 또는 Ctrl+S. 결과마다 저장 막대가 다르게 답한다.
    - 이 기기 보관: 바뀐 것이 있으면 localStorage 에 둔다. 로그인 만료 · 관리자 재배포 · 연결 끊김은 모두 결국
      새로고침으로 끝나는데, 그때 적던 글이 사라지지 않게 한다. 저장하거나 버리면 지운다. 로그아웃해도 지운다.
-     공용 컴퓨터라도 일정 · FAQ 는 어차피 공개되는 글이라 위험이 작다. 글(초안)이 들어오면 다시 본다.
+     공용 컴퓨터라도 일정 · FAQ 는 어차피 공개되는 글이라 위험이 작다. 블로그 초안은 공개 전의 글이라, 로그아웃
+     때 지우는 것이 더 중요해졌다(shell.tsx). 글은 한 편마다 따로 보관한다(draftKey).
    - 떠날 때 경고: 바뀐 것이 있으면 브라우저가 한 번 묻는다. */
 
 export type Phase = "idle" | "invalid" | "saving" | "saved" | "failed" | "signed-out" | "conflict" | "discarded";
@@ -25,7 +26,12 @@ export type EditorConfig<D, S> = {
   describe: (before: D, after: D) => { changes: Change[]; summary: string };
   /* 저장을 막는 곳의 수. 브라우저에서 서버와 같은 규칙으로 센다. */
   issues: (state: S) => number;
-  save: (data: D, revision: number) => Promise<SaveResult<D>>;
+  /* mode: 저장의 갈래(블로그 글의 「draft」 · 「publish」). Ctrl+S 는 mode 없이 부른다 — 단축키로 게시되지 않게. */
+  save: (data: D, revision: number, mode?: string) => Promise<SaveResult<D>>;
+  /* 이 기기 보관의 열쇠. 없으면 kind. 블로그 글은 글마다 다르다(post:12). */
+  draftKey?: string;
+  /* 화면이 아직 상태에 넣지 않은 변경이 있는가(블로그 본문 편집기는 0.2초 늦게 알린다). Ctrl+S 가 본다. */
+  hasPending?: () => boolean;
   /* 고칠 곳이 있어 저장을 막았을 때: 첫 고칠 곳을 펴고 그 칸으로 초점을 옮긴다. */
   onInvalid: (state: S) => void;
   /* 저장했을 때: 열려 있던 입력칸 · 새 일정 칸을 닫는다. */
@@ -101,15 +107,15 @@ const parse = <T,>(raw: string | null): T | null => {
 export function useEditor<D, S>(config: EditorConfig<D, S>) {
   const router = useRouter();
   const { kind, describe, payload, toState } = config;
-  const draftKey = DRAFT_PREFIX + kind;
-  const lostKey = LOST_PREFIX + kind;
+  const draftKey = DRAFT_PREFIX + (config.draftKey ?? kind);
+  const lostKey = LOST_PREFIX + (config.draftKey ?? kind);
 
   const [base, setBase] = useState(config.data);
   const [state, setState] = useState(() => config.toState(config.data));
   const [revision, setRevision] = useState(config.revision);
   const [phase, setPhase] = useState<Phase>("idle");
   const [invalidMessage, setInvalidMessage] = useState("");
-  const [outcome, setOutcome] = useState<{ warnings: string[]; published: Published } | null>(null);
+  const [outcome, setOutcome] = useState<{ warnings: string[]; published: Published; mode?: string } | null>(null);
   const [conflict, setConflict] = useState<{ at: string; actor: string } | null>(null);
   /* 변경 취소 · 이어서 고치기 바로 전의 작업(되살리기용). why 는 막대 문구를 고른다. */
   const [undo, setUndo] = useState<{ state: S; base: D; revision: number; why: "discard" | "resume" } | null>(null);
@@ -167,33 +173,34 @@ export function useEditor<D, S>(config: EditorConfig<D, S>) {
   };
 
   /* ── 저장 ── */
-  const save = async () => {
+  /* 저장했으면 true. 미리 보기처럼 저장 뒤에 이어서 할 일이 있는 쪽이 본다. */
+  const save = async (mode?: string): Promise<boolean> => {
     const c = config;
-    if (phase === "saving") return;
+    if (phase === "saving") return false;
     if (c.issues(state) > 0) {
       setInvalidMessage("");
       setPhase("invalid");
       c.onInvalid(state);
-      return;
+      return false;
     }
     const blocked = c.blocker?.();
     if (blocked) {
       setInvalidMessage(blocked.message);
       setPhase("invalid");
       blocked.focus();
-      return;
+      return false;
     }
     const focused = document.activeElement instanceof HTMLElement ? document.activeElement.id : "";
     setPhase("saving");
     setOutcome(null);
     let result: SaveResult<D>;
     try {
-      result = await c.save(c.payload(state), revision);
+      result = await c.save(c.payload(state), revision, mode);
     } catch {
       /* 요청 자체가 실패했다(연결 끊김, 관리자 앱이 막 새로 배포되어 옛 화면의 액션을 못 찾음).
          잡지 않으면 오류 화면으로 바뀌면서 적던 내용이 사라진다. */
       setPhase("failed");
-      return;
+      return false;
     } finally {
       /* 저장하는 동안 편집 칸을 잠갔다가(inert) 풀면서, 있던 자리로 초점을 돌려준다. 그 자리가 없어졌으면(저장하며
          입력칸이 닫힘, 막대의 단추가 바뀜) 막대의 결과 글로 옮긴다 — 초점이 쪽 맨 위로 튀지 않게. */
@@ -207,13 +214,13 @@ export function useEditor<D, S>(config: EditorConfig<D, S>) {
       setBase(result.saved);
       setState(c.toState(result.saved));
       setRevision(result.revision);
-      setOutcome({ warnings: result.warnings, published: result.published });
+      setOutcome({ warnings: result.warnings, published: result.published, mode });
       setPhase(result.published.ok ? "saved" : "idle");
       storage.remove("local", draftKey);
       c.onSaved?.();
       /* 메뉴의 점, 홈, 반영 실패 띠를 서버의 새 값으로 다시 그린다. 편집 화면의 작업본은 그대로다. */
       router.refresh();
-      return;
+      return true;
     }
     if (result.reason === "signed-out") setPhase("signed-out");
     else if (result.reason === "conflict") {
@@ -223,10 +230,13 @@ export function useEditor<D, S>(config: EditorConfig<D, S>) {
       setInvalidMessage(result.message);
       setPhase("invalid");
     }
+    return false;
   };
   const saveRef = useRef(save);
+  const pendingRef = useRef(config.hasPending);
   useEffect(() => {
     saveRef.current = save;
+    pendingRef.current = config.hasPending;
   });
 
   /* Ctrl/⌘+S 로도 저장한다(바뀐 것이 있을 때만). 엑셀에 익숙한 손버릇. */
@@ -234,7 +244,7 @@ export function useEditor<D, S>(config: EditorConfig<D, S>) {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
-        if (count > 0) void saveRef.current();
+        if (count > 0 || pendingRef.current?.()) void saveRef.current();
       }
     };
     window.addEventListener("keydown", onKey);
@@ -319,6 +329,8 @@ export function useEditor<D, S>(config: EditorConfig<D, S>) {
     reloadLatest,
     undoWhy: undo?.why ?? "discard",
     closeBar: () => setPhase("idle"),
+    /* 저장 막대 밖의 액션(블로그 글 내리기 · 휴지통)이 판 번호를 올렸을 때. 내용은 그대로라 판 번호만 맞춘다. */
+    adoptRevision: (next: number) => setRevision(next),
     /* 이 기기에 보관했다고 알린 뒤 다른 쪽으로 보낼 때(다시 로그인): 떠날 때 경고를 끈다. */
     leave: () => {
       leaving.current = true;

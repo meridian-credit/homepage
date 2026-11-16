@@ -34,12 +34,15 @@ export function SaveBar({
   object,
   siteUrl,
   onGotoIssue,
+  labels,
 }: {
   editor: EditorLike;
   /* 「세무 일정을」 */
   object: string;
   siteUrl?: string;
   onGotoIssue: () => void;
+  /* 블로그 글처럼 저장이 곧 반영이 아닌 종류의 문구. 저장 단추 이름, 바뀐 것이 있을 때의 안내, 저장한 뒤의 알림. */
+  labels?: { save?: string; dirtyHint?: string; saved?: (mode?: string) => { title: string; sub: string; site: boolean } };
 }) {
   const pathname = usePathname();
   const dialog = useRef<HTMLDialogElement>(null);
@@ -74,12 +77,12 @@ export function SaveBar({
           저장하지 않은 변경 {editor.count}건
         </>
       );
-      sub = `${editor.summary} · 저장하면 1~2초 뒤 사이트에 나옵니다.`;
+      sub = `${editor.summary} · ${labels?.dirtyHint ?? "저장하면 1~2초 뒤 사이트에 나옵니다."}`;
       actions = (
         <>
           {discard}
-          <button type="button" className="btn btn-primary" onClick={() => void editor.save()} title="저장하고 반영 (Ctrl+S)">
-            저장하고 반영
+          <button type="button" className="btn btn-primary" onClick={() => void editor.save()} title={`${labels?.save ?? "저장하고 반영"} (Ctrl+S)`}>
+            {labels?.save ?? "저장하고 반영"}
           </button>
         </>
       );
@@ -121,17 +124,20 @@ export function SaveBar({
         </button>
       );
       break;
-    case "saved":
+    case "saved": {
+      const custom = labels?.saved?.(editor.outcome?.mode);
       title = (
         <>
           <Icon name="check" />
-          저장했습니다
+          {custom?.title ?? "저장했습니다"}
         </>
       );
-      sub = editor.outcome?.warnings.length ? `사이트에도 반영됐습니다. 참고: ${editor.outcome.warnings.join(" ")}` : "사이트에도 반영됐습니다.";
+      sub =
+        custom?.sub ??
+        (editor.outcome?.warnings.length ? `사이트에도 반영됐습니다. 참고: ${editor.outcome.warnings.join(" ")}` : "사이트에도 반영됐습니다.");
       actions = (
         <>
-          {siteUrl ? (
+          {siteUrl && (custom?.site ?? true) ? (
             <a className="btn btn-light" href={siteUrl} target="_blank" rel="noopener noreferrer">
               <Icon name="external" />
               사이트에서 보기
@@ -141,6 +147,7 @@ export function SaveBar({
         </>
       );
       break;
+    }
     case "failed":
       title = (
         <>

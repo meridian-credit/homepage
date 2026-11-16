@@ -2,7 +2,7 @@ import "server-only";
 import { META } from "@/lib/content/schema";
 import type { FaqItem } from "@/lib/faq";
 import type { ScheduleItem } from "@/lib/schedule";
-import type { ContentKind } from "@admin/content/registry";
+import type { AuditKind } from "@admin/content/registry";
 import { getDb } from "./db";
 
 /* 관리자 쪽 읽기 · 쓰기. 쓰기는 늘 「판 번호 확인 → 목록 통째로 바꾸기 → 변경 기록」을 한 트랜잭션으로 한다.
@@ -14,7 +14,7 @@ export type AuditEvent = {
   id: number;
   at: string;
   actor: string;
-  kind: ContentKind;
+  kind: AuditKind;
   summary: string;
   before: unknown;
   after: unknown;
@@ -43,7 +43,7 @@ export function readFaq(): FaqState {
 
 type WriteResult = { ok: true; revision: number } | { ok: false; reason: "conflict" };
 
-function record(actor: string, kind: ContentKind, summary: string, before: unknown, after: unknown) {
+function record(actor: string, kind: AuditKind, summary: string, before: unknown, after: unknown) {
   getDb()
     .prepare(`INSERT INTO audit_event (at, actor, kind, summary, before_json, after_json) VALUES (?, ?, ?, ?, ?, ?)`)
     .run(new Date().toISOString(), actor, kind, summary, JSON.stringify(before), JSON.stringify(after));
@@ -97,7 +97,7 @@ export function writeFaq(
   })();
 }
 
-type AuditRow = { id: number; at: string; actor: string; kind: ContentKind; summary: string; before_json: string; after_json: string };
+type AuditRow = { id: number; at: string; actor: string; kind: AuditKind; summary: string; before_json: string; after_json: string };
 const toEvent = (r: AuditRow): AuditEvent => ({
   id: r.id,
   at: r.at,
@@ -108,7 +108,7 @@ const toEvent = (r: AuditRow): AuditEvent => ({
   after: JSON.parse(r.after_json),
 });
 
-export function listAudit({ kind, limit = 50 }: { kind?: ContentKind; limit?: number } = {}): AuditEvent[] {
+export function listAudit({ kind, limit = 50 }: { kind?: AuditKind; limit?: number } = {}): AuditEvent[] {
   const rows = kind
     ? getDb().prepare(`SELECT * FROM audit_event WHERE kind = ? ORDER BY id DESC LIMIT ?`).all(kind, limit)
     : getDb().prepare(`SELECT * FROM audit_event ORDER BY id DESC LIMIT ?`).all(limit);
@@ -125,10 +125,10 @@ export const countLaterSaves = (event: AuditEvent) =>
   (getDb().prepare(`SELECT COUNT(*) AS n FROM audit_event WHERE kind = ? AND id > ?`).get(event.kind, event.id) as { n: number }).n;
 
 /* 종류마다 마지막 저장(누가 · 언제). 홈과 충돌 창이 쓴다. */
-export function lastSaves(): Partial<Record<ContentKind, { at: string; actor: string }>> {
+export function lastSaves(): Partial<Record<AuditKind, { at: string; actor: string }>> {
   const rows = getDb()
     .prepare(`SELECT kind, at, actor FROM audit_event WHERE id IN (SELECT MAX(id) FROM audit_event GROUP BY kind)`)
-    .all() as { kind: ContentKind; at: string; actor: string }[];
+    .all() as { kind: AuditKind; at: string; actor: string }[];
   return Object.fromEntries(rows.map((r) => [r.kind, { at: r.at, actor: r.actor }]));
 }
 

@@ -2,8 +2,11 @@ import type { IconName } from "@admin/ui/icons";
 
 /* 관리자가 다루는 콘텐츠 종류. 메뉴, 홈의 「사이트 내용」, 변경 기록의 거르기가 모두 이 목록에서 나온다.
    종류를 더할 때 여기 한 줄을 더한다(나머지 순서는 docs/plans/admin-backend/README.md 의 체크리스트).
-   브라우저에서도 읽으므로 서버 전용 코드를 넣지 않는다. */
-export type ContentKind = "schedule" | "faq";
+   브라우저에서도 읽으므로 서버 전용 코드를 넣지 않는다.
+   AuditKind: 변경 기록 표(audit_event)에 남는 종류. 글은 따로(post_event) 남긴다 — 앞 이미지의 관리자가
+   audit_event 의 kind 를 일정 · FAQ 둘로만 알기 때문이다(src/lib/content/schema.ts). */
+export type AuditKind = "schedule" | "faq";
+export type ContentKind = AuditKind | "post";
 
 export type ContentType = {
   kind: ContentKind;
@@ -42,6 +45,17 @@ export const CONTENT_TYPES: ContentType[] = [
     group: "site",
     sitePath: "/faq",
     appears: "FAQ 페이지와 문의 페이지 아래에 이 순서대로 나옵니다. 구글 · 네이버 검색 결과에 쓰이는 정보도 이 목록으로 만듭니다.",
+  },
+  {
+    kind: "post",
+    label: "블로그 글",
+    object: "블로그 글을",
+    subject: "블로그 글이",
+    href: "/posts",
+    icon: "post",
+    group: "site",
+    sitePath: "/blog",
+    appears: "사이트의 인사이트(/blog)와 홈의 최근 글, 서비스 상세의 관련 글 · 업무 경험에 나옵니다. 게시한 글만 사이트에 나오고, 초안은 미리 보기로만 봅니다.",
   },
 ];
 

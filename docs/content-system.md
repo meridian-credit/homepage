@@ -4,56 +4,55 @@
 
 The blog was missing two structural safeguards:
 
-- no first-class source links in frontmatter
+- no first-class source links
 - no deterministic related-post rules
 
-This system adds those pieces without breaking existing posts.
+This system adds those pieces.
 
-## Frontmatter
+## Post fields
 
-Use the fields below for new or updated posts.
+Since 2026-11-16 posts are written in the admin (블로그 글), stored in the content DB, and published from there. The
+plan, the data model and the publish flow are in `docs/plans/admin-backend/blog.md`. The old `content/posts/*.mdx`
+files and their frontmatter are gone; the same fields live in the admin's 「글 정보」 panel (`PostData` in
+`src/lib/content/post-data.ts`):
 
-```yaml
----
-title: "제목"
-description: "검색 카드와 목록 카드에 함께 쓰이는 설명"
-date: "2026-04-15"
-updatedAt: "2026-04-15"
-lastChecked: "2026-04-15"
-category: "세무일반"
-published: true
-author: "박민상 회계사"
-effectiveFrom: "2026-01-01"
-coverImage: "/images/posts/example.png"
-keywords:
-  - 법인세
-  - 세무조정
-relatedSlugs:
-  - corporate-tax-filing-prep
-services:            # 업무경험 posts only: service slugs whose detail page lists this post
-  - tax-bookkeeping
-sourceLinks:
-  - label: "국세청 공식 안내"
-    url: "https://www.nts.go.kr/"
-    kind: "guidance"
-    note: "실무 적용 기준으로 먼저 확인한 자료"
----
-```
+| Admin field | Public name (`PostMeta`) | Notes |
+|---|---|---|
+| 주소 | `slug` | lowercase letters, digits, `-`. Locked while the post is published |
+| 제목 · 요약 | `title` · `description` | 요약 is the list card, search result and share card text (50–160 chars) |
+| 갈래 | `category` | one of `POST_CATEGORIES`; each must appear in `insightCategories` (`src/lib/posts.ts` throws otherwise) |
+| 발행일 · 업데이트 · 검토 기준일 · 적용 시점 | `date` · `updatedAt` · `lastChecked` · `effectiveFrom` | 발행일 defaults to the first publish day (Seoul) |
+| 글쓴이 | `author` | empty means the firm's default author |
+| 키워드 | `keywords` | empty means category + title words |
+| 근거 자료 | `sourceLinks` | label, http(s) URL, kind, note |
+| 관련 글 · 연결 서비스 | `relatedSlugs` · `services` | `services` only for 업무경험 posts |
+| 표지 사진 | `coverImage` | an uploaded image, `/uploads/<hash>.webp` |
+| 세율 · 기한 · 기준금액 · 법 개정을 다룹니다 | (not public) | when on, sources and 검토 기준일 are required to publish |
+| 본문 | `content` | GFM Markdown, written in the Milkdown editor. Raw HTML is not rendered |
+
+There are no default source links any more: a post shows only the sources its author entered. The 「<갈래> 기본 근거
+넣기」 button inserts the category's statutes as editable rows.
 
 ## Editorial rules
 
-- Add at least one `sourceLinks` entry to any post that mentions rates, dates, filing deadlines, thresholds, or law changes.
-- Use `lastChecked` on anything seasonal or law-change sensitive.
-- Use `relatedSlugs` when there is a specific follow-up article that should outrank generic same-category posts.
-- Use `keywords` for concept clusters, not for SEO stuffing.
-- `services` values are service slugs from `serviceGroups` in `src/lib/constants.ts`. Guide for 업무경험 posts:
+- Turn on 「세율 · 기한 · 기준금액 · 법 개정을 다룹니다」 for any post that mentions rates, dates, filing deadlines,
+  thresholds, or law changes. It then needs at least one source and a 검토 기준일 to publish.
+- Use 검토 기준일 on anything seasonal or law-change sensitive. Don't press 「오늘 검토함」 without actually re-reviewing
+  the post.
+- Use 관련 글 when there is a specific follow-up article that should outrank generic same-category posts.
+- Use 키워드 for concept clusters, not for SEO stuffing.
+- 연결 서비스 values are service slugs from `serviceGroups` in `src/lib/constants.ts`. Guide for 업무경험 posts:
   `docs/BLOG_WORK_CASES.md`.
 
-`npm run audit:content` (a CI gate) enforces this schema on published posts:
-- Errors: missing `title` / `description` / `date` / `category`, invalid dates, and a `date` in the future.
-- Warnings: missing `lastChecked`, a `lastChecked` older than 120 days, and missing `sourceLinks`.
-  - Warnings do not fail CI.
-  - Don't bump `lastChecked` without actually re-reviewing the post.
+The publish check (`publishIssues` in `admin/src/content/post.ts`) runs in the browser and again on the server. It
+replaced the post checks of `npm run audit:content`:
+- Errors block publishing: empty title / slug / category / summary / body, a slug in use, invalid or future dates, a
+  tax-facts post without sources or 검토 기준일, an incomplete source row, a body link that is not http(s) / `/` / `#`,
+  a body image that is not an uploaded one or no longer exists.
+- Warnings need a confirmation: summary outside 50–160 chars, 검토 기준일 older than 120 days, no keywords, images
+  without alt text, a heading 1 in the body, raw HTML in the body, a 업무경험 post without a service, unpublished
+  related posts, and a non-tax-facts post without sources.
+
 ## Authority priority
 
 - For rates, deadlines, filing duties, thresholds, forms, penalties, and calculation formulas, cite the closest primary authority first.
@@ -64,8 +63,10 @@ sourceLinks:
 
 ## Rendering behavior
 
-- post detail pages now expose dates, author, sources, and article JSON-LD
+- post detail pages expose dates, author, sources, and article JSON-LD
 - related posts are ranked by `relatedSlugs`, then category, then keyword overlap
+- the body is rendered by `src/components/blog/post-body.tsx` (remark → hast → JSX, no MDX): links are kept only when
+  safe, images only when uploaded (with their stored width and height), wide tables scroll on their own
 
 ## Retrofit order
 

@@ -123,7 +123,7 @@ const websiteJsonLd = {
 };
 
 /* 글이 한 편도 없는 블로그 갈래의 메뉴 주소. 메뉴는 이걸 빼고 그린다.
-   빌드 때 한 번 센다 — 글은 content/posts 에 있고 배포마다 다시 만든다. */
+   빌드 때 세고, 관리자가 글을 게시 · 내리면 모든 쪽을 다시 그리면서 다시 센다(/api/revalidate). */
 function emptyInsightLinks() {
   const posts = getAllPosts();
   return insightCategories

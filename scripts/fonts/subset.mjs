@@ -3,8 +3,9 @@
  *
  * Pretendard · Wanted Sans 는 배포본 그대로 92조각(unicode-range)으로 실려 있다.
  * 조각은 페이지에 그 범위 글자가 하나라도 있으면 통째로 받는데, 한 조각에 한글이
- * 수백 자씩 들어 있어 페이지마다 600KB 안팎을 받았다. 사이트 글은 코드와 content/
- * 에 다 있으니, 조각마다 그 글자만 남긴 "… Site" family 를 만들어 앞에 세운다.
+ * 수백 자씩 들어 있어 페이지마다 600KB 안팎을 받았다. 사이트 글은 코드에 다 있으니, 조각마다 그 글자만 남긴 "… Site" family 를 만들어 앞에 세운다.
+ * 관리자에서 고치는 콘텐츠(블로그 게시 글 · FAQ · 세무 일정)는 CONTENT_DB 가 있을 때(서버 빌드는 DB 사본을 붙인다)
+ * 그 DB 에서 읽는다. 빌드 뒤에 게시한 글의 새 글자는 다음 배포 전까지 원래 조각으로 나온다 — 깨지지 않고 무게만 는다.
  *
  * - 조각 구조와 조각별 서체 설정(굵기 축·표시 방식)은 원본 그대로 둔다.
  * - unicode-range 는 실제로 남긴 글자만 적는다. 그래서 사이트에 없는 글자(검색어,
@@ -39,8 +40,9 @@ const ENTITIES = {
 };
 
 /* 코드(JSX)는 strict 다. 모르는 이름을 조용히 넘기면 그 글자가 subset 에서 빠진다. 여기에 더해 준다.
-   글(content/)은 빌드를 멈추지 않는다. 「R&D;」 같은 평범한 글이 엔티티 꼴이 될 수 있고, MDX 는 모르는
-   이름을 글자 그대로 찍는다(그 글자는 이미 다 들어 있다). 진짜 엔티티라면 그 글자만 원래 조각에서 받는다. */
+   블로그 글(DB 의 Markdown)은 빌드를 멈추지 않는다. 「R&D;」 같은 평범한 글이 엔티티 꼴이 될 수 있고, 모르는
+   이름은 글자 그대로 찍힌다(그 글자는 이미 다 들어 있다). 진짜 엔티티라면 그 글자만 원래 조각에서 받는다.
+   편집기는 굵은 글씨 뒤 조사를 &#xB85C; 처럼 적는다 — 숫자 참조는 늘 풀어 센다. */
 function decodeEntities(text, where, strict = true) {
   return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, body) => {
     if (body[0] === '#') return String.fromCodePoint(body[1].toLowerCase() === 'x' ? parseInt(body.slice(2), 16) : Number(body.slice(1)));
@@ -85,14 +87,40 @@ function collectCss(file, add) {
   }
 }
 
-function collectSiteCodePoints() {
+/* 관리자 DB 의 공개 글자. 표가 아직 없는 DB(이전 전)는 그 표만 건너뛴다. */
+async function collectDbText(add) {
+  const file = process.env.CONTENT_DB;
+  if (!file || !fs.existsSync(file)) return;
+  const { default: Database } = await import('better-sqlite3');
+  const db = new Database(file, { readonly: true, fileMustExist: true });
+  try {
+    const read = (sql) => {
+      try {
+        return db.prepare(sql).all();
+      } catch (error) {
+        if (/no such table/.test(String(error))) return [];
+        throw error;
+      }
+    };
+    for (const row of read('SELECT data FROM post_public')) {
+      const post = JSON.parse(row.data);
+      for (const value of Object.values(post)) add(decodeEntities(typeof value === 'string' ? value : JSON.stringify(value), 'DB post_public', false));
+    }
+    for (const row of read('SELECT question, answer FROM faq_item')) add(`${row.question}${row.answer}`);
+    for (const row of read('SELECT what, period FROM schedule_item')) add(`${row.what}${row.period}`);
+  } finally {
+    db.close();
+  }
+}
+
+async function collectSiteCodePoints() {
   const points = new Set();
   const add = (text) => { for (const ch of text) points.add(ch.codePointAt(0)); };
   for (const file of listFiles(path.join(root, 'src'))) {
     if (/\.(ts|tsx|mts)$/.test(file) && !file.endsWith('.d.ts')) collectSource(file, add);
     else if (file.endsWith('.css')) collectCss(file, add);
   }
-  for (const file of listFiles(path.join(root, 'content'))) add(decodeEntities(fs.readFileSync(file, 'utf8'), file, false));
+  await collectDbText(add);
   add(RUNTIME_TEXT);
   for (let cp = 0x20; cp <= 0x7e; cp++) points.add(cp);
   /* 줄바꿈·탭은 글리프가 아니다. */
@@ -133,7 +161,7 @@ function parseFaces(cssFile) {
   });
 }
 
-const sitePoints = [...collectSiteCodePoints()].sort((a, b) => a - b);
+const sitePoints = [...(await collectSiteCodePoints())].sort((a, b) => a - b);
 
 fs.rmSync(outDir, { recursive: true, force: true });
 const rules = [
