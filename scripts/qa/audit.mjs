@@ -9,7 +9,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 const BASE = process.env.BASE || 'http://localhost:3100';
 const motions = process.env.MOTION && process.env.MOTION !== 'both' ? [process.env.MOTION] : ['reduce', 'no-preference'];
 const routes = ['/', '/about', '/services', '/services/tax-bookkeeping', '/clients', '/members', '/contact', '/blog',
-  '/blog/apartment-joint-vs-sole-ownership', '/portal', '/faq', '/pricing'];
+  '/portal', '/faq', '/pricing'];
 
 /* 알고 둔 것. 이유를 같이 적는다. */
 const ACCEPTED = [

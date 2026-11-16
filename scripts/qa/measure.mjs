@@ -10,7 +10,7 @@ const OUT = process.env.OUT || 'artifacts/measure';
 const engine = process.env.ENGINE === 'webkit' ? webkit : chromium;
 await mkdir(OUT, { recursive: true });
 
-const routes = (process.env.ROUTES || '/,/about,/services,/services/tax-bookkeeping,/services/audit-advisory,/services/tax-advisory,/members,/clients,/blog,/blog/apartment-joint-vs-sole-ownership,/faq,/portal,/contact,/pricing').split(',');
+const routes = (process.env.ROUTES || '/,/about,/services,/services/tax-bookkeeping,/services/audit-advisory,/services/tax-advisory,/members,/clients,/blog,/faq,/portal,/contact,/pricing').split(',');
 const viewports = [
   { name: 'desktop', viewport: { width: 1440, height: 900 }, isMobile: false },
   { name: 'mobile', viewport: { width: 390, height: 844 }, isMobile: true },

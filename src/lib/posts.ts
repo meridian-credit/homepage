@@ -115,49 +115,6 @@ const defaultSourceLinksByCategory: Record<string, PostSourceLink[]> = {
   ],
 };
 
-const defaultSourceLinksBySlug: Record<string, PostSourceLink[]> = {
-  "corporate-tax-rate-increase-2026": [
-    {
-      label: "법인세법 제55조",
-      url: "https://www.law.go.kr/법령/법인세법/제55조",
-      kind: "law",
-      note: "내국법인의 각 사업연도 소득에 대한 법인세율 조문입니다.",
-    },
-  ],
-  "dividend-separate-taxation-2026": [
-    {
-      label: "조세특례제한법 제104조의27",
-      url: "https://www.law.go.kr/법령/조세특례제한법/제104조의27",
-      kind: "law",
-      note: "고배당기업 주식 배당소득 과세특례의 적용 요건 조문입니다.",
-    },
-  ],
-  "startup-tax-relief-2026": [
-    {
-      label: "조세특례제한법 제6조",
-      url: "https://www.law.go.kr/법령/조세특례제한법/제6조",
-      kind: "law",
-      note: "창업중소기업 등에 대한 세액감면 조문입니다.",
-    },
-  ],
-  "small-corp-tax-benefits-checklist": [
-    {
-      label: "조세특례제한법",
-      url: "https://www.law.go.kr/법령/조세특례제한법",
-      kind: "law",
-      note: "중소기업 세액공제·감면 특례의 기본 법령입니다.",
-    },
-  ],
-  "rnd-tax-credit-pre-review": [
-    {
-      label: "조세특례제한법 제10조",
-      url: "https://www.law.go.kr/법령/조세특례제한법/제10조",
-      kind: "law",
-      note: "연구·인력개발비 세액공제의 기본 조문입니다.",
-    },
-  ],
-};
-
 const defaultKeywordsByCategory: Record<string, string[]> = {
   법인세: ["법인세", "세무조정", "중소기업"],
   소득세: ["소득세", "종합소득세", "세액공제"],
@@ -189,8 +146,8 @@ function uniqueStrings(values: string[]) {
   return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)));
 }
 
-function getDefaultSourceLinks(slug: string, category: string) {
-  return defaultSourceLinksBySlug[slug] ?? defaultSourceLinksByCategory[category] ?? [];
+function getDefaultSourceLinks(category: string) {
+  return defaultSourceLinksByCategory[category] ?? [];
 }
 
 function getDefaultKeywords(slug: string, title: string, category: string) {
@@ -302,7 +259,7 @@ function parsePostMeta(slug: string, data: Record<string, unknown>): PostMeta {
     effectiveFrom: toOptionalString(data.effectiveFrom),
     coverImage: toOptionalString(data.coverImage),
     sourceLinks:
-      sourceLinks.length > 0 ? sourceLinks : getDefaultSourceLinks(slug, category),
+      sourceLinks.length > 0 ? sourceLinks : getDefaultSourceLinks(category),
     relatedSlugs: toStringArray(data.relatedSlugs),
     keywords: keywords.length > 0 ? keywords : getDefaultKeywords(slug, title, category),
     services: toStringArray(data.services),
