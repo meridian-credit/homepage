@@ -4,12 +4,13 @@ export const ntsMonthUrl = (year: number, month: number) => `${NTS_SCHEDULE}&tax
 
 /* 국세청이 공식으로 게시한 달까지만 적는다. 게시되지 않은 달을 추측해 넣지 않는다.
    2026-09-27 확인: 10 · 11 · 12월 게시, 2027년 1월 미게시.
-   갱신은 사이트 주인이 한다. 남은 일정이 30일 밑으로 내려가면 content-audit 이
-   맨 앞에 경고하고, 주간 점검(.github/workflows/schedule-check.yml)이 실패로 알린다.
+   갱신은 사이트 주인이 관리자(admin.meridianco.kr)에서 한다. 이 배열의 남은 일정이 30일 밑으로 내려가면
+   content-audit 이 맨 앞에 경고하고, 주간 점검(.github/workflows/schedule-check.yml)이 실패로 알린다.
 
-   개발 서버(accounting.teamcredit.kr)는 이 배열이 아니라 관리자 앱이 고친 DB 를 읽는다
-   (src/lib/content/read.ts). 이 배열은 DB 가 없는 운영 · CI 의 값이고, DB 를 처음 만들 때 넣는 씨앗이다.
-   관리자에서 고친 일정은 여기로 돌아오지 않는다. */
+   서버(운영 www.meridianco.kr 는 2026-11-16 부터, 개발 accounting.teamcredit.kr)는 이 배열이 아니라 관리자 앱이 고친
+   DB 를 읽는다(src/lib/content/read.ts). 이 배열은 DB 가 없는 CI · 로컬의 값이고, DB 를 처음 만들 때 넣는 씨앗이다.
+   관리자에서 고친 일정은 여기로 돌아오지 않는다. 그래서 위의 두 점검은 이 배열만 본다. 운영에 실제로 보이는
+   일정이 얼마나 남았는지는 관리자 홈이 알린다. */
 export const scheduleReviewedAt = '2026-09-27';
 export const scheduleDates = [
   { what: '원천세 납부', when: '2026-10-12', period: '2026년 9월분' },

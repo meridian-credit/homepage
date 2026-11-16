@@ -6,7 +6,8 @@ import type { NextConfig } from "next";
    뿌리는 저장소 맨 위다.
 
    공개 사이트에 넣지 않은 까닭: 공개 쪽 layout(머리 · 바닥 · 스크롤)과 따로 놀아야 하고, /contract 가
-   같은 주소에서 남의 앱을 돌리므로 관리자 세션은 다른 호스트(accounting-admin.teamcredit.kr)에 둔다. */
+   같은 주소에서 남의 앱을 돌리므로 관리자 세션은 다른 호스트(운영 admin.meridianco.kr, 개발
+   accounting-admin.teamcredit.kr)에 둔다. */
 const root = path.resolve(__dirname, "..");
 const isDev = process.env.NODE_ENV === "development";
 

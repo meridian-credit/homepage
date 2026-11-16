@@ -105,3 +105,11 @@ Owner decisions the same day:
 - Both editors lose bold before a Korean particle (`**25%**로`). remark's `mdast-util-to-markdown` already handles it by writing the next character as a character reference (`**25%**&#xB85C;`). Milkdown overrides remark's `strong`/`emphasis` handlers and loses that; removing the override in `remarkStringifyOptionsCtx` fixes it.
 - The spike scripts are in `temp/wysiwyg-spike/` of the backend-database worktree, not in git.
 - The January 2027 schedule waits until NTS publishes it; the month was still empty on 2026-11-16. The weekly schedule check fails until then (it did at 05:38Z).
+2026-11-16 16:10 — The admin now runs in production at https://admin.meridianco.kr (owner's decision). A save there redraws www.meridianco.kr.
+- The dev admin stays for trials, with its own DB and accounts.
+- Login is open from anywhere (owner's choice over an office-IP limit). The account is a new non-`admin` username with a random 24-character password, kept in the operator's `credit-scripts/.env`. TOTP is still to come.
+- Backups follow the plan: a daily copy on the server for 30 days, and S3 Seoul (versioned, 90 days) through a put-only key.
+- The restore steps were rehearsed on dev and needed one fix. The DB files belong to root, so the copy runs inside a throwaway container.
+- The production images now carry `com.teamcredit.keep=true`, so the weekly host prune no longer deletes rollback images.
+- The weekly `schedule-check.yml` and content-audit's runway warning still read only the code arrays. Production no longer shows those, so the checks can fail while the admin shows a full schedule, or pass while it runs empty.
+- Setup details are in AGENTS.md → Deploy.

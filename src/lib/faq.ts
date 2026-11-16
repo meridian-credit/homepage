@@ -2,8 +2,8 @@
  * 컨택트 페이지 FAQ.
  * 문의 폼 앞에서 자주 막히는 지점만 골랐다. 답은 두세 문장 안에서 끝낸다.
  *
- * 개발 서버는 이 배열이 아니라 관리자 앱이 고친 DB 를 읽는다(getFaq, src/lib/content/read.ts).
- * 이 배열은 DB 가 없는 운영 · CI 의 값이고, DB 를 처음 만들 때 넣는 씨앗이다.
+ * 서버(운영은 2026-11-16 부터, 개발)는 이 배열이 아니라 관리자 앱이 고친 DB 를 읽는다(getFaq, src/lib/content/read.ts).
+ * 이 배열은 DB 가 없는 CI · 로컬의 값이고, DB 를 처음 만들 때 넣는 씨앗이다.
  */
 
 export interface FaqItem {

@@ -1,11 +1,11 @@
-/* 개발 서버(CONTENT_DB 가 있을 때)만: 서버가 뜨면 모든 쪽을 「다음 방문 때 DB 에서 다시 그리기」로 표시한다.
+/* 콘텐츠 DB 를 읽는 서버(운영 · 개발, CONTENT_DB 가 있을 때)만: 서버가 뜨면 모든 쪽을 「다음 방문 때 DB 에서 다시 그리기」로 표시한다.
  *
  * 쪽은 빌드 때의 DB 사본으로 미리 그려져 있다. 그 뒤 관리자에서 저장해 다시 그린 쪽은 컨테이너 안에만 있고,
  * 「다시 그리기」 표시는 메모리에만 있다. 그래서 이런 때 옛 내용이 나온다.
  * - 배포가 실패해 앞 이미지로 되돌리거나, .env 를 바꾸고 컨테이너를 다시 만들 때(빌드 때 사본으로 돌아간다)
  * - 저장 뒤 아직 아무도 열지 않은 쪽(/about 등)이 있는 채로 서버가 다시 뜰 때(표시가 사라진다)
  * revalidatePath 는 요청 안에서만 부를 수 있어서, 뜬 뒤 자기 자신의 /api/revalidate 를 부른다.
- * 운영(CONTENT_DB · REVALIDATE_SECRET 없음)에서는 아무것도 하지 않는다. */
+ * DB 가 없는 곳(CI · 로컬, CONTENT_DB · REVALIDATE_SECRET 없음)에서는 아무것도 하지 않는다. */
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   const secret = process.env.REVALIDATE_SECRET;

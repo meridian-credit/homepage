@@ -39,20 +39,21 @@ The variables:
 - `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, `NEXT_PUBLIC_NAVER_SITE_VERIFICATION`: search-console ownership meta tags.
   They are baked into the HTML at build time, so a new build host needs them too.
 - `VERCEL`: set by Vercel itself. Analytics and Speed Insights render only when it is `1`. No current host sets it.
-- `CONTENT_DB`: dev only. Path to the admin app's SQLite file. When set, the tax calendar and FAQ come from it
-  (read-only); when unset, from `src/lib/schedule.ts` / `src/lib/faq.ts`.
-- `REVALIDATE_SECRET`: dev only. Bearer secret for `POST /api/revalidate`, which the admin calls after a save. Unset
-  means the route answers 404.
+- `CONTENT_DB`: set on the servers (production and dev). Path to the admin app's SQLite file. When set, the tax
+  calendar and FAQ come from it (read-only); when unset (CI, local), from `src/lib/schedule.ts` / `src/lib/faq.ts`.
+- `REVALIDATE_SECRET`: set on the servers. Bearer secret for `POST /api/revalidate`, which the admin calls after a
+  save. Unset means the route answers 404.
 
-The admin app (`admin/`, dev only) reads its own set, from `admin.env` on the dev server (`admin.env.example` lists
-them):
+The admin app (`admin/`) reads its own set, from `admin.env` on each server (`admin.env.example` there lists them):
 
 - `CONTENT_DB`: the same SQLite file. The admin creates and migrates it.
-- `ADMIN_URL`: its public origin, `https://accounting-admin.teamcredit.kr`. Login callbacks and cookies use it.
+- `ADMIN_URL`: its public origin. That is `https://admin.meridianco.kr` in production and
+  `https://accounting-admin.teamcredit.kr` on dev. Login callbacks and cookies use it.
 - `BETTER_AUTH_SECRET`: signs login sessions. Changing it signs everyone out.
-- `REVALIDATE_SECRET`, `PUBLIC_SITE_INTERNAL_URL`: how it asks the public site to redraw (`http://accounting_dev:3000`
-  on the server).
-- `PUBLIC_SITE_URL`, `ADMIN_ENV_BAND`: the 「사이트 보기」 link and the banner at the top.
+- `REVALIDATE_SECRET`, `PUBLIC_SITE_INTERNAL_URL`: how it asks the public site to redraw (`http://accounting_prod:3000`
+  or `http://accounting_dev:3000` on the server).
+- `PUBLIC_SITE_URL`: the 「사이트 열기」 link.
+- `ADMIN_ENV_BAND`: the banner at the top. Dev only; production leaves it unset, so it shows no banner.
 
 Admin accounts are not env vars: there is no sign-up, so an operator creates them with `admin/scripts/user.mjs`
 (see the script header).

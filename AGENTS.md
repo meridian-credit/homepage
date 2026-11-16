@@ -62,7 +62,7 @@ Other browser QA scripts in `scripts/qa/` all expect a server on :3100:
 
 ## Architecture
 
-**Site data is code, except the tax calendar and FAQ on dev.**
+**Site data is code, except the tax calendar and FAQ, which the servers read from the admin's DB.**
 - `src/lib/data.ts` holds `services` (fields drive the services pages, home, and search), `members`, and `personas`.
 - `src/lib/constants.ts` holds `siteConfig` (name, URL, contacts) and `navMenu`. It also holds `serviceGroups`, the
   single source of the 4-group / 8-service taxonomy that menus, lists, and strips all read. `orderedServices`
@@ -71,8 +71,8 @@ Other browser QA scripts in `scripts/qa/` all expect a server on :3100:
   deliberately absent from it and from `sitemap.ts`. Both pages set `robots: { index: false }` in their own metadata,
   and `robots.ts` also disallows `/preview`. Keep these consistent.
 - The tax calendar and the FAQ are read only through `getSchedule()` / `getFaq()` in `src/lib/content/read.ts`.
-  - With `CONTENT_DB` set (the dev server), they read the admin app's SQLite file read-only.
-  - Without it (production, CI, local), they return the arrays in `src/lib/schedule.ts` / `src/lib/faq.ts`.
+  - With `CONTENT_DB` set (production since 2026-11-16, and dev), they read the admin app's SQLite file read-only.
+  - Without it (CI, local), they return the arrays in `src/lib/schedule.ts` / `src/lib/faq.ts`.
   - The arrays also seed a new DB. Edits made in the admin never flow back into them.
 - `src/lib/schedule.ts` holds NTS tax-calendar dates plus `scheduleReviewedAt`. D-day is computed at view time in
   Asia/Seoul; never store a D-day number.
@@ -81,6 +81,8 @@ Other browser QA scripts in `scripts/qa/` all expect a server on :3100:
   - `npm run audit:content` puts a warning first when under 30 days of dates remain.
     `.github/workflows/schedule-check.yml` runs the same check weekly and fails, as a reminder to refill the list.
     GitHub runs scheduled workflows only from the default branch (`main`).
+  - Both checks read only the arrays. Since production reads the DB, the schedule visitors see is filled in the
+    admin, and the admin home shows its real runway.
 
 **Blog.** Posts are `content/posts/*.mdx`, parsed by `src/lib/posts.ts` (gray-matter, next-mdx-remote, remark-gfm).
 The frontmatter schema and citation rules are in `docs/content-system.md`:
@@ -91,9 +93,12 @@ The frontmatter schema and citation rules are in `docs/content-system.md`:
   query, as the `<Suspense>` fallback. Only `BlogContentFromUrl` calls `useSearchParams`. A `null` fallback here once
   left the HTML without a single post and caused CLS of 0.6. `tests/e2e/blog-rendering.spec.ts` guards against that.
 
-**Admin app** (`admin/`) edits the tax calendar and FAQ. It runs only on dev for now; see `docs/plans/admin-backend/`.
-- It is a separate Next app in the same repo and `node_modules`, built with `next build admin` and served at
-  https://accounting-admin.teamcredit.kr. It imports public code through `@/` and its own through `@admin/`.
+**Admin app** (`admin/`) edits the tax calendar and FAQ; see `docs/plans/admin-backend/`.
+- It runs in two places, each with its own DB and accounts:
+  - Production: https://admin.meridianco.kr (since 2026-11-16). A save redraws www.meridianco.kr.
+  - Dev: https://accounting-admin.teamcredit.kr, kept for trials. A save redraws only the dev site.
+- It is a separate Next app in the same repo and `node_modules`, built with `next build admin`. It imports public
+  code through `@/` and its own through `@admin/`.
   - It is separate rather than a route group so the public layout stays untouched and `main` ships no admin
     surface.
   - The separate host also keeps the admin session away from `/contract`, which runs another app's JS on the site
@@ -274,26 +279,48 @@ Tests enforce three rules:
 
 ## Deploy
 
-- **Production: https://www.meridianco.kr serves `main` from `proxmox-ubuntu`** (moved off Vercel 2026-10-12, owner's
-  decision; the Vercel Git link had been broken since the repo transfer).
-  - Stack `/opt/stacks/accounting_prod`, container `accounting_prod`. The ubuntu crontab runs its `deploy.sh` every
-    minute (tag `# accounting-prod-deploy`). It works like dev's, with two differences:
+- **Production: https://www.meridianco.kr serves `main` from `proxmox-ubuntu`, and https://admin.meridianco.kr is its
+  admin.** Both were the owner's decisions: the move off Vercel on 2026-10-12 (the Vercel Git link had been broken
+  since the repo transfer), and the admin on 2026-11-16.
+  - Stack `/opt/stacks/accounting_prod`, containers `accounting_prod` and `accounting_prod_admin`. The ubuntu crontab
+    runs its `deploy.sh` every minute (tag `# accounting-prod-deploy`). It builds in dev's order (below), with one
+    addition:
     - It deploys a new `main` head only after that commit's `CI` run passed. It reads the result from the public
       Actions API without a token. A pass on the PR counts, so fast-forwarding `main` to a green PR head ships at
       once. A failed CI marks the SHA `failed`; after a green re-run, `rm failed && ./deploy.sh`.
-    - It has no content DB. The tax calendar and FAQ come from the code arrays; the admin stays on dev.
-  - Path: Cloudflare DNS-only (`www` CNAME and the apex, flattened) → `origin.teamcredit.kr` → its own site block in the
-    Caddy edge on `proxy-seoul-01` → inner NPM → `accounting_prod:3000`. The apex is redirected to www by
-    `next.config.ts`.
-  - The Caddy block adds what Vercel used to: HSTS `max-age=63072000`, and `public, max-age=0, must-revalidate` on
-    HTML in place of `next start`'s `s-maxage=31536000`. It adds no `X-Robots-Tag`.
-  - `.env` (mode 600) holds the SES key of the IAM user `meridian-homepage-contact-prod` (same send-only policy as
-    dev's), `CONTACT_FROM_EMAIL`, and the two search-console tokens, which `compose.yaml` passes as build args.
-    `CONTACT_TO_EMAIL` is unset, so inquiries go to `siteConfig.email`. `env.example` lists what is deliberately
-    absent.
-  - Rollback within the server: the previous image is kept. Rollback to Vercel: point `www` back to
-    `cname.vercel-dns.com` and the apex to `76.76.21.21`. The Vercel project still serves `db9e3a3` (2026-08-02),
-    whose form mails through Resend.
+    - That API allows 60 requests an hour per public IP, and other machines behind the same address share the quota.
+      When it runs out, the script exits without a log line until the reset (seen 2026-11-16). Before assuming the
+      cron is broken, run `curl -s https://api.github.com/rate_limit` on the server.
+  - Path: Cloudflare DNS-only (`www` and `admin` CNAMEs, the apex flattened) → `origin.teamcredit.kr` → site blocks in
+    the Caddy edge on `proxy-seoul-01` → inner NPM. Host 79 goes to `accounting_prod:3000` and host 86 to
+    `accounting_prod_admin:3000`. The apex is redirected to www by `next.config.ts`.
+  - The www block adds what Vercel used to: HSTS `max-age=63072000`, and `public, max-age=0, must-revalidate` on
+    HTML in place of `next start`'s `s-maxage=31536000`. It adds no `X-Robots-Tag`. The admin block adds the same
+    HSTS and `X-Robots-Tag: noindex`.
+  - `.env` (mode 600) holds:
+    - the SES key of the IAM user `meridian-homepage-contact-prod` (same send-only policy as dev's)
+    - `CONTACT_FROM_EMAIL`
+    - the two search-console tokens, which `compose.yaml` passes as build args
+    - `REVALIDATE_SECRET`
+  - `CONTACT_TO_EMAIL` is unset, so inquiries go to `siteConfig.email`.
+  - `admin.env` (mode 600) has no `ADMIN_ENV_BAND`, so the production admin shows no banner. `env.example` and
+    `admin.env.example` list both files.
+  - Accounts: `printf '%s' "$PW" | docker exec -i accounting_prod_admin node admin/scripts/user.mjs add <username>`.
+    The operator keeps the production login in `~/dev/credit-scripts/.env` (`MERIDIAN_ADMIN_*`).
+  - The content DB is `data/content.db`. It was seeded from the code arrays on 2026-11-16.
+  - `backup.sh` runs daily at 04:27 (tag `# accounting-prod-admin-backup`, log `backup.log`):
+    - It keeps a copy in `data/backups/` for 30 days.
+    - It puts another in S3 `meridian-homepage-content-backup/content/` (Seoul). The bucket is versioned and its
+      lifecycle keeps copies for 90 days.
+    - The server's key (IAM user `meridian-homepage-backup-prod`, in `backup.env`) may only `PutObject` there. It
+      cannot list, read or delete.
+  - Restore works as on dev (below), with `accounting_prod_admin` and `accounting_prod`.
+  - Rollback within the server: the previous image of each container is kept.
+    - The images carry the label `com.teamcredit.keep=true`. Without it the host's weekly
+      `docker image prune --filter until=336h` deletes a rollback image two weeks after a deploy, as it did on
+      2026-11-01.
+    - Rollback to Vercel: point `www` back to `cname.vercel-dns.com` and the apex to `76.76.21.21`. The Vercel
+      project still serves `db9e3a3` (2026-08-02), whose form mails through Resend and which has no admin.
   - Vercel Analytics and Speed Insights render only when `VERCEL=1`, so they are gone on this host.
 - **CI runs only on PRs and `main` pushes.** A `dev` push is checked only by the server's own build.
 - **Dev: https://accounting.teamcredit.kr serves the `dev` branch, and https://accounting-admin.teamcredit.kr its
@@ -316,9 +343,13 @@ Tests enforce three rules:
   - The content DB is `data/content.db`, mounted at `/data` in both containers. `data/` is mode 700, because the DB,
     its `build.db` snapshot and the backups also hold the login sessions and password hashes.
   - A daily copy goes to `data/backups/` and is kept 30 days (ubuntu crontab; failures go to `backup.log`).
-  - To restore, stop both containers, because the web one holds the file open too. Copy a backup over
-    `content.db`, delete `content.db-wal` and `content.db-shm`, then start the admin and then the web container.
-    The web container redraws itself on start.
+  - To restore (rehearsed here on 2026-11-16, 5 s down):
+    1. Stop both containers, because the web one holds the file open too.
+    2. Copy a backup over `content.db` and delete `content.db-wal` and `content.db-shm`. The files belong to root
+       (the containers write them), and the ubuntu user has no sudo, so do it inside a throwaway container:
+       `docker run --rm -v "$PWD/data:/data" --entrypoint sh accounting_admin:$DEPLOY_SHA -c 'cp /data/backups/<file> /data/content.db && rm -f /data/content.db-wal /data/content.db-shm'`.
+    3. Start the admin, then the web container. The web container redraws itself on start.
+  - The dev images carry no keep label yet, so their rollback images still go after two weeks.
   - The admin's settings are in `admin.env` (mode 600). `admin.env.example` lists them: `BETTER_AUTH_SECRET`, and
     the same `REVALIDATE_SECRET` as `.env`.
   - Accounts are managed with
