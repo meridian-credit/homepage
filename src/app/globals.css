@@ -5668,3 +5668,134 @@ footer .t-label-d {
    0.2s 선형이 motion 판 spring 의 뒤따름(시간 상수 약 0.23s)과 비슷해진다. */
 .scroll-progress { transform: scaleX(0); transition: transform .2s linear; }
 @media (prefers-reduced-motion: reduce) { .scroll-progress { transition: none; } }
+
+/* ─── 글 안의 도식 (components/blog/diagram.tsx) ───
+   블로그 도식에 한해 연한 바탕과 둥근 상자를 쓴다(2026-11-17 사용자 선택, DESIGN_SYSTEM 의 선 원칙 예외).
+   색은 딥블루와 액센트, 그 연한 단계만. 폰(600px 이하)에서는 일정을 세로 목록으로, 계산을 쌓아서 보인다. */
+.dg {
+  --dg-navy: var(--color-deep);
+  --dg-blue: var(--color-accent);
+  --dg-blue-soft: #EAF0FF;
+  --dg-blue-mid: #C9D7FF;
+  --dg-bg: #F4F7FC;
+  --dg-line: #E4EBF5;
+  --dg-tx2: #4A5677;
+  --dg-tx3: #6B7591;
+  margin: 2.5rem 0;
+  padding: 1.75rem;
+  background: var(--dg-bg);
+  border-radius: 16px;
+  color: var(--dg-navy);
+  font-size: 1rem;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+.prose .dg ol, .prose .dg ul { list-style: none; margin: 0; padding: 0; }
+.prose .dg li { margin: 0; font-size: inherit; line-height: inherit; color: inherit; }
+.dg-kind { font-size: 0.75rem; font-weight: 700; color: var(--dg-blue); letter-spacing: 0.06em; }
+.dg-title { font: 700 1.3rem/1.4 var(--font-display); letter-spacing: -0.02em; margin: 0.125rem 0 1.5rem; }
+.dg figcaption { font-size: 0.8rem; color: var(--dg-tx3); margin-top: 1.25rem; }
+
+/* 판단 흐름: 질문 상자, 갈래선, 결과 카드 */
+.dg-fc { display: grid; justify-items: center; text-align: center; }
+.dg-node { background: #fff; border: 2px solid var(--dg-navy); border-radius: 12px; padding: 0.75rem 1.1rem; font-weight: 700; max-width: 21rem; box-shadow: 0 2px 0 var(--dg-line); }
+.dg-node-tag { display: block; font-size: 0.7rem; color: var(--dg-blue); letter-spacing: 0.08em; }
+.dg-split { position: relative; width: calc((var(--n) - 1) / var(--n) * 100%); height: 44px; }
+.dg-split::before { content: ""; position: absolute; left: 50%; top: 0; height: 18px; border-left: 2px solid var(--dg-navy); }
+.dg-split::after { content: ""; position: absolute; inset: 18px 0 0; border: 2px solid var(--dg-navy); border-bottom: 0; border-radius: 10px 10px 0 0; }
+.prose .dg .dg-cols { display: grid; grid-template-columns: repeat(var(--n), 1fr); width: 100%; }
+.dg-cols > li { display: grid; justify-items: center; align-content: start; padding: 0 0.375rem; }
+.dg-yn { font-size: 0.75rem; font-weight: 800; padding: 0.125rem 0.75rem; border-radius: 999px; margin: 0.375rem 0 0.5rem; background: var(--dg-navy); color: #fff; }
+.dg-yn.no { background: #fff; color: var(--dg-tx2); border: 1.5px solid var(--dg-tx3); }
+.dg-out { border-radius: 12px; padding: 0.75rem 1rem; font-weight: 700; max-width: 16rem; background: #fff; border: 2px dashed var(--dg-tx3); }
+.dg-out small { display: block; font-weight: 500; font-size: 0.8rem; opacity: 0.85; }
+.dg-out.good { background: var(--dg-blue); border: 0; color: #fff; }
+.dg-out.pay { background: var(--dg-navy); border: 0; color: #fff; }
+
+/* 기준 구간: 색 띠 위에 이름, 아래에 시작값과 설명 */
+.prose .dg .dg-band-bar { display: grid; grid-template-columns: repeat(var(--n), 1fr); }
+.dg-band-bar > li { display: grid; grid-template-rows: 56px auto auto; align-content: start; }
+.dg-band-name { display: grid; place-items: center; text-align: center; font-weight: 700; color: #fff; background: var(--dg-blue); padding: 0 0.25rem; line-height: 1.25; }
+.dg-band-bar > li:first-child .dg-band-name { background: var(--dg-blue-mid); color: var(--dg-navy); border-radius: 10px 0 0 10px; }
+.dg-band-bar > li:last-child .dg-band-name { background: var(--dg-navy); border-radius: 0 10px 10px 0; }
+.dg-band-start { border-left: 2px solid var(--dg-navy); padding: 0.6rem 0.75rem 0 0.4rem; font: 700 0.95rem var(--font-display); font-variant-numeric: tabular-nums; }
+.dg-band-desc { padding: 0.5rem 0.75rem 0 0.4rem; font-size: 0.875rem; color: var(--dg-tx2); }
+
+/* 일정: 점 간격은 실제 날수에 비례 */
+.dg-rail { position: relative; height: 150px; margin: 0 0.5rem; }
+.dg-rail-line { position: absolute; left: 0; right: 0; top: 70px; height: 6px; background: var(--dg-line); border-radius: 3px; }
+.dg-window { position: absolute; top: 70px; height: 6px; background: var(--dg-blue); border-radius: 3px; }
+.dg-window span { position: absolute; top: 12px; left: 14px; font-size: 0.75rem; font-weight: 700; color: var(--dg-blue); white-space: nowrap; }
+.dg-ev { position: absolute; top: 0; width: 8rem; transform: translateX(-50%); text-align: center; display: grid; }
+.dg-ev.first { transform: none; text-align: left; }
+.dg-ev.last { transform: translateX(-100%); text-align: right; }
+.dg-ev time { font: 700 1rem/1.3 var(--font-display); font-variant-numeric: tabular-nums; }
+.dg-ev span { font-size: 0.8rem; color: var(--dg-tx2); line-height: 1.35; }
+.dg-ev::after { content: ""; position: absolute; top: 64px; left: calc(50% - 9px); width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 3px solid var(--dg-navy); box-sizing: border-box; }
+.dg-ev.first::after { left: -9px; }
+.dg-ev.last::after { left: auto; right: -9px; }
+.dg-ev.hot time { color: var(--dg-blue); }
+.dg-ev.hot::after { background: var(--dg-blue); border-color: var(--dg-blue); box-shadow: 0 0 0 6px var(--dg-blue-soft); }
+.dg-ev.below { top: 92px; }
+.dg-ev.below::after { top: -28px; }
+
+/* 계산: 금액만큼 막대 */
+.dg-wf { display: grid; grid-template-columns: minmax(9rem, 12rem) 1fr auto; gap: 0.6rem 0.9rem; align-items: center; font-variant-numeric: tabular-nums; }
+.dg-wf-row { display: contents; }
+.dg-wf-k { font-size: 0.9rem; color: var(--dg-tx2); }
+.dg-wf-row.base .dg-wf-k, .dg-wf-row.res .dg-wf-k { color: var(--dg-navy); font-weight: 700; }
+.dg-op { color: var(--dg-tx3); }
+.dg-wf-bar { position: relative; height: 26px; }
+.dg-wf-bar i { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--dg-navy); }
+.dg-wf-row.minus i { background: repeating-linear-gradient(135deg, var(--dg-blue-mid) 0 6px, #fff 6px 10px); border: 1.5px solid var(--dg-blue-mid); }
+.dg-wf-row.plus i { background: var(--dg-blue-mid); }
+.dg-wf-row.mid i { background: #7F8DB8; }
+.dg-wf-row.res i { background: var(--dg-blue); }
+.dg-wf-v { text-align: right; font-weight: 700; white-space: nowrap; }
+.dg-wf-v small { font-weight: 400; color: var(--dg-tx3); margin-left: 1px; }
+.dg-wf-row.res .dg-wf-v { color: var(--dg-blue); font: 800 1.3rem var(--font-display); }
+
+/* 비교: 카드 */
+.dg-cards { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 0.875rem; }
+.dg-card { background: #fff; border-radius: 12px; padding: 1.25rem; border: 1.5px solid var(--dg-line); }
+.dg-card.pick { border: 2px solid var(--dg-blue); }
+.dg-card-name { font: 700 1.1rem var(--font-display); }
+.dg-when { display: inline-block; margin-top: 0.375rem; font-size: 0.8rem; font-weight: 700; padding: 0.125rem 0.625rem; border-radius: 999px; background: var(--dg-bg); color: var(--dg-tx2); }
+.dg-card.pick .dg-when { background: var(--dg-blue-soft); color: var(--dg-blue); }
+.dg-card dl { margin: 1rem 0 0; display: grid; gap: 0.625rem; }
+.dg-card dt { font-size: 0.75rem; color: var(--dg-tx3); }
+.dg-card dd { margin: 0; font-weight: 600; }
+.dg-meter { display: flex; gap: 4px; margin-top: 4px; }
+.dg-meter i { width: 22px; height: 6px; border-radius: 3px; background: var(--dg-line); }
+.dg-meter i.on { background: var(--dg-navy); }
+.dg-card.pick .dg-meter i.on { background: var(--dg-blue); }
+
+/* 단계 */
+.prose .dg .dg-step-list { counter-reset: dgs; }
+.prose .dg .dg-step-list > li { counter-increment: dgs; position: relative; padding: 0 0 1.25rem 3rem; }
+.prose .dg .dg-step-list > li:last-child { padding-bottom: 0; }
+.dg-step-list > li::before { content: counter(dgs); position: absolute; left: 0; top: 0; width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 2px solid var(--dg-navy); color: var(--dg-navy); font: 700 14px/26px var(--font-display); text-align: center; box-sizing: border-box; }
+.dg-step-list > li:first-child::before { background: var(--dg-navy); color: #fff; }
+.dg-step-list > li:not(:last-child)::after { content: ""; position: absolute; left: 14px; top: 34px; bottom: 4px; border-left: 2px solid var(--dg-line); }
+.dg-step-list b { display: block; line-height: 30px; }
+.dg-step-list span { color: var(--dg-tx2); font-size: 0.9rem; }
+
+@media (max-width: 600px) {
+  .dg { padding: 1.25rem 1rem; border-radius: 12px; }
+  .dg-node, .dg-out { font-size: 0.85rem; padding: 0.5rem 0.625rem; }
+  .dg-cols > li { padding: 0 0.2rem; }
+  .prose .dg .dg-band-bar { grid-template-columns: 1fr; gap: 0.75rem; }
+  .dg-band-bar > li { grid-template-rows: auto; grid-template-columns: 7rem 1fr; }
+  .dg-band-name, .dg-band-bar > li:first-child .dg-band-name, .dg-band-bar > li:last-child .dg-band-name { grid-row: span 2; border-radius: 8px; padding: 0.5rem; }
+  .dg-band-start { border-left: 0; padding-top: 0; }
+  .dg-rail { height: auto; margin: 0; padding-left: 30px; }
+  .dg-rail-line { top: 6px; bottom: 6px; left: 8px; right: auto; width: 4px; height: auto; }
+  .dg-window { display: none; }
+  .dg-ev, .dg-ev.first, .dg-ev.last, .dg-ev.below { position: relative; left: auto !important; top: auto; transform: none; text-align: left; width: auto; padding-bottom: 1rem; }
+  .dg-ev::after, .dg-ev.first::after, .dg-ev.last::after, .dg-ev.below::after { left: -30px; right: auto; top: 3px; }
+  .dg-wf { display: block; }
+  .dg-wf-row { display: grid; grid-template-columns: 1fr auto; gap: 0.25rem 0.5rem; margin-bottom: 0.875rem; }
+  .dg-wf-bar { grid-column: 1 / -1; grid-row: 2; height: 12px; }
+  .dg-wf-row.res .dg-wf-v { font-size: 1.1rem; }
+  .dg-cards { grid-template-columns: 1fr; }
+}

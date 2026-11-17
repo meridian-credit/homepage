@@ -53,6 +53,29 @@ replaced the post checks of `npm run audit:content`:
   without alt text, a heading 1 in the body, raw HTML in the body, a 업무경험 post without a service, unpublished
   related posts, and a non-tax-facts post without sources.
 
+## Diagrams
+
+본문의 도식은 사진이 아니라 코드 블록으로 쓴다. 언어 자리에 종류를 적고, 블록 첫 줄에 제목을 쓴다. 사이트가 서버에서
+HTML 로 그린다(`src/lib/content/markdown.ts` 의 `remarkDiagrams` → `src/components/blog/diagram.tsx`). 글자가 HTML
+텍스트로 남아 검색엔진과 AI 가 읽는다.
+
+````
+```흐름
+중간예납, 내야 하나
+직전 사업연도에 법인세 산출세액이 있었나?
+- 아니오: 상반기 가결산으로 신고 | 올해 실적 기준
+- 예: 8월 31일까지 신고 납부 (납부)
+근거: 법인세법 제63조
+```
+````
+
+- 종류는 `흐름`, `구간`, `일정`, `계산`, `비교`, `단계`. 문법은 `src/lib/diagram.mjs` 와 `tests/unit/diagram.test.mjs`
+  (`npm run test:unit`). 언제 어떤 도식을 쓰는지는 글쓰기 스킬(`daily-tax-content` 의 `references/diagrams.md`)에 있다.
+- 제목을 ```` ```흐름 제목 ```` 처럼 언어 줄에 쓰지 않는다. Milkdown 은 코드 블록의 언어만 지키고 그 뒤 글자를 지운다.
+- 마지막 줄의 `근거: ...` 는 도식 아래 출처로 그린다.
+- `계산` 은 따라 계산해 보고 틀리면 그리지 않는다.
+- 그리지 못하는 블록은 사이트에 코드 그대로 나온다. 게시 전 검사(`publishIssues`)가 오류로 막는다.
+
 ## Authority priority
 
 - For rates, deadlines, filing duties, thresholds, forms, penalties, and calculation formulas, cite the closest primary authority first.

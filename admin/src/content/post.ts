@@ -11,6 +11,7 @@ import {
   type PostData,
   type PostSource,
 } from "@/lib/content/post-data";
+import { DIAGRAM_KINDS, parseDiagram } from "@/lib/diagram.mjs";
 import type { Change } from "./types";
 
 /* 블로그 글의 규칙 · 게시 전 검사 · 비교(docs/plans/admin-backend/blog.md §5). 편집 화면(브라우저)과 저장 액션(서버)이
@@ -128,10 +129,10 @@ export function draftIssues(post: PostData, ctx: PostContext): PostIssue[] {
 }
 
 /* 본문을 사이트와 같은 해석(remark + GFM)으로 읽어 링크 · 사진 · 제목 1 · HTML 을 센다. */
-type MdNode = { type: string; url?: string; alt?: string | null; depth?: number; value?: string; children?: MdNode[] };
+type MdNode = { type: string; url?: string; alt?: string | null; depth?: number; value?: string; lang?: string | null; meta?: string | null; children?: MdNode[] };
 const mdParser = unified().use(remarkParse).use(remarkGfm);
 export function bodyFacts(body: string) {
-  const facts = { badLinks: [] as string[], foreignImages: 0, images: [] as string[], noAlt: 0, h1: 0, html: 0, text: "" };
+  const facts = { badLinks: [] as string[], foreignImages: 0, images: [] as string[], noAlt: 0, h1: 0, html: 0, text: "", badDiagrams: [] as string[] };
   const walk = (node: MdNode) => {
     if (node.type === "link" && node.url !== undefined && !isSafeHref(node.url)) facts.badLinks.push(node.url);
     if (node.type === "image") {
@@ -141,6 +142,10 @@ export function bodyFacts(body: string) {
       if (!node.alt?.trim()) facts.noAlt++;
     }
     if (node.type === "heading" && node.depth === 1) facts.h1++;
+    if (node.type === "code" && node.lang && DIAGRAM_KINDS.includes(node.lang)) {
+      const r = parseDiagram(node.lang, node.value ?? "", node.meta);
+      if (!r.ok) facts.badDiagrams.push(`${node.lang}: ${r.error}`);
+    }
     /* 편집기는 빈 문단을 <br /> 로 적는다. 사이트에서는 그냥 빈 줄이 없어질 뿐이라 알리지 않는다. */
     if (node.type === "html" && !/^<br\s*\/?>$/i.test((node.value ?? "").trim())) facts.html++;
     node.children?.forEach(walk);
@@ -183,6 +188,8 @@ export function publishIssues(post: PostData, ctx: PostContext, knownUploads?: S
   }
   if (facts) {
     if (facts.badLinks.length) err("body", `본문의 링크 주소가 웹 주소가 아닙니다: ${facts.badLinks.slice(0, 3).join(", ")}`);
+    /* 틀린 도식은 사이트에 코드 그대로 나오고, 계산 도식은 검산이 틀린 경우다. 그대로 내보내지 않는다. */
+    if (facts.badDiagrams.length) err("body", `그리지 못하는 도식이 있습니다. ${facts.badDiagrams.slice(0, 2).join(" / ")}`);
     if (facts.foreignImages) err("body", `본문에 여기서 올리지 않은 사진이 ${facts.foreignImages}장 있습니다. 사이트에 나오지 않으니 사진 넣기로 다시 올려 주세요.`);
     if (knownUploads) {
       const missing = facts.images.filter((n) => !knownUploads.has(n)).length;

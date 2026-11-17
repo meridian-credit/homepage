@@ -3,6 +3,7 @@ import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { getUploadSizes } from "@/lib/content/read";
 import { isSafeHref, markdownToHast } from "@/lib/content/markdown";
 import { uploadName, uploadsIn } from "@/lib/content/post-data";
+import Diagram from "@/components/blog/diagram";
 
 /* 블로그 본문(GFM Markdown)을 그린다. 2026-11-16 에 MDX(next-mdx-remote)에서 바꿨다.
  * - 글은 관리자가 DB 에 쓴다. MDX 는 본문의 { } 를 JS 로 실행하므로, 관리자 계정을 빼앗기면 공개 서버에서 코드가
@@ -30,6 +31,8 @@ export default function PostBody({ source }: { source: string }) {
       // eslint-disable-next-line @next/next/no-img-element
       return <img src={`/uploads/${name}`} alt={alt ?? ""} title={title} width={size.width} height={size.height} loading="lazy" decoding="async" />;
     },
+    /* 도식 코드 블록(markdown.ts 의 remarkDiagrams 가 만든 요소) */
+    ...({ "x-diagram": ({ kind, meta, body }: { kind: string; meta: string; body: string }) => <Diagram kind={kind} meta={meta} body={body} /> } as Partial<Components>),
     /* 넓은 표는 표만 옆으로 밀리게 감싼다. 문서 전체가 가로로 늘지 않게. */
     table: (props) => (
       <div className="table-scroll">
