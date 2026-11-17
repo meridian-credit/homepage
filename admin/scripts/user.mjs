@@ -5,12 +5,13 @@
      docker exec accounting_admin node admin/scripts/user.mjs list
    - 비밀번호는 표준 입력으로만 받는다. 명령줄 인자는 ps 와 셸 기록에 남는다.
    - 비밀번호를 바꾸거나 계정을 지우면 그 계정의 로그인 세션도 모두 지운다.
-   - 규칙(아이디 3–30자 영문 · 숫자 · _ · ., 비밀번호 12–128자)은 admin/src/lib/auth.ts 와 같아야 한다.
+   - 아이디와 비밀번호 규칙은 옆의 account-rules.mjs 에 있고, 앱(admin/src/lib/auth.ts)도 같은 파일을 읽는다.
    필요한 환경 변수: CONTENT_DB, BETTER_AUTH_SECRET (관리자 컨테이너에는 이미 있다). */
 import fs from "node:fs";
 import Database from "better-sqlite3";
 import { betterAuth } from "better-auth";
 import { username as usernamePlugin } from "better-auth/plugins";
+import { PASSWORD, USERNAME, isValidPassword, isValidUsername } from "./account-rules.mjs";
 
 const [command, rawName] = process.argv.slice(2);
 const fail = (message) => {
@@ -25,8 +26,8 @@ const auth = betterAuth({
   baseURL: process.env.ADMIN_URL ?? "http://localhost",
   secret: process.env.BETTER_AUTH_SECRET,
   database: new Database(process.env.CONTENT_DB, { fileMustExist: true }),
-  emailAndPassword: { enabled: true, autoSignIn: false, minPasswordLength: 12, maxPasswordLength: 128 },
-  plugins: [usernamePlugin()],
+  emailAndPassword: { enabled: true, autoSignIn: false, minPasswordLength: PASSWORD.min, maxPasswordLength: PASSWORD.max },
+  plugins: [usernamePlugin({ minUsernameLength: USERNAME.min, maxUsernameLength: USERNAME.max })],
 });
 const ctx = await auth.$context;
 
@@ -39,15 +40,13 @@ if (command === "list") {
 
 if (!rawName) fail("아이디를 적어 주세요.");
 const name = rawName.toLowerCase();
-/* 점은 가운데에만, 연달아 쓰지 않는다 — 아이디로 만드는 자리 이메일(<아이디>@users.invalid)이 이메일 검사를 통과해야 한다. */
-if (name.length < 3 || name.length > 30 || !/^[a-z0-9_]+(\.[a-z0-9_]+)*$/.test(name))
-  fail("아이디는 3–30자의 영문 · 숫자 · _ 로 적어 주세요(. 은 가운데에만).");
+if (!isValidUsername(name)) fail(`아이디는 ${USERNAME.min}–${USERNAME.max}자의 영문, 숫자, _ 로 적어 주세요(. 은 가운데에만).`);
 const findUser = () => ctx.adapter.findOne({ model: "user", where: [{ field: "username", value: name }] });
 
 const readPassword = () => {
   if (process.stdin.isTTY) fail("비밀번호는 파이프로 넘겨 주세요: printf '%s' \"$PW\" | docker exec -i ...");
   const password = fs.readFileSync(0, "utf8").replace(/\r?\n$/, "");
-  if (password.length < 12 || password.length > 128) fail("비밀번호는 12–128자여야 합니다.");
+  if (!isValidPassword(password)) fail(`비밀번호는 ${PASSWORD.min}–${PASSWORD.max}자여야 합니다.`);
   return password;
 };
 

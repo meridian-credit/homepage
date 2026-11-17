@@ -69,6 +69,9 @@ jobs:
       - name: Audit content metadata
         run: npm run audit:content
 
+      - name: Rule checks (AGENTS.md, Corrections become checks)
+        run: npm run check:rules
+
       - name: Lint
         run: npm run lint
 
