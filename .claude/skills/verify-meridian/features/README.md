@@ -22,7 +22,7 @@
 | 문의 보내기 | `contact.md` | `verify.mjs contact <label>` |
 | 사이트 검색 | `site-search.md` | `verify.mjs search <label>` |
 | 세무 일정 | `tax-calendar.md` | `verify.mjs schedule <label>` |
-| 블로그 목록과 글 | `blog.md` | 아직 구동해 보지 않았다(글이 있는 DB 필요) |
+| 블로그 목록과 글 | `blog.md` | `verify.mjs blog <label>` (글이 있는 빌드 필요) |
 
 ## 개선 기록
 
@@ -32,4 +32,5 @@
 |---|---|---|---|
 | 2026-11-17 | 검색창이 데스크톱과 모바일에 하나씩 있어 이름만으로 찾으면 실패 | `search` 여정이 `.first()` 를 쓴다 | `search` 통과 |
 | 2026-11-17 | 링크를 `count()` 로 바로 세면 그리기 전이라 0 | 여정이 `waitFor` 뒤에 읽는다 | `schedule` 통과 |
+| 2026-11-17 | 파일 복사한 DB 에 글이 없었다(WAL 누락) | `blog.md` 에 SQLite backup 으로 복사하는 명령 | 백업본에서 글 1개 확인, `blog` 통과 |
 | 2026-11-17 | 지도가 「가장 문의하기」, 서비스 페이지 초안, e2e DB 의 글을 잘못 적었다 | 실제로 찍어 본 값으로 고침, 블로그는 미구동 표시 | 탐침 실행 결과 |

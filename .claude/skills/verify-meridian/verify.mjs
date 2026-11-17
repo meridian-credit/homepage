@@ -4,6 +4,7 @@
      node .claude/skills/verify-meridian/verify.mjs contact <label>  /contact 문의 흐름을 실제 경로로 구동, 증거 저장
      node .claude/skills/verify-meridian/verify.mjs search <label>   머리말 검색 열기, 결과, 숨김 페이지, 키보드 이동
      node .claude/skills/verify-meridian/verify.mjs schedule <label> 머리말 일정 큐브와 일정이 다 지난 뒤의 포털 팝업
+     node .claude/skills/verify-meridian/verify.mjs blog <label>     블로그 목록(JS 유무 같음)과 첫 글 (CONTENT_DB 빌드 필요)
      node .claude/skills/verify-meridian/verify.mjs stop             start 가 띄운 서버만 끈다 */
 import { spawn, execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, openSync, readFileSync, rmSync, statSync, writeFileSync, readdirSync } from "node:fs";
@@ -209,9 +210,37 @@ const schedule = () =>
     return { cubeText, expectedFirst: scheduleDates[0].what, popupHref, expectedHref, ok: cubeText.includes(scheduleDates[0].what) && popupHref === expectedHref };
   });
 
-const commands = { start, doctor, stop, contact, search, schedule };
+/* 블로그. 글은 CONTENT_DB 로 빌드해야 생긴다(SKILL.md Launch). 글이 없는 빌드면 "전제 없음"으로 실패한다. 통과로 적지 않는다. */
+const blog = () =>
+  journey("blog", async (context, out) => {
+    const slugs = (page) =>
+      page.$$eval('a[href^="/blog/"]', (links) => [...new Set(links.map((a) => a.getAttribute("href")))].filter((h) => /^\/blog\/[a-z0-9-]+$/.test(h)).sort());
+    const browser = context.browser();
+    const noJs = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 1440, height: 900 } });
+    const staticPage = await noJs.newPage();
+    await staticPage.goto(`${BASE}/blog`);
+    const withoutJs = await slugs(staticPage);
+    await noJs.close();
+    if (!withoutJs.length) return { ok: false, reason: "전제 없음: 공개 글이 없다. CONTENT_DB 로 다시 빌드한다." };
+    const page = await context.newPage();
+    await page.goto(`${BASE}/blog`);
+    await page.waitForLoadState("networkidle");
+    const withJs = await slugs(page);
+    await page.screenshot({ path: path.join(out, "1-list.png") });
+    await page.locator(`a[href="${withJs[0]}"]`).first().click();
+    await page.waitForURL(`**${withJs[0]}`);
+    const article = page.locator("article[data-published-at]");
+    await article.waitFor();
+    const publishedAt = await article.getAttribute("data-published-at");
+    const title = (await page.getByRole("heading", { level: 1 }).first().innerText()).trim();
+    await page.screenshot({ path: path.join(out, "2-post.png") });
+    const sameList = JSON.stringify(withoutJs) === JSON.stringify(withJs);
+    return { withoutJs, withJs, sameList, opened: withJs[0], publishedAt, title, ok: sameList && Boolean(publishedAt) && title.length > 0 };
+  });
+
+const commands = { start, doctor, stop, contact, search, schedule, blog };
 if (!commands[cmd]) {
-  console.error("쓰는 법: verify.mjs start | doctor | contact|search|schedule [label] | stop");
+  console.error("쓰는 법: verify.mjs start | doctor | contact|search|schedule|blog [label] | stop");
   process.exit(2);
 }
 await commands[cmd]();

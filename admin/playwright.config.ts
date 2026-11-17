@@ -15,7 +15,9 @@ export default defineConfig({
   use: { ...devices["Desktop Chrome"], trace: "retain-on-failure" },
   webServer: [
     {
-      command: `rm -rf "${DIR}" && mkdir -p "${DIR}" && npx next start admin -p 3310`,
+      /* 폴더 정리는 node 로 한다. Windows 에서는 이 명령을 cmd.exe 가 돌리는데, cmd 의 mkdir 은 -p 를 폴더 이름으로 받아
+         저장소 루트에 "-p" 폴더를 만들고 두 번째 실행부터 실패한다. */
+      command: `node -e "const fs=require('fs');fs.rmSync(process.argv[1],{recursive:true,force:true});fs.mkdirSync(process.argv[1],{recursive:true})" "${DIR}" && npx next start admin -p 3310`,
       cwd: "..",
       url: `${ADMIN}/api/health`,
       env: ENV,

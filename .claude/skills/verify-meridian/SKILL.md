@@ -38,7 +38,8 @@ DB 와 계정을 만든 채로 :3310 과 :3210 을 띄운다(`admin/tests/e2e-en
 - **문의 흐름(도구에 들어 있음):** `verify.mjs contact <label>`. 실제 `/api/contact` 를 거친다. 기대 결과는 500,
   「메일 전송 설정이 완료되지 않았습니다」 알림과 직접 연락처, 쓰던 내용 보존. 성공 화면은 메일을 보내야 하므로
   가짜 SES 를 쓰는 `tests/e2e/contact-route.spec.ts` 가 맡는다.
-- **검색:** `verify.mjs search <label>`. **세무 일정:** `verify.mjs schedule <label>`.
+- **검색:** `verify.mjs search <label>`. **세무 일정:** `verify.mjs schedule <label>`. **블로그:** `verify.mjs blog <label>`
+  (글이 있는 빌드가 필요하다. 만드는 법은 `features/blog.md`).
 - **그 밖의 화면:** 기능 지도 `features/` 의 각 파일에 있는 선택자로 Playwright 를 직접 짠다. 접근 가능한 이름
   (`getByRole`, `getByLabel`)을 먼저 쓰고, 좌표와 탭 순서는 쓰지 않는다.
 - **레이아웃:** 눈대중이 아니라 측정값. `BASE=http://localhost:3100 OUT=artifacts/verify/<label>/measure node scripts/qa/measure.mjs`
