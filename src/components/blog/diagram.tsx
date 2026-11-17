@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { Fragment, type CSSProperties } from "react";
 import { parseDiagram } from "@/lib/diagram.mjs";
 
 type Parsed = Extract<ReturnType<typeof parseDiagram>, { ok: true }>["diagram"];
@@ -28,8 +28,9 @@ export default function Diagram({ kind, meta, body }: { kind: string; meta: stri
   );
 }
 
-const KIND_CLASS = { 흐름: "flow", 구간: "bands", 일정: "time", 계산: "calc", 비교: "cmp", 단계: "steps" } as const;
-const KIND_LABEL = { 흐름: "판단 흐름", 구간: "기준 구간", 일정: "일정", 계산: "계산", 비교: "비교", 단계: "단계" } as const;
+// 종류를 더하면 아래 두 표에 빠진 칸이 타입 오류로 드러난다.
+const KIND_CLASS: Record<Parsed["kind"], string> = { 흐름: "flow", 구간: "bands", 일정: "time", 계산: "calc", 비교: "cmp", 단계: "steps", 구성: "map" };
+const KIND_LABEL: Record<Parsed["kind"], string> = { 흐름: "판단 흐름", 구간: "기준 구간", 일정: "일정", 계산: "계산", 비교: "비교", 단계: "단계", 구성: "구성" };
 
 function DiagramBody({ d }: { d: Parsed }) {
   switch (d.kind) {
@@ -135,6 +136,34 @@ function DiagramBody({ d }: { d: Parsed }) {
           ))}
         </ol>
       );
+
+    case "구성":
+      return (
+        <ol className="dg-rows">
+          {d.rows.map((r, i) => (
+            <li className="dg-row" key={i}>
+              {r.boxes.map((b, j) => (
+                <Fragment key={j}>
+                  {j > 0 && (
+                    <span className="dg-arrow">
+                      {r.labels[j - 1] && <small>{r.labels[j - 1]}</small>}
+                      <i aria-hidden="true" />
+                      <span className="sr-only">→</span>
+                    </span>
+                  )}
+                  <span className={b.pick ? "dg-box pick" : "dg-box"}>
+                    {b.name}
+                    {b.note && <small>{b.note}</small>}
+                  </span>
+                </Fragment>
+              ))}
+            </li>
+          ))}
+        </ol>
+      );
+
+    default:
+      return d satisfies never;
   }
 }
 

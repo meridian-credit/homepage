@@ -1,7 +1,7 @@
 // 블로그 글 안의 도식 블록(```흐름 제목 ... ```)을 읽는다. 사이트(src/lib/content/markdown.ts)와 관리자 게시 전
 // 검사(admin/src/content/post.ts)가 같이 쓰고, node --test 로 바로 돌도록 .mjs 로 둔다. 문법은 daily-tax-content 스킬의 references/diagrams.md 와 같다.
 
-export const DIAGRAM_KINDS = ["흐름", "구간", "일정", "계산", "비교", "단계"];
+export const DIAGRAM_KINDS = ["흐름", "구간", "일정", "계산", "비교", "단계", "구성"];
 
 /**
  * @typedef {{ answer: string, node: FlowNode }} FlowBranch
@@ -13,12 +13,15 @@ export const DIAGRAM_KINDS = ["흐름", "구간", "일정", "계산", "비교", 
  * @typedef {{ op: string, label: string, amount: number, left: number, width: number, tone: "base" | "minus" | "plus" | "mid" | "res" }} CalcRow
  * @typedef {{ name: string, pick: boolean, when?: string, rows: { label: string, value: string, level?: number }[] }} CompareCard
  * @typedef {{ title: string, desc?: string }} Step
+ * @typedef {{ name: string, note?: string, pick: boolean }} Box
+ * @typedef {{ boxes: Box[], labels: string[] }} BoxRow
  * @typedef {{ kind: "흐름", root: FlowQuestion }
  *   | { kind: "구간", bands: Band[] }
  *   | { kind: "일정", points: TimePoint[], windows: TimeWindow[] }
  *   | { kind: "계산", rows: CalcRow[] }
  *   | { kind: "비교", cards: CompareCard[] }
- *   | { kind: "단계", steps: Step[] }} DiagramBody
+ *   | { kind: "단계", steps: Step[] }
+ *   | { kind: "구성", rows: BoxRow[] }} DiagramBody
  * @typedef {DiagramBody & { title: string, source?: string }} Diagram
  */
 
@@ -228,5 +231,32 @@ const PARSERS = {
       return { title, desc };
     });
     return { kind: "단계", steps };
+  },
+
+  // 정해진 모양이 없는 그림(관계, 돈의 흐름)을 상자와 화살표로 조립한다. 한 줄이 가로 한 줄이다.
+  구성(lines) {
+    need(lines.length >= 1 && lines.length <= 6, "줄은 한 개에서 여섯 개");
+    const rows = lines.map(l => {
+      const parts = l.trim().split(/\s*(?:→|->)\s*/);
+      /** @type {BoxRow} */
+      const row = { boxes: [], labels: [] };
+      let label = null;
+      for (const p of parts) {
+        const m = p.match(/^\[([^\]|]+?)(?:\s*\|\s*([^\]]+?))?\s*\](\*)?$/);
+        if (m) {
+          if (row.boxes.length) row.labels.push(label ?? "");
+          row.boxes.push({ name: m[1].trim(), note: m[2]?.trim() || undefined, pick: !!m[3] });
+          label = null;
+        } else {
+          need(row.boxes.length > 0 && label === null && !!p, `"[상자] → 설명 → [상자]" 형식이 아니다: "${l.trim()}"`);
+          label = p;
+        }
+      }
+      need(label === null && row.boxes.length >= 2, `줄은 상자로 시작하고 상자로 끝난다: "${l.trim()}"`);
+      need(row.boxes.length <= 3, `한 줄에 상자는 세 개까지: "${l.trim()}"`);
+      return row;
+    });
+    need(rows.flatMap(r => r.boxes).filter(b => b.pick).length <= 1, "강조(*)는 한 도식에 하나");
+    return { kind: "구성", rows };
   },
 };
