@@ -36,7 +36,8 @@ There are no default source links any more: a post shows only the sources its au
 ## Editorial rules
 
 - Turn on 「세율 · 기한 · 기준금액 · 법 개정을 다룹니다」 for any post that mentions rates, dates, filing deadlines,
-  thresholds, or law changes. It then needs at least one source and a 검토 기준일 to publish.
+  thresholds, or law changes. It then needs a 검토 기준일 to publish, and a missing source gets a stronger warning.
+  Sources never block publishing (owner decision 2026-11-18), but such a post should still cite one.
 - Use 검토 기준일 on anything seasonal or law-change sensitive. Don't press 「오늘 검토함」 without actually re-reviewing
   the post.
 - Use 관련 글 when there is a specific follow-up article that should outrank generic same-category posts.
@@ -47,11 +48,11 @@ There are no default source links any more: a post shows only the sources its au
 The publish check (`publishIssues` in `admin/src/content/post.ts`) runs in the browser and again on the server. It
 replaced the post checks of `npm run audit:content`:
 - Errors block publishing: empty title / slug / category / summary / body, a slug in use, invalid or future dates, a
-  tax-facts post without sources or 검토 기준일, an incomplete source row, a body link that is not http(s) / `/` / `#`,
+  tax-facts post without 검토 기준일, an incomplete source row, a body link that is not http(s) / `/` / `#`,
   a body image that is not an uploaded one or no longer exists.
 - Warnings need a confirmation: summary outside 50–160 chars, 검토 기준일 older than 120 days, no keywords, images
   without alt text, a heading 1 in the body, raw HTML in the body, a 업무경험 post without a service, unpublished
-  related posts, and a non-tax-facts post without sources.
+  related posts, and a post without sources.
 
 ## Authority priority
 

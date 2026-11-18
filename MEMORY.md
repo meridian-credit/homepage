@@ -123,3 +123,7 @@ Owner decisions the same day:
 - Rejected for now: scheduled publishing, roles (one account), duplicate-post, slug change while published (locked instead of a redirect table), a raw Markdown pane, co-editing.
 - Rolling the public site back to a pre-blog image makes every published post 404. Once posts exist, fix forward instead.
 - Open owner questions: roles, whether 「세율 · 기한」 posts without sources should block or warn (block now), retiring schedule-check.yml.
+2026-11-18 15:29 — Owner answers on the blog admin's open questions:
+- No roles. Assume one admin account; whoever is signed in may publish.
+- A post without sources is never blocked, only warned. With 「세율 · 기한 …을 다룹니다」 on, the warning is stronger and a 검토 기준일 is still required (one click on [오늘 검토함]). The check is plain code (`publishIssues`), not an LLM: it checks that fields are filled, not whether a source supports the text.
+- `schedule-check.yml` stays for now, knowing it reads only the code arrays and not the schedule production shows from the admin DB.

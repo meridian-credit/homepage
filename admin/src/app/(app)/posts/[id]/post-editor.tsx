@@ -547,7 +547,7 @@ export default function PostEditor({
                 <input type="checkbox" checked={s.taxFacts} onChange={(e) => set({ taxFacts: e.target.checked })} />
                 <span>
                   <strong>세율 · 기한 · 기준금액 · 법 개정을 다룹니다</strong>
-                  <span className="hint">켜 두면 근거 자료와 검토 기준일이 있어야 게시됩니다.</span>
+                  <span className="hint">켜 두면 검토 기준일이 있어야 게시됩니다. 근거 자료가 없으면 게시할 때 한 번 더 묻습니다.</span>
                 </span>
               </label>
 

@@ -28,7 +28,8 @@ export type PostData = {
   services: string[];
   /* 표지 사진. /uploads/<이름> 또는 빈 문자열. */
   cover: string;
-  /* 세율 · 기한 · 기준금액 · 법 개정을 다루는 글. 켜져 있으면 근거 자료와 검토 기준일이 있어야 게시된다. */
+  /* 세율 · 기한 · 기준금액 · 법 개정을 다루는 글. 켜져 있으면 검토 기준일이 있어야 게시되고, 근거 자료가 없으면
+     더 분명한 경고가 나온다(근거 자료는 막지 않는다 — 주인 결정 2026-11-18). */
   taxFacts: boolean;
   /* 본문 GFM Markdown. */
   body: string;

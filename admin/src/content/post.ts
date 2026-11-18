@@ -170,10 +170,16 @@ export function publishIssues(post: PostData, ctx: PostContext, knownUploads?: S
   post.sources.forEach((s, i) => {
     if (sourceFilled(s) && (!s.label.trim() || !s.url.trim())) err("sources", `근거 자료 ${i + 1}번째 줄에 이름과 주소를 모두 적어 주세요.`, i);
   });
-  if (post.taxFacts) {
-    if (!sources.length) err("sources", "세율 · 기한을 다루는 글은 근거 자료가 하나 이상 있어야 합니다. 법령을 먼저 적어 주세요.");
-    if (!post.lastChecked.trim()) err("lastChecked", "세율 · 기한을 다루는 글은 검토 기준일이 있어야 합니다. 내용을 확인한 날을 적어 주세요.");
-  } else if (!sources.length) warn("sources", "근거 자료가 없습니다. 세율 · 기한을 다루지 않는 글이면 그대로 게시해도 됩니다.");
+  /* 근거 자료는 없어도 게시한다(주인 결정 2026-11-18). 세율 · 기한을 다루는 글이면 경고를 더 분명히 한다. */
+  if (!sources.length)
+    warn(
+      "sources",
+      post.taxFacts
+        ? "세율 · 기한을 다루는 글인데 근거 자료가 없습니다. 법령이나 국세청 안내를 하나라도 적어 두면 읽는 사람이 확인할 수 있습니다."
+        : "근거 자료가 없습니다. 세율 · 기한을 다루지 않는 글이면 그대로 게시해도 됩니다."
+    );
+  if (post.taxFacts && !post.lastChecked.trim())
+    err("lastChecked", "세율 · 기한을 다루는 글은 검토 기준일이 있어야 합니다. 내용을 확인한 날을 적어 주세요([오늘 검토함]).");
 
   let facts: ReturnType<typeof bodyFacts> | null = null;
   try {

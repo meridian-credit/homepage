@@ -101,8 +101,9 @@ the fields and citation rules are in `docs/content-system.md`.
   site really redrew.
 - `/api/search` is `force-static` and has no module cache, so a redraw rebuilds it. `scripts/fonts/subset.mjs`
   reads published posts, FAQ and schedule text from `CONTENT_DB` when set.
-- Any post stating rates, deadlines, thresholds, or law changes needs sources, primary authority first. The admin
-  enforces it when 「세율 · 기한 …을 다룹니다」 is on.
+- Any post stating rates, deadlines, thresholds, or law changes should cite sources, primary authority first. The
+  admin only warns when they are missing (owner decision 2026-11-18); with 「세율 · 기한 …을 다룹니다」 on, it
+  requires a 검토 기준일.
 - `services: [slug]` attaches a 업무경험 post to that service's detail page.
 - Related posts rank by `relatedSlugs`, then category, then keyword overlap.
 - `/blog` ships its first page of posts in the static HTML. `blog/page.tsx` renders the same `BlogContent`, without a

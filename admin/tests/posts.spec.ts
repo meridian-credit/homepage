@@ -171,6 +171,22 @@ test("게시 전 검사가 빈 요약을 막고 그 칸으로 간다", async ({ 
   expect(query<{ n: number }>(`SELECT count(*) AS n FROM post_public`).n).toBe(0);
 });
 
+test("세율 · 기한 글이라도 근거 자료가 없으면 막지 않고 경고만 한다", async ({ page }) => {
+  /* 주인 결정 2026-11-18. 검토 기준일은 그대로 막는다. */
+  await signIn(page);
+  await openPost(page);
+  await page.getByRole("button", { name: "1번째 근거 지우기" }).click();
+  await page.locator("#post-publish").click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("list", { name: "확인할 것" })).toContainText("세율 · 기한을 다루는 글인데 근거 자료가 없습니다");
+  await expect(dialog.getByRole("list", { name: "고칠 곳" })).toHaveCount(0);
+  await expect(page.locator("#post-publish-confirm")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#post-publish-confirm")).toBeHidden();
+  await saveBar(page).getByRole("button", { name: "변경 취소" }).click();
+  await expect(page.getByLabel("1번째 근거 이름")).toHaveValue("법인세법 제55조");
+});
+
 test("게시하면 블로그 · 글 쪽 · 홈 · 검색 · sitemap · llms.txt 에 나오고, 굵은 글씨 뒤 조사도 굵게 나온다", async ({ page }) => {
   await signIn(page);
   await openPost(page);
