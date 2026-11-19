@@ -3,6 +3,7 @@ import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { APIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { username } from "better-auth/plugins";
+import { PASSWORD, USERNAME } from "../../scripts/account-rules.mjs";
 import { getDb } from "./db";
 
 /* 관리자 로그인. 아이디 · 비밀번호만 받는다(주인 결정 2026-10-12, Google 로그인 대신).
@@ -18,14 +19,14 @@ import { getDb } from "./db";
    라우트를 읽는 순간 DB 를 열려다 멈춘다.
    설정을 따로 내보내는 것은 앱이 뜰 때 로그인 표를 먼저 만들기 위해서다(instrumentation.ts). 인스턴스를
    먼저 만들면 Better Auth 가 표가 없다고 오류를 한 번 찍는다.
-   비밀번호 · 아이디 규칙은 admin/scripts/user.mjs 에도 같은 값이 있다. 바꿀 때 같이 바꾼다. */
+   비밀번호, 아이디 규칙은 admin/scripts/account-rules.mjs 한 곳에 있고 user.mjs 도 그것을 읽는다. */
 export function authOptions() {
   return {
     appName: "메리디안 관리자",
     baseURL: process.env.ADMIN_URL,
     secret: process.env.BETTER_AUTH_SECRET,
     database: getDb(),
-    emailAndPassword: { enabled: true, disableSignUp: true, minPasswordLength: 12, maxPasswordLength: 128 },
+    emailAndPassword: { enabled: true, disableSignUp: true, minPasswordLength: PASSWORD.min, maxPasswordLength: PASSWORD.max },
     /* 로그인 유지 30일(주인 결정 2026-10-12, 2단계 인증 없이). 한 달에 한 번쯤 들어와도 다시 로그인하지 않게.
        하루에 한 번 이상 쓰면 그날부터 다시 30일로 늘어난다(updateAge). 서버에서 비밀번호를 바꾸거나 계정을 지우면
        user.mjs 가 그 사람의 세션을 지우므로, 기간이 길어도 바로 끊을 수 있다. */
@@ -47,7 +48,15 @@ export function authOptions() {
         },
       },
     },
-    plugins: [username(), nextCookies()],
+    /* 로그인 때 검사기는 소문자로 바꾸기 전의 입력을 받는다. 대문자로 쳐도 같은 아이디로 들어오게 소문자로 맞춰 본다. */
+    plugins: [
+      username({
+        minUsernameLength: USERNAME.min,
+        maxUsernameLength: USERNAME.max,
+        usernameValidator: (name) => USERNAME.pattern.test(name.toLowerCase()),
+      }),
+      nextCookies(),
+    ],
   } satisfies BetterAuthOptions;
 }
 

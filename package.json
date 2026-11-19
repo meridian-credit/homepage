@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "audit:content": "node scripts/content-audit.mjs",
+    "check:rules": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-rules.mjs",
     "test:e2e": "playwright test",
     "qa:capture": "node scripts/qa/capture.mjs"
   },

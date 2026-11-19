@@ -11,7 +11,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 # Project guide
 
 Read by Claude Code (through `CLAUDE.md` → `@AGENTS.md`) and by codex. Edit guidance here, outside the
-nextjs-agent-rules markers above — `next dev` rewrites only the text between those markers.
+nextjs-agent-rules markers above. `next dev` rewrites only the text between those markers.
 
 ## What this is
 
@@ -34,6 +34,7 @@ npm run dev                  # http://localhost:3000
 npm run lint
 npm run build
 npm run audit:content        # tax-calendar runway check (CI gate); post checks moved to the admin's publish check
+npm run check:rules          # source checks for the rule table in "Corrections become checks" (CI gate)
 
 # Playwright e2e. playwright.config.ts starts `next start` on :3100 itself, so build first.
 npm run build && npm run test:e2e
@@ -45,10 +46,13 @@ npx playwright test -c admin/playwright.config.ts
 ```
 
 CI (`.github/workflows/ci.yml`, Node 22) runs `npm audit` (runtime deps fail from moderate, dev tools only on
-critical; see the comment there), `npm audit signatures`, audit:content, lint, build, then
+critical; see the comment there), `npm audit signatures`, audit:content, check:rules, lint, build, then
 e2e across four projects (desktop, mobile, webkit, firefox), then the admin build and admin e2e. CI puts `node scripts/qa/https.mjs` in front of :3100 and
 sets `QA_BASE_URL=https://localhost:3443`. That local TLS proxy makes the tests run under the real production CSP,
 including `upgrade-insecure-requests`. Reproduce it the same way when a change touches headers or CSP.
+
+To drive the built site like a visitor and collect PR evidence, follow `.claude/skills/verify-meridian/SKILL.md`
+(start, doctor, the contact journey, stop, and a feature map). Codex reads it as a plain file.
 
 Other browser QA scripts in `scripts/qa/` all expect a server on :3100:
 
@@ -134,7 +138,8 @@ the fields and citation rules are in `docs/content-system.md`.
     inner NPM sets to the real client.
     - With two proxies `X-Forwarded-For` holds two addresses, and Better Auth then falls back to one bucket shared
       by everyone.
-    - The username and password rules appear in both `auth.ts` and `user.mjs`. Change them together.
+    - The username and password rules live in `admin/scripts/account-rules.mjs`, which both `auth.ts` and `user.mjs`
+      import. It sits next to `user.mjs` because that script runs in the container without a build.
 - The content is one SQLite file (WAL), `CONTENT_DB`.
   - The admin is its only writer. On start it applies `MIGRATIONS` from `src/lib/content/schema.ts` and seeds from
     the code arrays once.
@@ -308,6 +313,41 @@ Tests enforce three rules:
   `/temp/`, which is gitignored.
 - `HANDOFF_REVIEW.md` is stale (April 2026, pre-rebrand "한결회계법인"). Don't rely on it.
 - `docs/IA_V2.md` is the current information-architecture plan (plain summary in `docs/memory/memory_IA_V2.md`).
+
+## Corrections become checks
+
+An agent skips a rule that nothing enforces. So when the owner corrects the same mistake a second time, don't add
+another line to this file. Fix it at the highest level that works:
+
+1. Architecture: one owner for each piece of state, one supported way for each task, delete the old way.
+2. Types, or a lint or CI check whose error message names the file or function to use instead. If the pattern is
+   already common, fail only when a change adds more.
+3. A test of the behavior. Show that it fails on the real past mistake before you commit it.
+4. Text here, last, and only for judgment calls.
+
+A comment that explains why a quick fix is acceptable is not a fix. Agents copy it as permission, so fix the root
+cause instead. Comments that record a constraint the code cannot show (a browser bug, a vendor limit, a client
+review item) stay, as Conventions says.
+
+Prove a change by running it, not by reading it: a Playwright measurement, a `capture.mjs` screenshot or a test
+output. Put that evidence in the PR so the reviewer reads the result instead of the diff.
+
+Rules in this file and what enforces them. When you enforce one of the unenforced rules, move it up. Drop a row once
+its mistake can't happen.
+
+| Rule | Enforced by |
+|---|---|
+| `/contact` stays statically prerendered and works without JS | `tests/e2e/contact-rendering.spec.ts` |
+| `/blog` ships its first page of posts in the static HTML | `tests/e2e/blog-rendering.spec.ts` |
+| `allow-discrete` goes inside the `transition` shorthand | `tests/e2e/flows.spec.ts` (menu close) |
+| Milkdown saves `**25%**로` as bold | `admin/tests/posts.spec.ts` |
+| `serviceGroups` names only slugs in `data.ts` | `orderedServices` throws at import |
+| The tax calendar has 30+ days of dates | `npm run audit:content`, `schedule-check.yml` |
+| The exact `/contract` rewrite comes before `/contract/:path*` | `npm run check:rules` |
+| `/pricing` and `/preview` stay out of the sitemap and search, and are noindex | `npm run check:rules` (metadata), `tests/e2e/noindex-pages.spec.ts` |
+| `scale` goes inside `transform` (Lightning CSS drops it) | `npm run check:rules` |
+| `STAGE_MEDIA` and the CSS media query match | `npm run check:rules` |
+| Username and password rules | One source, `admin/scripts/account-rules.mjs`, read by `auth.ts` and `user.mjs` |
 
 ## Deploy
 
